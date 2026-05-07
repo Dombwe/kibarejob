@@ -24,6 +24,11 @@ class ProfileScreen extends ConsumerWidget {
             icon: const Icon(Icons.view_carousel_outlined),
           ),
           IconButton(
+            tooltip: 'Abonnement',
+            onPressed: () => context.go('/subscription'),
+            icon: const Icon(Icons.workspace_premium_outlined),
+          ),
+          IconButton(
             tooltip: 'Documents',
             onPressed: () => context.go('/documents'),
             icon: const Icon(Icons.folder_outlined),

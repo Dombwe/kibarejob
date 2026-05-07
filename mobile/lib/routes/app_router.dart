@@ -12,6 +12,7 @@ import '../screens/notifications_screen.dart';
 import '../screens/profile_screen.dart';
 import '../screens/register_screen.dart';
 import '../screens/splash_screen.dart';
+import '../screens/subscription_screen.dart';
 import '../screens/swipe_screen.dart';
 
 final appRouter = GoRouter(
@@ -59,6 +60,10 @@ final appRouter = GoRouter(
     GoRoute(
       path: '/notifications',
       builder: (context, state) => const NotificationsScreen(),
+    ),
+    GoRoute(
+      path: '/subscription',
+      builder: (context, state) => const SubscriptionScreen(),
     ),
   ],
 );
