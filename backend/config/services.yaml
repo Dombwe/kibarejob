@@ -1,6 +1,13 @@
 parameters:
     app.storage_base_url: '/storage'
     app.storage_path: 'var/storage'
+    app.redis_cache_ttl_default: 120
+    messenger_transport_dsn_default: 'doctrine://default?auto_setup=0'
+    app.subscription_mode_default: 'mock'
+    app.payment_method_default: 'none'
+    app.subscription_mode: '%env(default:app.subscription_mode_default:SUBSCRIPTION_MODE)%'
+    app.payment_method: '%env(default:app.payment_method_default:PAYMENT_METHOD)%'
+    app.redis_cache_ttl: '%env(default:app.redis_cache_ttl_default:int:REDIS_CACHE_TTL)%'
 
 services:
     _defaults:
@@ -17,3 +24,60 @@ services:
             $projectDir: '%kernel.project_dir%'
             $storageBaseUrl: '%app.storage_base_url%'
             $storagePath: '%app.storage_path%'
+
+    App\Service\ChunkedUploadService:
+        arguments:
+            $projectDir: '%kernel.project_dir%'
+            $storagePath: '%app.storage_path%'
+
+    App\Service\DocumentExtractorService:
+        arguments:
+            $tesseractBinary: null
+
+    App\Controller\Api\DocumentController:
+        arguments:
+            $projectDir: '%kernel.project_dir%'
+
+    App\Command\CleanupDocumentsCommand:
+        arguments:
+            $projectDir: '%kernel.project_dir%'
+
+    App\Service\SubscriptionService:
+        arguments:
+            $subscriptionMode: '%app.subscription_mode%'
+
+    App\Service\PaymentService:
+        arguments:
+            $subscriptionMode: '%app.subscription_mode%'
+            $paymentMethod: '%app.payment_method%'
+
+    App\Middleware\QuotaMiddleware:
+        tags:
+            - { name: kernel.event_listener, event: kernel.request, method: onKernelRequest, priority: 20 }
+
+    kibarejob.redis:
+        class: Redis
+        factory: ['Symfony\Component\Cache\Adapter\RedisAdapter', 'createConnection']
+        arguments:
+            - '%env(REDIS_URL)%'
+
+    Symfony\Component\HttpFoundation\Session\Storage\Handler\RedisSessionHandler:
+        arguments:
+            - '@kibarejob.redis'
+            - { prefix: 'kjob:sess:', ttl: 86400 }
+
+    App\Service\CacheService:
+        arguments:
+            $redis: '@kibarejob.redis'
+            $defaultTtl: '%app.redis_cache_ttl%'
+
+    App\Service\ScoreCacheService:
+        arguments:
+            $redis: '@kibarejob.redis'
+
+    App\Middleware\RateLimiterMiddleware:
+        arguments:
+            $criticalLimiter: '@limiter.api_critical'
+            $uploadLimiter: '@limiter.api_upload'
+        tags:
+            - { name: kernel.event_listener, event: kernel.request, method: onKernelRequest, priority: 40 }

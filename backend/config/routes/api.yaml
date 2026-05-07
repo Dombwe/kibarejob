@@ -9,3 +9,31 @@ api_profile:
 api_employer_profile:
     resource: ../../src/Controller/Api/EmployerProfileController.php
     type: attribute
+
+api_documents:
+    resource: ../../src/Controller/Api/DocumentController.php
+    type: attribute
+
+api_subscription:
+    resource: ../../src/Controller/Api/SubscriptionController.php
+    type: attribute
+
+api_employer_offers:
+    resource: ../../src/Controller/Api/OfferController.php
+    type: attribute
+
+api_jobs_feed:
+    resource: ../../src/Controller/Api/FeedController.php
+    type: attribute
+
+api_jobs_swipe:
+    resource: ../../src/Controller/Api/SwipeController.php
+    type: attribute
+
+api_candidate_matches:
+    resource: ../../src/Controller/Api/CandidatureController.php
+    type: attribute
+
+api_employer_applications:
+    resource: ../../src/Controller/Api/EmployerApplicationController.php
+    type: attribute

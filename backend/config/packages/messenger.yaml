@@ -1,0 +1,10 @@
+framework:
+    messenger:
+        default_bus: messenger.bus.default
+        transports:
+            async:
+                dsn: '%env(default:messenger_transport_dsn_default:MESSENGER_TRANSPORT_DSN)%'
+                options:
+                    queue_name: kibarejob_async
+        routing:
+            App\Message\GenerateApplicationJob: async

@@ -1,0 +1,12 @@
+framework:
+    rate_limiter:
+        api_critical:
+            policy: token_bucket
+            limit: 60
+            rate:
+                interval: '1 minute'
+                amount: 60
+        api_upload:
+            policy: sliding_window
+            limit: 20
+            interval: '1 minute'

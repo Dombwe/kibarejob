@@ -1,0 +1,14 @@
+# Suggested cron entries for production servers.
+# Phase 1 remains free/mock, but resets keep counters clean for testing.
+
+daily:
+    command: 'bin/console subscription:reset-daily'
+    schedule: '0 0 * * *'
+
+monthly:
+    command: 'bin/console subscription:reset-monthly'
+    schedule: '0 0 1 * *'
+
+matching_scores:
+    command: 'bin/console matching:precompute-scores'
+    schedule: '0 */6 * * *'

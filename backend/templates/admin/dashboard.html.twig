@@ -1,0 +1,47 @@
+{% extends '@EasyAdmin/page/content.html.twig' %}
+
+{% block content_title %}KIBARE-JOB Admin{% endblock %}
+
+{% block main %}
+    <section class="content-panel">
+        <div class="content-panel-body">
+            <div style="display:grid;grid-template-columns:repeat(5,minmax(140px,1fr));gap:16px;margin-bottom:24px">
+                <article><strong>{{ stats.users }}</strong><br>Utilisateurs</article>
+                <article><strong>{{ stats.employersPending }}</strong><br>Employeurs a valider</article>
+                <article><strong>{{ stats.activeOffers }}</strong><br>Offres actives</article>
+                <article><strong>{{ stats.documentsPending }}</strong><br>Documents a moderer</article>
+                <article><strong>{{ stats.reportsPending }}</strong><br>Signalements</article>
+            </div>
+
+            <h2>Dernieres inscriptions</h2>
+            <table class="table datagrid">
+                <thead><tr><th>Email</th><th>Telephone</th><th>Actif</th><th>Date</th></tr></thead>
+                <tbody>
+                {% for user in latestUsers %}
+                    <tr>
+                        <td>{{ user.email }}</td>
+                        <td>{{ user.phone }}</td>
+                        <td>{{ user.active ? 'Oui' : 'Non' }}</td>
+                        <td>{{ user.createdAt|date('Y-m-d H:i') }}</td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+
+            <h2>Offres actives recentes</h2>
+            <table class="table datagrid">
+                <thead><tr><th>Titre</th><th>Lieu</th><th>Candidatures</th><th>Date</th></tr></thead>
+                <tbody>
+                {% for offer in activeOffers %}
+                    <tr>
+                        <td>{{ offer.title }}</td>
+                        <td>{{ offer.location }}</td>
+                        <td>{{ offer.applicationsCount }}</td>
+                        <td>{{ offer.createdAt|date('Y-m-d H:i') }}</td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </section>
+{% endblock %}

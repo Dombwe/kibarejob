@@ -14,6 +14,14 @@ class ValidationService
         'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
     ];
     private const ALLOWED_IMAGE_MIMES = ['image/jpeg', 'image/png', 'image/webp'];
+    private const ALLOWED_DOCUMENT_MIMES = [
+        'application/pdf',
+        'application/msword',
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        'image/jpeg',
+        'image/png',
+        'image/webp',
+    ];
 
     public function __construct(private readonly ValidatorInterface $validator)
     {
@@ -85,6 +93,18 @@ class ValidationService
         }
 
         return $this->validateUploadedFile($file, self::ALLOWED_IMAGE_MIMES, 2 * 1024 * 1024);
+    }
+
+    /**
+     * @return string[]
+     */
+    public function validateDocumentFile(?UploadedFile $file): array
+    {
+        if (!$file instanceof UploadedFile) {
+            return ['Aucun document fourni.'];
+        }
+
+        return $this->validateUploadedFile($file, self::ALLOWED_DOCUMENT_MIMES, 8 * 1024 * 1024);
     }
 
     /**
