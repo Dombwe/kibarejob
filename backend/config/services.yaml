@@ -1,0 +1,19 @@
+parameters:
+    app.storage_base_url: '/storage'
+    app.storage_path: 'var/storage'
+
+services:
+    _defaults:
+        autowire: true
+        autoconfigure: true
+
+    App\:
+        resource: '../src/'
+        exclude:
+            - '../src/Entity/'
+
+    App\Service\FileUploadService:
+        arguments:
+            $projectDir: '%kernel.project_dir%'
+            $storageBaseUrl: '%app.storage_base_url%'
+            $storagePath: '%app.storage_path%'

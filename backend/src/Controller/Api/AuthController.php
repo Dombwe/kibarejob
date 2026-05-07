@@ -1,0 +1,165 @@
+<?php
+
+namespace App\Controller\Api;
+
+use App\Entity\CandidateProfile;
+use App\Entity\Employer;
+use App\Entity\User;
+use App\Repository\UserRepository;
+use App\Service\ValidationService;
+use Doctrine\ORM\EntityManagerInterface;
+use Lexik\Bundle\JWTAuthenticationBundle\Services\JWTTokenManagerInterface;
+use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
+use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\Security\Core\Exception\BadCredentialsException;
+
+#[Route('/api/auth')]
+class AuthController extends AbstractController
+{
+    public function __construct(
+        private readonly EntityManagerInterface $entityManager,
+        private readonly UserRepository $userRepository,
+        private readonly UserPasswordHasherInterface $passwordHasher,
+        private readonly JWTTokenManagerInterface $jwtManager,
+        private readonly ValidationService $validationService,
+    ) {
+    }
+
+    #[Route('/login', name: 'api_auth_login', methods: ['POST'])]
+    public function login(Request $request): JsonResponse
+    {
+        $payload = $this->jsonPayload($request);
+        $email = $this->validationService->normalizeEmail($payload['email'] ?? null);
+        $password = (string) ($payload['password'] ?? '');
+        $user = $this->userRepository->findOneBy(['email' => $email]);
+
+        if (!$user instanceof User || !$this->passwordHasher->isPasswordValid($user, $password)) {
+            throw new BadCredentialsException('Identifiants invalides.');
+        }
+
+        if (!$user->isActive() || $user->isDeleted()) {
+            return $this->json(['message' => 'Compte inactif ou supprime.'], JsonResponse::HTTP_FORBIDDEN);
+        }
+
+        $user->setLastLogin(new \DateTimeImmutable());
+        $this->entityManager->flush();
+
+        return $this->json([
+            'token' => $this->jwtManager->create($user),
+            'user' => $this->serializeUser($user),
+        ]);
+    }
+
+    #[Route('/register', name: 'api_auth_register', methods: ['POST'])]
+    public function register(Request $request): JsonResponse
+    {
+        $payload = $this->jsonPayload($request);
+        $email = $this->validationService->normalizeEmail($payload['email'] ?? null);
+        $phone = $payload['phone'] ?? null;
+        $password = (string) ($payload['password'] ?? '');
+        $accountType = (string) ($payload['accountType'] ?? $payload['account_type'] ?? 'candidat');
+
+        $errors = [];
+        if ('' === $email || false === filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            $errors['email'][] = 'Email invalide.';
+        }
+
+        if (!$this->validationService->isValidBurkinaPhone($phone)) {
+            $errors['phone'][] = 'Le telephone doit respecter le format +226XXXXXXXX.';
+        }
+
+        if ($this->userRepository->findOneBy(['email' => $email]) instanceof User) {
+            $errors['email'][] = 'Cet email est deja utilise.';
+        }
+
+        if ($phone && $this->userRepository->findOneBy(['phone' => $phone]) instanceof User) {
+            $errors['phone'][] = 'Ce telephone est deja utilise.';
+        }
+
+        $passwordErrors = $this->validationService->validatePassword($password);
+        if ([] !== $passwordErrors) {
+            $errors['password'] = $passwordErrors;
+        }
+
+        if (!in_array($accountType, ['candidat', 'employeur'], true)) {
+            $errors['accountType'][] = 'Type de compte invalide.';
+        }
+
+        if ([] !== $errors) {
+            return $this->json(['errors' => $errors], JsonResponse::HTTP_UNPROCESSABLE_ENTITY);
+        }
+
+        $user = (new User())
+            ->setEmail($email)
+            ->setPhone($phone)
+            ->setRoles([$accountType === 'employeur' ? 'ROLE_EMPLOYER' : 'ROLE_CANDIDATE'])
+            ->setProfileCompletedPercent(10);
+        $user->setPasswordHash($this->passwordHasher->hashPassword($user, $password));
+
+        if ('employeur' === $accountType) {
+            $profile = (new Employer())
+                ->setUser($user)
+                ->setCompanyName((string) ($payload['companyName'] ?? $payload['company_name'] ?? 'Entreprise'))
+                ->setSector((string) ($payload['sector'] ?? 'Non renseigne'))
+                ->setCities($this->arrayValue($payload['cities'] ?? ['Ouagadougou']));
+            $this->entityManager->persist($profile);
+        } else {
+            $profile = (new CandidateProfile())
+                ->setUser($user)
+                ->setFirstName((string) ($payload['firstName'] ?? $payload['first_name'] ?? 'Candidat'))
+                ->setLastName((string) ($payload['lastName'] ?? $payload['last_name'] ?? 'KIBARE-JOB'))
+                ->setCity((string) ($payload['city'] ?? 'Ouagadougou'))
+                ->setEducationLevel((string) ($payload['educationLevel'] ?? $payload['education_level'] ?? 'Aucun'))
+                ->setSkills($this->arrayValue($payload['skills'] ?? []))
+                ->setLanguages($this->arrayValue($payload['languages'] ?? [['name' => 'Francais', 'level' => 'Debutant']]))
+                ->setAvailability((string) ($payload['availability'] ?? 'Immediate'));
+            $this->entityManager->persist($profile);
+        }
+
+        $this->entityManager->persist($user);
+        $this->entityManager->flush();
+
+        return $this->json([
+            'token' => $this->jwtManager->create($user),
+            'user' => $this->serializeUser($user),
+        ], JsonResponse::HTTP_CREATED);
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function jsonPayload(Request $request): array
+    {
+        $payload = json_decode($request->getContent(), true);
+
+        return is_array($payload) ? $payload : [];
+    }
+
+    /**
+     * @param mixed $value
+     *
+     * @return array<int|string, mixed>
+     */
+    private function arrayValue(mixed $value): array
+    {
+        return is_array($value) ? $value : [];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function serializeUser(User $user): array
+    {
+        return [
+            'id' => (string) $user->getId(),
+            'email' => $user->getEmail(),
+            'phone' => $user->getPhone(),
+            'roles' => $user->getRoles(),
+            'profileCompletedPercent' => $user->getProfileCompletedPercent(),
+            'subscriptionTier' => $user->getSubscriptionTier()->value,
+        ];
+    }
+}

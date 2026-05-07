@@ -1,0 +1,11 @@
+api_auth:
+    resource: ../../src/Controller/Api/AuthController.php
+    type: attribute
+
+api_profile:
+    resource: ../../src/Controller/Api/ProfileController.php
+    type: attribute
+
+api_employer_profile:
+    resource: ../../src/Controller/Api/EmployerProfileController.php
+    type: attribute
