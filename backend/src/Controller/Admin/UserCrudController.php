@@ -7,23 +7,18 @@ use Doctrine\ORM\EntityManagerInterface;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Action;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Actions;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Crud;
-use EasyCorp\Bundle\EasyAdminBundle\Context\AdminContext;
 use EasyCorp\Bundle\EasyAdminBundle\Controller\AbstractCrudController;
+use EasyCorp\Bundle\EasyAdminBundle\Context\AdminContext;
 use EasyCorp\Bundle\EasyAdminBundle\Field\ArrayField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\BooleanField;
-use EasyCorp\Bundle\EasyAdminBundle\Field\ChoiceField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\DateTimeField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\EmailField;
+use EasyCorp\Bundle\EasyAdminBundle\Field\IdField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\IntegerField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\TelephoneField;
-use Symfony\Component\HttpFoundation\Response;
 
 class UserCrudController extends AbstractCrudController
 {
-    public function __construct(private readonly EntityManagerInterface $entityManager)
-    {
-    }
-
     public static function getEntityFqcn(): string
     {
         return User::class;
@@ -39,14 +34,13 @@ class UserCrudController extends AbstractCrudController
 
     public function configureFields(string $pageName): iterable
     {
+        yield IdField::new('id')->hideOnForm();
         yield EmailField::new('email');
         yield TelephoneField::new('phone')->hideOnIndex();
         yield ArrayField::new('roles');
         yield BooleanField::new('isActive', 'Actif');
         yield BooleanField::new('isDeleted', 'Banni/Supprime');
         yield IntegerField::new('profileCompletedPercent', 'Profil %');
-        yield ChoiceField::new('subscriptionTier')->hideOnForm();
-        yield IntegerField::new('swipesUsedToday', 'Swipes aujourd hui');
         yield DateTimeField::new('lastLogin')->hideOnForm();
         yield DateTimeField::new('createdAt')->hideOnForm();
     }
@@ -55,7 +49,7 @@ class UserCrudController extends AbstractCrudController
     {
         $activate = Action::new('activate', 'Activer')->linkToCrudAction('activate');
         $deactivate = Action::new('deactivate', 'Desactiver')->linkToCrudAction('deactivate');
-        $ban = Action::new('ban', 'Bannir')->linkToCrudAction('ban')->setCssClass('btn btn-danger');
+        $ban = Action::new('ban', 'Bannir')->linkToCrudAction('ban')->addCssClass('btn btn-danger');
 
         return $actions
             ->add(Crud::PAGE_INDEX, $activate)
@@ -66,36 +60,36 @@ class UserCrudController extends AbstractCrudController
             ->add(Crud::PAGE_DETAIL, $ban);
     }
 
-    public function activate(AdminContext $context): Response
+    public function activate(AdminContext $context, EntityManagerInterface $entityManager)
     {
         $user = $context->getEntity()->getInstance();
         if ($user instanceof User) {
             $user->setIsActive(true)->setIsDeleted(false);
-            $this->entityManager->flush();
+            $entityManager->flush();
         }
 
-        return $this->redirect($context->getReferrer() ?? '/admin');
+        return $this->redirect($context->getReferrer() ?? $this->generateUrl('admin'));
     }
 
-    public function deactivate(AdminContext $context): Response
+    public function deactivate(AdminContext $context, EntityManagerInterface $entityManager)
     {
         $user = $context->getEntity()->getInstance();
         if ($user instanceof User) {
             $user->setIsActive(false);
-            $this->entityManager->flush();
+            $entityManager->flush();
         }
 
-        return $this->redirect($context->getReferrer() ?? '/admin');
+        return $this->redirect($context->getReferrer() ?? $this->generateUrl('admin'));
     }
 
-    public function ban(AdminContext $context): Response
+    public function ban(AdminContext $context, EntityManagerInterface $entityManager)
     {
         $user = $context->getEntity()->getInstance();
         if ($user instanceof User) {
             $user->setIsActive(false)->setIsDeleted(true);
-            $this->entityManager->flush();
+            $entityManager->flush();
         }
 
-        return $this->redirect($context->getReferrer() ?? '/admin');
+        return $this->redirect($context->getReferrer() ?? $this->generateUrl('admin'));
     }
 }

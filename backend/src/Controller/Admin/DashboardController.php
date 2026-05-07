@@ -35,13 +35,14 @@ class DashboardController extends AbstractDashboardController
         return $this->render('admin/dashboard.html.twig', [
             'stats' => [
                 'users' => $this->userRepository->count(['isDeleted' => false]),
-                'employersPending' => $this->employerRepository->count(['isValidated' => false, 'isDeleted' => false]),
+                'employersToValidate' => $this->employerRepository->count(['isValidated' => false, 'isDeleted' => false]),
                 'activeOffers' => $this->jobOfferRepository->count(['status' => \App\Entity\Enum\JobOfferStatus::Active, 'isDeleted' => false]),
-                'documentsPending' => $this->documentRepository->count(['isVerified' => false, 'isDeleted' => false]),
-                'reportsPending' => $this->reportRepository->count(['status' => 'pending', 'isDeleted' => false]),
+                'documentsToModerate' => $this->documentRepository->count(['isVerified' => false, 'isDeleted' => false]),
+                'pendingReports' => $this->reportRepository->count(['status' => 'pending']),
             ],
-            'latestUsers' => $this->userRepository->findBy(['isDeleted' => false], ['createdAt' => 'DESC'], 8),
-            'activeOffers' => $this->jobOfferRepository->findBy(['status' => \App\Entity\Enum\JobOfferStatus::Active, 'isDeleted' => false], ['createdAt' => 'DESC'], 8),
+            'latestUsers' => $this->userRepository->findBy(['isDeleted' => false], ['createdAt' => 'DESC'], 10),
+            'activeOffers' => $this->jobOfferRepository->findBy(['status' => \App\Entity\Enum\JobOfferStatus::Active, 'isDeleted' => false], ['createdAt' => 'DESC'], 10),
+            'flaggedDocuments' => $this->documentRepository->findBy(['isVerified' => false, 'isDeleted' => false], ['uploadedAt' => 'DESC'], 10),
         ]);
     }
 

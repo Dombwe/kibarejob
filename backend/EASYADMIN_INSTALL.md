@@ -1,11 +1,16 @@
 # EasyAdmin installation
 
-This backend skeleton does not yet include `composer.json`, so the bundle cannot be installed automatically here.
+The admin controllers are ready, but this repository currently has no `backend/composer.json`.
 
-When the Symfony project skeleton is present, run:
+When the Symfony skeleton is present, run:
 
 ```bash
+cd backend
 composer require easycorp/easyadmin-bundle
 ```
 
-Then import `config/routes/admin.yaml` from the main Symfony route loader if route imports are not automatic.
+Then ensure `backend/config/routes/admin.yaml` is imported by Symfony route loading, run Doctrine migrations, and open:
+
+```text
+/admin
+```

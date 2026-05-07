@@ -5,41 +5,111 @@
 {% block main %}
     <section class="content-panel">
         <div class="content-panel-body">
-            <div style="display:grid;grid-template-columns:repeat(5,minmax(140px,1fr));gap:16px;margin-bottom:24px">
-                <article><strong>{{ stats.users }}</strong><br>Utilisateurs</article>
-                <article><strong>{{ stats.employersPending }}</strong><br>Employeurs a valider</article>
-                <article><strong>{{ stats.activeOffers }}</strong><br>Offres actives</article>
-                <article><strong>{{ stats.documentsPending }}</strong><br>Documents a moderer</article>
-                <article><strong>{{ stats.reportsPending }}</strong><br>Signalements</article>
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:16px;">
+                <article class="card">
+                    <div class="card-body">
+                        <strong>{{ stats.users }}</strong>
+                        <div>Utilisateurs</div>
+                    </div>
+                </article>
+                <article class="card">
+                    <div class="card-body">
+                        <strong>{{ stats.employersToValidate }}</strong>
+                        <div>Employeurs a valider</div>
+                    </div>
+                </article>
+                <article class="card">
+                    <div class="card-body">
+                        <strong>{{ stats.activeOffers }}</strong>
+                        <div>Offres actives</div>
+                    </div>
+                </article>
+                <article class="card">
+                    <div class="card-body">
+                        <strong>{{ stats.documentsToModerate }}</strong>
+                        <div>Documents a moderer</div>
+                    </div>
+                </article>
+                <article class="card">
+                    <div class="card-body">
+                        <strong>{{ stats.pendingReports }}</strong>
+                        <div>Signalements</div>
+                    </div>
+                </article>
             </div>
+        </div>
+    </section>
 
-            <h2>Dernieres inscriptions</h2>
+    <section class="content-panel">
+        <div class="content-panel-header">
+            <h2 class="title">Dernieres inscriptions</h2>
+        </div>
+        <div class="content-panel-body">
             <table class="table datagrid">
-                <thead><tr><th>Email</th><th>Telephone</th><th>Actif</th><th>Date</th></tr></thead>
+                <thead>
+                    <tr><th>Email</th><th>Telephone</th><th>Roles</th><th>Date</th></tr>
+                </thead>
                 <tbody>
-                {% for user in latestUsers %}
-                    <tr>
-                        <td>{{ user.email }}</td>
-                        <td>{{ user.phone }}</td>
-                        <td>{{ user.active ? 'Oui' : 'Non' }}</td>
-                        <td>{{ user.createdAt|date('Y-m-d H:i') }}</td>
-                    </tr>
-                {% endfor %}
+                    {% for user in latestUsers %}
+                        <tr>
+                            <td>{{ user.email }}</td>
+                            <td>{{ user.phone }}</td>
+                            <td>{{ user.roles|join(', ') }}</td>
+                            <td>{{ user.createdAt|date('d/m/Y H:i') }}</td>
+                        </tr>
+                    {% else %}
+                        <tr><td colspan="4">Aucune inscription.</td></tr>
+                    {% endfor %}
                 </tbody>
             </table>
+        </div>
+    </section>
 
-            <h2>Offres actives recentes</h2>
+    <section class="content-panel">
+        <div class="content-panel-header">
+            <h2 class="title">Offres actives recentes</h2>
+        </div>
+        <div class="content-panel-body">
             <table class="table datagrid">
-                <thead><tr><th>Titre</th><th>Lieu</th><th>Candidatures</th><th>Date</th></tr></thead>
+                <thead>
+                    <tr><th>Titre</th><th>Lieu</th><th>Candidatures</th><th>Deadline</th></tr>
+                </thead>
                 <tbody>
-                {% for offer in activeOffers %}
-                    <tr>
-                        <td>{{ offer.title }}</td>
-                        <td>{{ offer.location }}</td>
-                        <td>{{ offer.applicationsCount }}</td>
-                        <td>{{ offer.createdAt|date('Y-m-d H:i') }}</td>
-                    </tr>
-                {% endfor %}
+                    {% for offer in activeOffers %}
+                        <tr>
+                            <td>{{ offer.title }}</td>
+                            <td>{{ offer.location }}</td>
+                            <td>{{ offer.applicationsCount }}</td>
+                            <td>{{ offer.deadline|date('d/m/Y') }}</td>
+                        </tr>
+                    {% else %}
+                        <tr><td colspan="4">Aucune offre active.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <section class="content-panel">
+        <div class="content-panel-header">
+            <h2 class="title">Documents a moderer</h2>
+        </div>
+        <div class="content-panel-body">
+            <table class="table datagrid">
+                <thead>
+                    <tr><th>Titre</th><th>Type</th><th>Score</th><th>Upload</th></tr>
+                </thead>
+                <tbody>
+                    {% for document in flaggedDocuments %}
+                        <tr>
+                            <td>{{ document.title }}</td>
+                            <td>{{ document.type.value }}</td>
+                            <td>{{ document.confidenceScore }}</td>
+                            <td>{{ document.uploadedAt|date('d/m/Y H:i') }}</td>
+                        </tr>
+                    {% else %}
+                        <tr><td colspan="4">Aucun document a moderer.</td></tr>
+                    {% endfor %}
                 </tbody>
             </table>
         </div>

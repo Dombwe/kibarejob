@@ -20,7 +20,7 @@ class Report
     private ?UuidInterface $id = null;
 
     #[ORM\ManyToOne(targetEntity: User::class)]
-    #[ORM\JoinColumn(name: 'reporter_id', referencedColumnName: 'id', nullable: true)]
+    #[ORM\JoinColumn(name: 'reporter_id', referencedColumnName: 'id', nullable: true, onDelete: 'SET NULL')]
     private ?User $reporter = null;
 
     #[Assert\NotBlank]
@@ -28,12 +28,15 @@ class Report
     private string $targetType = '';
 
     #[Assert\NotBlank]
-    #[ORM\Column(length: 64)]
+    #[ORM\Column(length: 36)]
     private string $targetId = '';
 
     #[Assert\NotBlank]
-    #[ORM\Column(type: Types::TEXT)]
+    #[ORM\Column(length: 100)]
     private string $reason = '';
+
+    #[ORM\Column(type: Types::TEXT, nullable: true)]
+    private ?string $description = null;
 
     #[ORM\Column(length: 30, options: ['default' => 'pending'])]
     private string $status = 'pending';
@@ -44,8 +47,9 @@ class Report
     #[ORM\Column(nullable: true)]
     private ?\DateTimeImmutable $resolvedAt = null;
 
-    #[ORM\Column(options: ['default' => false])]
-    private bool $isDeleted = false;
+    #[ORM\ManyToOne(targetEntity: User::class)]
+    #[ORM\JoinColumn(name: 'resolved_by_id', referencedColumnName: 'id', nullable: true, onDelete: 'SET NULL')]
+    private ?User $resolvedBy = null;
 
     public function __construct()
     {
@@ -61,12 +65,14 @@ class Report
     public function setTargetId(string $targetId): self { $this->targetId = $targetId; return $this; }
     public function getReason(): string { return $this->reason; }
     public function setReason(string $reason): self { $this->reason = $reason; return $this; }
+    public function getDescription(): ?string { return $this->description; }
+    public function setDescription(?string $description): self { $this->description = $description; return $this; }
     public function getStatus(): string { return $this->status; }
     public function setStatus(string $status): self { $this->status = $status; return $this; }
     public function getCreatedAt(): \DateTimeImmutable { return $this->createdAt; }
     public function setCreatedAt(\DateTimeImmutable $createdAt): self { $this->createdAt = $createdAt; return $this; }
     public function getResolvedAt(): ?\DateTimeImmutable { return $this->resolvedAt; }
     public function setResolvedAt(?\DateTimeImmutable $resolvedAt): self { $this->resolvedAt = $resolvedAt; return $this; }
-    public function isDeleted(): bool { return $this->isDeleted; }
-    public function setIsDeleted(bool $isDeleted): self { $this->isDeleted = $isDeleted; return $this; }
+    public function getResolvedBy(): ?User { return $this->resolvedBy; }
+    public function setResolvedBy(?User $resolvedBy): self { $this->resolvedBy = $resolvedBy; return $this; }
 }
