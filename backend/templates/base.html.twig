@@ -1,23 +1,34 @@
 <!DOCTYPE html>
-<html>
+<html lang="fr">
     <head>
         <meta charset="UTF-8">
-        <title>{% block title %}Welcome!{% endblock %}</title>
-        <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 128 128%22><text y=%221.2em%22 font-size=%2296%22>⚫️</text><text y=%221.3em%22 x=%220.2em%22 font-size=%2276%22 fill=%22%23fff%22>sf</text></svg>">
-        {% block stylesheets %}
-        {% endblock %}
-
-        {% block javascripts %}
-        {% endblock %}
-
-        {% set frankenphpHotReload = app.request.server.get('FRANKENPHP_HOT_RELOAD') %}
-        {% if frankenphpHotReload %}
-        <meta name="frankenphp-hot-reload:url" content="{{ frankenphpHotReload }}">
-        <script src="https://cdn.jsdelivr.net/npm/idiomorph"></script>
-        <script src="https://cdn.jsdelivr.net/npm/frankenphp-hot-reload/+esm" type="module"></script>
-        {% endif %}
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>{% block title %}KIBARE-JOB{% endblock %}</title>
+        <meta name="description" content="KIBARE-JOB, le recrutement intelligent pour l'Afrique.">
+        <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 128 128'%3E%3Crect width='128' height='128' rx='28' fill='%230F172A'/%3E%3Ctext x='25' y='82' font-size='48' fill='%2322C55E' font-family='Arial'%3EKJ%3C/text%3E%3C/svg%3E">
+        <script src="https://cdn.tailwindcss.com"></script>
+        <script>
+            tailwind.config = {
+                theme: {
+                    extend: {
+                        colors: {
+                            primary: '#0F172A',
+                            accent: '#22C55E',
+                            secondary: '#3B82F6'
+                        },
+                        boxShadow: {
+                            soft: '0 24px 70px rgba(15, 23, 42, 0.12)'
+                        }
+                    }
+                }
+            };
+        </script>
+        <link rel="stylesheet" href="{{ asset('assets/kibarejob.css') }}">
+        {% block stylesheets %}{% endblock %}
     </head>
-    <body>
+    <body class="bg-slate-50 text-slate-900 antialiased">
         {% block body %}{% endblock %}
+        <script src="{{ asset('assets/kibarejob.js') }}" defer></script>
+        {% block javascripts %}{% endblock %}
     </body>
 </html>

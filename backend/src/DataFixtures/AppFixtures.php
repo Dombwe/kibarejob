@@ -27,6 +27,7 @@ class AppFixtures extends Fixture
     public function load(ObjectManager $manager): void
     {
         $this->loadSubscriptionPlans($manager);
+        $this->loadAdmin($manager);
 
         $employerUsers = $this->loadEmployers($manager);
         $candidateUsers = $this->loadCandidates($manager);
@@ -34,6 +35,18 @@ class AppFixtures extends Fixture
         $this->loadSwipes($manager, $candidateUsers, $offers);
 
         $manager->flush();
+    }
+
+    private function loadAdmin(ObjectManager $manager): void
+    {
+        $user = (new User())
+            ->setEmail('admin@kibarejob.test')
+            ->setPhone('+22679999999')
+            ->setRoles(['ROLE_ADMIN'])
+            ->setProfileCompletedPercent(100);
+        $user->setPasswordHash($this->passwordHasher->hashPassword($user, 'password'));
+
+        $manager->persist($user);
     }
 
     private function loadSubscriptionPlans(ObjectManager $manager): void

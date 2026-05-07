@@ -8,6 +8,8 @@ use App\Entity\User;
 use App\Repository\UserRepository;
 use App\Service\ValidationService;
 use Doctrine\ORM\EntityManagerInterface;
+use Gesdinet\JWTRefreshTokenBundle\Generator\RefreshTokenGeneratorInterface;
+use Gesdinet\JWTRefreshTokenBundle\Model\RefreshTokenManagerInterface;
 use Lexik\Bundle\JWTAuthenticationBundle\Services\JWTTokenManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -24,6 +26,8 @@ class AuthController extends AbstractController
         private readonly UserRepository $userRepository,
         private readonly UserPasswordHasherInterface $passwordHasher,
         private readonly JWTTokenManagerInterface $jwtManager,
+        private readonly RefreshTokenGeneratorInterface $refreshTokenGenerator,
+        private readonly RefreshTokenManagerInterface $refreshTokenManager,
         private readonly ValidationService $validationService,
     ) {
     }
@@ -49,6 +53,7 @@ class AuthController extends AbstractController
 
         return $this->json([
             'token' => $this->jwtManager->create($user),
+            ...$this->issueRefreshToken($user),
             'user' => $this->serializeUser($user),
         ]);
     }
@@ -124,8 +129,37 @@ class AuthController extends AbstractController
 
         return $this->json([
             'token' => $this->jwtManager->create($user),
+            ...$this->issueRefreshToken($user),
             'user' => $this->serializeUser($user),
         ], JsonResponse::HTTP_CREATED);
+    }
+
+    #[Route('/refresh', name: 'api_auth_refresh', methods: ['POST'])]
+    public function refresh(Request $request): JsonResponse
+    {
+        $payload = $this->jsonPayload($request);
+        $tokenValue = (string) ($payload['refresh_token'] ?? $request->request->get('refresh_token', ''));
+
+        if ('' === $tokenValue) {
+            return $this->json(['message' => 'Refresh token manquant.'], JsonResponse::HTTP_BAD_REQUEST);
+        }
+
+        $refreshToken = $this->refreshTokenManager->get($tokenValue);
+        if (null === $refreshToken || !$refreshToken->isValid()) {
+            return $this->json(['message' => 'Refresh token invalide ou expire.'], JsonResponse::HTTP_UNAUTHORIZED);
+        }
+
+        $user = $this->userRepository->findOneBy(['email' => $refreshToken->getUsername()]);
+        if (!$user instanceof User || !$user->isActive() || $user->isDeleted()) {
+            return $this->json(['message' => 'Utilisateur introuvable ou inactif.'], JsonResponse::HTTP_UNAUTHORIZED);
+        }
+
+        return $this->json([
+            'token' => $this->jwtManager->create($user),
+            'refresh_token' => $refreshToken->getRefreshToken(),
+            'refresh_token_expiration' => $refreshToken->getValid()?->getTimestamp(),
+            'user' => $this->serializeUser($user),
+        ]);
     }
 
     /**
@@ -160,6 +194,20 @@ class AuthController extends AbstractController
             'roles' => $user->getRoles(),
             'profileCompletedPercent' => $user->getProfileCompletedPercent(),
             'subscriptionTier' => $user->getSubscriptionTier()->value,
+        ];
+    }
+
+    /**
+     * @return array{refresh_token: string|null, refresh_token_expiration: int|null}
+     */
+    private function issueRefreshToken(User $user): array
+    {
+        $refreshToken = $this->refreshTokenGenerator->createForUserWithTtl($user, 2592000);
+        $this->refreshTokenManager->save($refreshToken);
+
+        return [
+            'refresh_token' => $refreshToken->getRefreshToken(),
+            'refresh_token_expiration' => $refreshToken->getValid()?->getTimestamp(),
         ];
     }
 }

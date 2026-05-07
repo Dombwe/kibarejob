@@ -32,13 +32,13 @@ class SubscriptionPlan
     #[ORM\Column]
     private int $price = 0;
 
-    #[ORM\Column(nullable: true)]
+    #[ORM\Column(name: 'price_3months', nullable: true)]
     private ?int $price3months = null;
 
-    #[ORM\Column(nullable: true)]
+    #[ORM\Column(name: 'price_6months', nullable: true)]
     private ?int $price6months = null;
 
-    #[ORM\Column(nullable: true)]
+    #[ORM\Column(name: 'price_12months', nullable: true)]
     private ?int $price12months = null;
 
     #[ORM\Column(type: Types::JSON, nullable: true)]

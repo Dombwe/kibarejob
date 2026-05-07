@@ -1,6 +1,10 @@
 # KIBARE-JOB
 
-KIBARE-JOB est une plateforme de recrutement pour le Burkina Faso et l'Afrique. Elle combine un backend Symfony, une application mobile Flutter et une logique de matching locale pour permettre aux candidats de swiper des offres et aux employeurs de recevoir des candidatures pre-qualifiees.
+KIBARE-JOB est une plateforme de recrutement pour le Burkina Faso 
+et l'Afrique. Elle combine un backend Symfony, une application mobile 
+Flutter et une logique de matching locale pour permettre aux candidats 
+de swiper des offres et aux employeurs de recevoir des candidatures 
+pre-qualifiées.
 
 ## Stack
 
@@ -63,7 +67,8 @@ flutter analyze
 flutter run --dart-define=API_BASE_URL=http://10.0.2.2:8000
 ```
 
-Sur un telephone physique, remplace `10.0.2.2` par l'adresse IP locale de ton ordinateur.
+Sur un telephone physique, remplace `10.0.2.2` par 
+l'adresse IP locale de ton ordinateur.
 
 ## Variables d'environnement principales
 

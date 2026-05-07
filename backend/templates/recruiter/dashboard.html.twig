@@ -1,0 +1,34 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Espace recruteur - KIBARE-JOB{% endblock %}
+
+{% block body %}
+<main class="min-h-screen bg-slate-50">
+    <header class="border-b border-slate-200 bg-white">
+        <div class="mx-auto flex max-w-7xl items-center justify-between px-5 py-5">
+            <a href="{{ path('home') }}" class="font-black text-primary">KIBARE-JOB Recruteur</a>
+            <a href="{{ path('app_logout') }}" class="rounded-full bg-primary px-5 py-2 text-sm font-black text-white transition duration-300 hover:scale-105">Deconnexion</a>
+        </div>
+    </header>
+    <section class="mx-auto max-w-7xl px-5 py-12">
+        <div class="fade-in rounded-2xl bg-primary p-8 text-white shadow-soft">
+            <p class="font-black uppercase tracking-[0.2em] text-accent">Dashboard</p>
+            <h1 class="mt-4 text-4xl font-black">Publier, suivre, analyser.</h1>
+            <p class="mt-4 max-w-2xl leading-7 text-white/75">Cet espace permet aux recruteurs de creer des offres, suivre completement les candidatures et consulter les statistiques RH.</p>
+        </div>
+        <div class="mt-8 grid gap-6 md:grid-cols-3">
+            {% for card in [
+                {title: 'Offres actives', value: '20', text: 'Creation et moderation des postes ouverts.'},
+                {title: 'Candidatures', value: '50', text: 'Suivi des statuts: vues, entretiens, recrutes.'},
+                {title: 'Statistiques', value: 'IA', text: 'Matching, documents manquants et qualite des profils.'}
+            ] %}
+                <article class="fade-in rounded-2xl bg-white p-7 shadow-soft">
+                    <p class="text-sm font-black uppercase tracking-[0.16em] text-slate-400">{{ card.title }}</p>
+                    <p class="mt-4 text-5xl font-black text-primary">{{ card.value }}</p>
+                    <p class="mt-4 leading-7 text-slate-600">{{ card.text }}</p>
+                </article>
+            {% endfor %}
+        </div>
+    </section>
+</main>
+{% endblock %}

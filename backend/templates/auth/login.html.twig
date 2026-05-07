@@ -1,0 +1,49 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Connexion - KIBARE-JOB{% endblock %}
+
+{% block body %}
+<main class="grid min-h-screen place-items-center bg-[linear-gradient(135deg,#0F172A_0%,#172554_48%,#0F172A_100%)] px-5 py-12">
+    <section class="fade-in w-full max-w-md rounded-2xl bg-white p-8 shadow-soft">
+        <a href="{{ path('home') }}" class="mb-8 inline-flex items-center gap-3 font-black text-primary">
+            <span class="grid h-11 w-11 place-items-center rounded-2xl bg-primary text-accent">KJ</span>
+            KIBARE-JOB
+        </a>
+        <h1 class="text-3xl font-black text-primary">Connexion recruteur</h1>
+        <p class="mt-3 leading-7 text-slate-600">Connecte-toi pour publier des offres et suivre tes candidatures.</p>
+
+        {% for message in app.flashes('error') %}
+            <div class="mt-5 rounded-2xl bg-red-50 px-4 py-3 text-sm font-semibold text-red-700">{{ message }}</div>
+        {% endfor %}
+
+        {% if error %}
+            <div class="mt-5 rounded-2xl bg-red-50 px-4 py-3 text-sm font-semibold text-red-700">{{ error.messageKey|trans(error.messageData, 'security') }}</div>
+        {% endif %}
+
+        <form class="mt-8 space-y-5" method="post" data-login-form>
+            <label class="block">
+                <span class="text-sm font-black text-slate-700">Email</span>
+                <input class="mt-2 w-full rounded-2xl border border-slate-200 px-4 py-3 outline-none transition focus:border-secondary focus:ring-4 focus:ring-blue-100" type="email" name="email" value="{{ last_username }}" autocomplete="email" required>
+            </label>
+            <label class="block">
+                <span class="text-sm font-black text-slate-700">Mot de passe</span>
+                <input class="mt-2 w-full rounded-2xl border border-slate-200 px-4 py-3 outline-none transition focus:border-secondary focus:ring-4 focus:ring-blue-100" type="password" name="password" autocomplete="current-password" required>
+            </label>
+            <button class="flex w-full items-center justify-center rounded-2xl bg-accent px-6 py-4 font-black text-primary transition duration-300 hover:scale-[1.02]" type="submit">
+                <span data-login-label>Se connecter</span>
+                <span class="hidden" data-login-loader>Connexion...</span>
+            </button>
+        </form>
+
+        <div class="my-6 flex items-center gap-3 text-xs font-black uppercase tracking-[0.18em] text-slate-400">
+            <span class="h-px flex-1 bg-slate-200"></span>
+            ou
+            <span class="h-px flex-1 bg-slate-200"></span>
+        </div>
+
+        <a href="{{ path('connect_google_start') }}" class="flex w-full items-center justify-center rounded-2xl border border-slate-200 bg-white px-6 py-4 font-black text-primary transition duration-300 hover:scale-[1.02] hover:bg-slate-50">
+            Continuer avec Google
+        </a>
+    </section>
+</main>
+{% endblock %}

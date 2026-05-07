@@ -32,7 +32,7 @@ final class Version20250101000000 extends AbstractMigration
             subscription_expiry DATE DEFAULT NULL,
             subscription_started_at DATE DEFAULT NULL,
             swipes_used_today INT NOT NULL DEFAULT 0,
-            last_swipe_reset DATE NOT NULL DEFAULT (CURRENT_DATE),
+            last_swipe_reset DATE NOT NULL,
             UNIQUE INDEX uniq_users_email (email),
             UNIQUE INDEX uniq_users_phone (phone),
             PRIMARY KEY(id)
@@ -75,7 +75,7 @@ final class Version20250101000000 extends AbstractMigration
             is_validated TINYINT(1) NOT NULL DEFAULT 0,
             offers_used_this_month INT NOT NULL DEFAULT 0,
             applications_viewed_this_month INT NOT NULL DEFAULT 0,
-            last_offer_reset DATE NOT NULL DEFAULT (CURRENT_DATE),
+            last_offer_reset DATE NOT NULL,
             is_deleted TINYINT(1) NOT NULL DEFAULT 0,
             PRIMARY KEY(user_id)
         ) DEFAULT CHARACTER SET utf8mb4 COLLATE `utf8mb4_unicode_ci` ENGINE = InnoDB");
