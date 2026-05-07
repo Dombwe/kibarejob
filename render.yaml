@@ -1,0 +1,31 @@
+services:
+  - type: web
+    name: kibarejob-backend
+    runtime: docker
+    plan: free
+    rootDir: backend
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /admin
+    envVars:
+      - key: APP_ENV
+        value: prod
+      - key: APP_SECRET
+        generateValue: true
+      - key: DATABASE_URL
+        sync: false
+      - key: REDIS_URL
+        sync: false
+      - key: REDIS_CACHE_TTL
+        value: "120"
+      - key: SUBSCRIPTION_MODE
+        value: mock
+      - key: PAYMENT_METHOD
+        value: none
+      - key: MESSENGER_TRANSPORT_DSN
+        value: doctrine://default?auto_setup=0
+      - key: JWT_SECRET_KEY
+        value: /app/config/jwt/private.pem
+      - key: JWT_PUBLIC_KEY
+        value: /app/config/jwt/public.pem
+      - key: JWT_PASSPHRASE
+        sync: false

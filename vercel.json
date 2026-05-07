@@ -1,0 +1,11 @@
+{
+  "version": 2,
+  "buildCommand": "echo \"Symfony employer web app is served by backend in phase 1\"",
+  "outputDirectory": "backend/public",
+  "routes": [
+    {
+      "src": "/(.*)",
+      "dest": "/index.php"
+    }
+  ]
+}

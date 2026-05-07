@@ -1,0 +1,74 @@
+name: Deploy backend
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "backend/**"
+      - "render.yaml"
+      - ".github/workflows/deploy-backend.yml"
+  workflow_dispatch:
+
+jobs:
+  validate-backend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    services:
+      mysql:
+        image: mysql:8
+        env:
+          MYSQL_DATABASE: kibarejob_test
+          MYSQL_ROOT_PASSWORD: root
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h localhost -proot"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=10
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.2"
+          extensions: intl, mbstring, pdo_mysql, sodium, zip
+          tools: composer:v2
+
+      - name: Install dependencies
+        run: composer install --no-interaction --prefer-dist
+
+      - name: Validate composer
+        run: composer validate --strict
+
+      - name: Lint container
+        env:
+          DATABASE_URL: mysql://root:root@127.0.0.1:3306/kibarejob_test?serverVersion=8.0&charset=utf8mb4
+          REDIS_URL: redis://127.0.0.1:6379
+          APP_SECRET: ci-secret
+        run: php bin/console lint:container
+
+      - name: Validate Doctrine mapping
+        env:
+          DATABASE_URL: mysql://root:root@127.0.0.1:3306/kibarejob_test?serverVersion=8.0&charset=utf8mb4
+          REDIS_URL: redis://127.0.0.1:6379
+          APP_SECRET: ci-secret
+        run: php bin/console doctrine:schema:validate --skip-sync
+
+  deploy-render-hook:
+    needs: validate-backend
+    runs-on: ubuntu-latest
+    env:
+      RENDER_DEPLOY_HOOK_URL: ${{ secrets.RENDER_DEPLOY_HOOK_URL }}
+    steps:
+      - name: Trigger Render deploy hook
+        if: ${{ env.RENDER_DEPLOY_HOOK_URL != '' }}
+        run: curl -fsSL -X POST "$RENDER_DEPLOY_HOOK_URL"

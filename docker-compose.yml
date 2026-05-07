@@ -1,0 +1,57 @@
+services:
+  mysql:
+    image: mysql:8
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: kibarejob
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_USER: kibarejob
+      MYSQL_PASSWORD: kibarejob
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-proot"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+
+  backend:
+    build: ./backend
+    restart: unless-stopped
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    environment:
+      APP_ENV: dev
+      APP_SECRET: dev-kibarejob-secret
+      DATABASE_URL: mysql://kibarejob:kibarejob@mysql:3306/kibarejob?serverVersion=8.0&charset=utf8mb4
+      REDIS_URL: redis://redis:6379
+      REDIS_CACHE_TTL: 120
+      SUBSCRIPTION_MODE: mock
+      PAYMENT_METHOD: none
+      MESSENGER_TRANSPORT_DSN: doctrine://default?auto_setup=0
+      JWT_SECRET_KEY: /app/config/jwt/private.pem
+      JWT_PUBLIC_KEY: /app/config/jwt/public.pem
+      JWT_PASSPHRASE: ""
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend:/app
+      - backend_vendor:/app/vendor
+      - backend_var:/app/var
+    command: sh -lc "composer install && php bin/console doctrine:migrations:migrate --no-interaction || true && php -S 0.0.0.0:8000 -t public"
+
+volumes:
+  mysql_data:
+  backend_vendor:
+  backend_var:

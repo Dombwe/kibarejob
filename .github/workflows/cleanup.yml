@@ -1,0 +1,52 @@
+name: Cleanup scheduled tasks
+
+on:
+  schedule:
+    - cron: "0 0 * * *"
+    - cron: "0 1 1 * *"
+  workflow_dispatch:
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.2"
+          extensions: intl, mbstring, pdo_mysql, sodium, zip
+          tools: composer:v2
+
+      - name: Install dependencies
+        run: composer install --no-interaction --prefer-dist --no-dev
+
+      - name: Run daily quota reset
+        env:
+          APP_ENV: prod
+          APP_SECRET: ${{ secrets.APP_SECRET }}
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          REDIS_URL: ${{ secrets.REDIS_URL }}
+        run: php bin/console subscription:reset-daily
+
+      - name: Run monthly quota reset
+        if: ${{ github.event.schedule == '0 1 1 * *' || github.event_name == 'workflow_dispatch' }}
+        env:
+          APP_ENV: prod
+          APP_SECRET: ${{ secrets.APP_SECRET }}
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          REDIS_URL: ${{ secrets.REDIS_URL }}
+        run: php bin/console subscription:reset-monthly
+
+      - name: Cleanup documents
+        env:
+          APP_ENV: prod
+          APP_SECRET: ${{ secrets.APP_SECRET }}
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          REDIS_URL: ${{ secrets.REDIS_URL }}
+        run: php bin/console document:cleanup --days=90
