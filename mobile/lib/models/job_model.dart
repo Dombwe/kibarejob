@@ -8,6 +8,7 @@ class JobModel {
     required this.requiredSkills,
     required this.deadline,
     this.companyName,
+    this.companyLogoUrl,
     this.salaryMin,
     this.salaryMax,
     this.matchScore,
@@ -21,6 +22,7 @@ class JobModel {
   final List<String> requiredSkills;
   final DateTime? deadline;
   final String? companyName;
+  final String? companyLogoUrl;
   final int? salaryMin;
   final int? salaryMax;
   final int? matchScore;
@@ -44,6 +46,7 @@ class JobModel {
           .toList(),
       deadline: DateTime.tryParse(offer['deadline']?.toString() ?? ''),
       companyName: company?['name']?.toString() ?? offer['companyName']?.toString(),
+      companyLogoUrl: company?['logoUrl']?.toString(),
       salaryMin: int.tryParse(offer['salaryMin']?.toString() ?? ''),
       salaryMax: int.tryParse(offer['salaryMax']?.toString() ?? ''),
       matchScore: int.tryParse(json['matchScore']?.toString() ?? ''),

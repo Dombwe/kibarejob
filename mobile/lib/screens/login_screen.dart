@@ -29,7 +29,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
     ref.listen(authControllerProvider, (_, next) {
       if (next.valueOrNull != null) {
-        context.go('/profile');
+        context.go('/swipe');
       }
     });
 

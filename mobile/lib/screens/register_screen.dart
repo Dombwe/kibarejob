@@ -36,7 +36,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     final authState = ref.watch(authControllerProvider);
     ref.listen(authControllerProvider, (_, next) {
       if (next.valueOrNull != null) {
-        context.go('/profile');
+        context.go('/swipe');
       }
     });
 

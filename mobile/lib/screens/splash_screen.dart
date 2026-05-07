@@ -20,7 +20,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
         return;
       }
       final user = ref.read(authControllerProvider).valueOrNull;
-      context.go(user == null ? '/login' : '/profile');
+      context.go(user == null ? '/login' : '/swipe');
     });
   }
 

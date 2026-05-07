@@ -6,6 +6,9 @@ class SwipeModel {
     this.matchScore,
     this.sentAt,
     this.offerTitle,
+    this.cvUsedUrl,
+    this.motivationLetterText,
+    this.documentsSent = const [],
   });
 
   final String id;
@@ -14,6 +17,9 @@ class SwipeModel {
   final int? matchScore;
   final DateTime? sentAt;
   final String? offerTitle;
+  final String? cvUsedUrl;
+  final String? motivationLetterText;
+  final List<String> documentsSent;
 
   factory SwipeModel.fromJson(Map<String, dynamic> json) {
     final offer = json['offer'] is Map<String, dynamic>
@@ -27,6 +33,11 @@ class SwipeModel {
       matchScore: int.tryParse(json['matchScore']?.toString() ?? ''),
       sentAt: DateTime.tryParse(json['sentAt']?.toString() ?? ''),
       offerTitle: offer?['title']?.toString(),
+      cvUsedUrl: json['cvUsedUrl']?.toString(),
+      motivationLetterText: json['motivationLetterText']?.toString(),
+      documentsSent: (json['documentsSent'] as List<dynamic>? ?? const [])
+          .map((item) => item.toString())
+          .toList(),
     );
   }
 
@@ -37,5 +48,8 @@ class SwipeModel {
         'matchScore': matchScore,
         'sentAt': sentAt?.toIso8601String(),
         'offerTitle': offerTitle,
+        'cvUsedUrl': cvUsedUrl,
+        'motivationLetterText': motivationLetterText,
+        'documentsSent': documentsSent,
       };
 }
