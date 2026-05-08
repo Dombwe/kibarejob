@@ -5,9 +5,13 @@ parameters:
     messenger_transport_dsn_default: 'doctrine://default?auto_setup=0'
     app.subscription_mode_default: 'mock'
     app.payment_method_default: 'none'
+    app.public_url_default: 'http://localhost:8000'
+    app.mail_from_default: 'no-reply@kibarejob.local'
     app.subscription_mode: '%env(default:app.subscription_mode_default:SUBSCRIPTION_MODE)%'
     app.payment_method: '%env(default:app.payment_method_default:PAYMENT_METHOD)%'
     app.redis_cache_ttl: '%env(int:default:app.redis_cache_ttl_default:REDIS_CACHE_TTL)%'
+    app.public_url: '%env(default:app.public_url_default:APP_PUBLIC_URL)%'
+    app.mail_from: '%env(default:app.mail_from_default:MAIL_FROM)%'
 
 services:
     _defaults:
@@ -50,6 +54,11 @@ services:
         arguments:
             $subscriptionMode: '%app.subscription_mode%'
             $paymentMethod: '%app.payment_method%'
+
+    App\Service\AuthEmailService:
+        arguments:
+            $publicUrl: '%app.public_url%'
+            $mailFrom: '%app.mail_from%'
 
     App\Middleware\QuotaMiddleware:
         tags:

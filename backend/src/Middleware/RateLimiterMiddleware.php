@@ -74,7 +74,7 @@ class RateLimiterMiddleware
     private function clientKey(string $ip): string
     {
         $user = $this->security->getUser();
-        $userId = method_exists($user, 'getId') ? (string) $user->getId() : 'guest';
+        $userId = is_object($user) && method_exists($user, 'getId') ? (string) $user->getId() : 'guest';
 
         return sha1($ip . ':' . $userId);
     }

@@ -16,6 +16,8 @@ use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Entity(repositoryClass: UserRepository::class)]
 #[ORM\Table(name: 'users')]
+#[ORM\Index(name: 'idx_users_email_verification_token_hash', columns: ['email_verification_token_hash'])]
+#[ORM\Index(name: 'idx_users_password_reset_token_hash', columns: ['password_reset_token_hash'])]
 #[ORM\UniqueConstraint(name: 'uniq_users_email', columns: ['email'])]
 #[ORM\UniqueConstraint(name: 'uniq_users_phone', columns: ['phone'])]
 class User implements UserInterface, PasswordAuthenticatedUserInterface
@@ -32,12 +34,27 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column(length: 255)]
     private string $email = '';
 
+    #[ORM\Column(options: ['default' => false])]
+    private bool $isEmailVerified = false;
+
+    #[ORM\Column(length: 64, nullable: true)]
+    private ?string $emailVerificationTokenHash = null;
+
+    #[ORM\Column(type: Types::DATETIME_IMMUTABLE, nullable: true)]
+    private ?\DateTimeImmutable $emailVerificationTokenExpiresAt = null;
+
     #[Assert\Length(max: 20)]
     #[ORM\Column(length: 20, nullable: true)]
     private ?string $phone = null;
 
     #[ORM\Column(name: 'password_hash', length: 255)]
     private string $passwordHash = '';
+
+    #[ORM\Column(length: 64, nullable: true)]
+    private ?string $passwordResetTokenHash = null;
+
+    #[ORM\Column(type: Types::DATETIME_IMMUTABLE, nullable: true)]
+    private ?\DateTimeImmutable $passwordResetTokenExpiresAt = null;
 
     #[ORM\Column(type: Types::JSON, options: ['default' => '["candidat"]'])]
     private array $roles = ['candidat'];
@@ -100,14 +117,29 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         $this->swipes = new ArrayCollection();
     }
 
+    public function __toString(): string
+    {
+        return null !== $this->id ? (string) $this->id : $this->email;
+    }
+
     public function getId(): ?UuidInterface { return $this->id; }
     public function getEmail(): string { return $this->email; }
     public function setEmail(string $email): self { $this->email = $email; return $this; }
+    public function isEmailVerified(): bool { return $this->isEmailVerified; }
+    public function setIsEmailVerified(bool $isEmailVerified): self { $this->isEmailVerified = $isEmailVerified; return $this; }
+    public function getEmailVerificationTokenHash(): ?string { return $this->emailVerificationTokenHash; }
+    public function setEmailVerificationTokenHash(?string $emailVerificationTokenHash): self { $this->emailVerificationTokenHash = $emailVerificationTokenHash; return $this; }
+    public function getEmailVerificationTokenExpiresAt(): ?\DateTimeImmutable { return $this->emailVerificationTokenExpiresAt; }
+    public function setEmailVerificationTokenExpiresAt(?\DateTimeImmutable $emailVerificationTokenExpiresAt): self { $this->emailVerificationTokenExpiresAt = $emailVerificationTokenExpiresAt; return $this; }
     public function getPhone(): ?string { return $this->phone; }
     public function setPhone(?string $phone): self { $this->phone = $phone; return $this; }
     public function getPassword(): string { return $this->passwordHash; }
     public function getPasswordHash(): string { return $this->passwordHash; }
     public function setPasswordHash(string $passwordHash): self { $this->passwordHash = $passwordHash; return $this; }
+    public function getPasswordResetTokenHash(): ?string { return $this->passwordResetTokenHash; }
+    public function setPasswordResetTokenHash(?string $passwordResetTokenHash): self { $this->passwordResetTokenHash = $passwordResetTokenHash; return $this; }
+    public function getPasswordResetTokenExpiresAt(): ?\DateTimeImmutable { return $this->passwordResetTokenExpiresAt; }
+    public function setPasswordResetTokenExpiresAt(?\DateTimeImmutable $passwordResetTokenExpiresAt): self { $this->passwordResetTokenExpiresAt = $passwordResetTokenExpiresAt; return $this; }
     public function getUserIdentifier(): string { return $this->email; }
     public function getRoles(): array { return array_values(array_unique([...$this->roles, 'ROLE_USER'])); }
     public function setRoles(array $roles): self { $this->roles = $roles; return $this; }

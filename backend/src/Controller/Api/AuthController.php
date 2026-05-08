@@ -6,6 +6,7 @@ use App\Entity\CandidateProfile;
 use App\Entity\Employer;
 use App\Entity\User;
 use App\Repository\UserRepository;
+use App\Service\AuthEmailService;
 use App\Service\ValidationService;
 use Doctrine\ORM\EntityManagerInterface;
 use Gesdinet\JWTRefreshTokenBundle\Generator\RefreshTokenGeneratorInterface;
@@ -29,6 +30,7 @@ class AuthController extends AbstractController
         private readonly RefreshTokenGeneratorInterface $refreshTokenGenerator,
         private readonly RefreshTokenManagerInterface $refreshTokenManager,
         private readonly ValidationService $validationService,
+        private readonly AuthEmailService $authEmailService,
     ) {
     }
 
@@ -46,6 +48,13 @@ class AuthController extends AbstractController
 
         if (!$user->isActive() || $user->isDeleted()) {
             return $this->json(['message' => 'Compte inactif ou supprime.'], JsonResponse::HTTP_FORBIDDEN);
+        }
+
+        if (!$user->isEmailVerified()) {
+            return $this->json([
+                'message' => 'Adresse email non confirmee. Verifiez votre boite mail avant de vous connecter.',
+                'emailVerificationRequired' => true,
+            ], JsonResponse::HTTP_FORBIDDEN);
         }
 
         $user->setLastLogin(new \DateTimeImmutable());
@@ -101,14 +110,18 @@ class AuthController extends AbstractController
             ->setEmail($email)
             ->setPhone($phone)
             ->setRoles([$accountType === 'employeur' ? 'ROLE_EMPLOYER' : 'ROLE_CANDIDATE'])
-            ->setProfileCompletedPercent(10);
+            ->setProfileCompletedPercent(10)
+            ->setIsEmailVerified(false);
         $user->setPasswordHash($this->passwordHasher->hashPassword($user, $password));
+        $verificationToken = $this->authEmailService->createEmailVerificationToken($user);
 
         if ('employeur' === $accountType) {
             $profile = (new Employer())
                 ->setUser($user)
                 ->setCompanyName((string) ($payload['companyName'] ?? $payload['company_name'] ?? 'Entreprise'))
                 ->setSector((string) ($payload['sector'] ?? 'Non renseigne'))
+                ->setCountryCode((string) ($payload['countryCode'] ?? $payload['country_code'] ?? 'BF'))
+                ->setCountryName((string) ($payload['countryName'] ?? $payload['country_name'] ?? 'Burkina Faso'))
                 ->setCities($this->arrayValue($payload['cities'] ?? ['Ouagadougou']));
             $this->entityManager->persist($profile);
         } else {
@@ -126,12 +139,114 @@ class AuthController extends AbstractController
 
         $this->entityManager->persist($user);
         $this->entityManager->flush();
+        $this->authEmailService->sendEmailVerification($user, $verificationToken);
+
+        $response = [
+            'message' => 'Compte cree. Un email de confirmation vient de vous etre envoye.',
+            'emailVerificationRequired' => true,
+            'user' => $this->serializeUser($user),
+        ];
+
+        return $this->json($this->withLocalDebugToken($response, 'verificationToken', $verificationToken), JsonResponse::HTTP_CREATED);
+    }
+
+    #[Route('/verify-email', name: 'api_auth_verify_email', methods: ['GET', 'POST'])]
+    public function verifyEmail(Request $request): JsonResponse
+    {
+        $payload = $this->jsonPayload($request);
+        $token = (string) ($payload['token'] ?? $request->query->get('token', ''));
+
+        if ('' === $token) {
+            return $this->json(['message' => 'Token de confirmation manquant.'], JsonResponse::HTTP_BAD_REQUEST);
+        }
+
+        $user = $this->userRepository->findOneBy([
+            'emailVerificationTokenHash' => $this->authEmailService->hashToken($token),
+        ]);
+
+        if (!$user instanceof User || !$this->authEmailService->isEmailVerificationTokenValid($user, $token)) {
+            return $this->json(['message' => 'Lien de confirmation invalide ou expire.'], JsonResponse::HTTP_BAD_REQUEST);
+        }
+
+        $this->authEmailService->markEmailVerified($user);
+        $this->entityManager->flush();
 
         return $this->json([
-            'token' => $this->jwtManager->create($user),
-            ...$this->issueRefreshToken($user),
+            'message' => 'Adresse email confirmee. Vous pouvez maintenant vous connecter.',
             'user' => $this->serializeUser($user),
-        ], JsonResponse::HTTP_CREATED);
+        ]);
+    }
+
+    #[Route('/resend-verification', name: 'api_auth_resend_verification', methods: ['POST'])]
+    public function resendVerification(Request $request): JsonResponse
+    {
+        $payload = $this->jsonPayload($request);
+        $email = $this->validationService->normalizeEmail($payload['email'] ?? null);
+        $user = $this->userRepository->findOneBy(['email' => $email]);
+
+        if ($user instanceof User && !$user->isDeleted() && !$user->isEmailVerified()) {
+            $token = $this->authEmailService->createEmailVerificationToken($user);
+            $this->entityManager->flush();
+            $this->authEmailService->sendEmailVerification($user, $token);
+        }
+
+        $response = [
+            'message' => 'Si un compte non confirme existe avec cet email, un nouveau lien a ete envoye.',
+        ];
+
+        return $this->json(isset($token) ? $this->withLocalDebugToken($response, 'verificationToken', $token) : $response);
+    }
+
+    #[Route('/forgot-password', name: 'api_auth_forgot_password', methods: ['POST'])]
+    public function forgotPassword(Request $request): JsonResponse
+    {
+        $payload = $this->jsonPayload($request);
+        $email = $this->validationService->normalizeEmail($payload['email'] ?? null);
+        $user = $this->userRepository->findOneBy(['email' => $email]);
+
+        if ($user instanceof User && $user->isActive() && !$user->isDeleted()) {
+            $token = $this->authEmailService->createPasswordResetToken($user);
+            $this->entityManager->flush();
+            $this->authEmailService->sendPasswordReset($user, $token);
+        }
+
+        $response = [
+            'message' => 'Si un compte existe avec cet email, un lien de reinitialisation a ete envoye.',
+        ];
+
+        return $this->json(isset($token) ? $this->withLocalDebugToken($response, 'passwordResetToken', $token) : $response);
+    }
+
+    #[Route('/reset-password', name: 'api_auth_reset_password', methods: ['POST'])]
+    public function resetPassword(Request $request): JsonResponse
+    {
+        $payload = $this->jsonPayload($request);
+        $token = (string) ($payload['token'] ?? $request->query->get('token', ''));
+        $password = (string) ($payload['password'] ?? '');
+
+        if ('' === $token) {
+            return $this->json(['message' => 'Token de reinitialisation manquant.'], JsonResponse::HTTP_BAD_REQUEST);
+        }
+
+        $passwordErrors = $this->validationService->validatePassword($password);
+        if ([] !== $passwordErrors) {
+            return $this->json(['errors' => ['password' => $passwordErrors]], JsonResponse::HTTP_UNPROCESSABLE_ENTITY);
+        }
+
+        $user = $this->userRepository->findOneBy([
+            'passwordResetTokenHash' => $this->authEmailService->hashToken($token),
+        ]);
+
+        if (!$user instanceof User || !$this->authEmailService->isPasswordResetTokenValid($user, $token)) {
+            return $this->json(['message' => 'Lien de reinitialisation invalide ou expire.'], JsonResponse::HTTP_BAD_REQUEST);
+        }
+
+        $user->setPasswordHash($this->passwordHasher->hashPassword($user, $password));
+        $this->authEmailService->clearPasswordResetToken($user);
+        $this->authEmailService->markEmailVerified($user);
+        $this->entityManager->flush();
+
+        return $this->json(['message' => 'Mot de passe reinitialise. Vous pouvez vous connecter.']);
     }
 
     #[Route('/refresh', name: 'api_auth_refresh', methods: ['POST'])]
@@ -150,7 +265,7 @@ class AuthController extends AbstractController
         }
 
         $user = $this->userRepository->findOneBy(['email' => $refreshToken->getUsername()]);
-        if (!$user instanceof User || !$user->isActive() || $user->isDeleted()) {
+        if (!$user instanceof User || !$user->isActive() || $user->isDeleted() || !$user->isEmailVerified()) {
             return $this->json(['message' => 'Utilisateur introuvable ou inactif.'], JsonResponse::HTTP_UNAUTHORIZED);
         }
 
@@ -192,9 +307,26 @@ class AuthController extends AbstractController
             'email' => $user->getEmail(),
             'phone' => $user->getPhone(),
             'roles' => $user->getRoles(),
+            'isEmailVerified' => $user->isEmailVerified(),
             'profileCompletedPercent' => $user->getProfileCompletedPercent(),
             'subscriptionTier' => $user->getSubscriptionTier()->value,
         ];
+    }
+
+    /**
+     * @param array<string, mixed> $response
+     *
+     * @return array<string, mixed>
+     */
+    private function withLocalDebugToken(array $response, string $key, string $token): array
+    {
+        if ('prod' === $this->getParameter('kernel.environment')) {
+            return $response;
+        }
+
+        $response['debug'][$key] = $token;
+
+        return $response;
     }
 
     /**

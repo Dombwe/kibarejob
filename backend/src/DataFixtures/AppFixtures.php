@@ -43,7 +43,8 @@ class AppFixtures extends Fixture
             ->setEmail('admin@kibarejob.test')
             ->setPhone('+22679999999')
             ->setRoles(['ROLE_ADMIN'])
-            ->setProfileCompletedPercent(100);
+            ->setProfileCompletedPercent(100)
+            ->setIsEmailVerified(true);
         $user->setPasswordHash($this->passwordHasher->hashPassword($user, 'password'));
 
         $manager->persist($user);
@@ -89,7 +90,8 @@ class AppFixtures extends Fixture
                 ->setEmail(sprintf('employeur%d@kibarejob.test', $index + 1))
                 ->setPhone(sprintf('+2267000000%d', $index + 1))
                 ->setRoles(['ROLE_EMPLOYER'])
-                ->setProfileCompletedPercent(100);
+                ->setProfileCompletedPercent(100)
+                ->setIsEmailVerified(true);
             $user->setPasswordHash($this->passwordHasher->hashPassword($user, 'password'));
 
             $employer = (new Employer())
@@ -98,6 +100,8 @@ class AppFixtures extends Fixture
                 ->setNif(sprintf('BF-%04d-KJOB', $index + 1))
                 ->setSector($sector)
                 ->setCompanySize(['1-10', '11-50', '51-200', '200+'][$index % 4])
+                ->setCountryCode('BF')
+                ->setCountryName('Burkina Faso')
                 ->setCities($cities)
                 ->setLogoUrl($logo)
                 ->setDescription($name . ' recrute des profils motives pour accompagner sa croissance.')
@@ -145,7 +149,8 @@ class AppFixtures extends Fixture
                 ->setEmail(sprintf('candidat%d@kibarejob.test', $index + 1))
                 ->setPhone(sprintf('+2267100000%d', $index + 1))
                 ->setRoles(['ROLE_CANDIDATE'])
-                ->setProfileCompletedPercent(80);
+                ->setProfileCompletedPercent(80)
+                ->setIsEmailVerified(true);
             $user->setPasswordHash($this->passwordHasher->hashPassword($user, 'password'));
 
             $profile = (new CandidateProfile())

@@ -17,6 +17,8 @@ class EmployerProfileType extends AbstractType
             ->add('nif', TextType::class, ['required' => false])
             ->add('sector', TextType::class)
             ->add('companySize', TextType::class, ['required' => false])
+            ->add('countryCode', TextType::class)
+            ->add('countryName', TextType::class)
             ->add('cities')
             ->add('description')
             ->add('website', TextType::class, ['required' => false]);

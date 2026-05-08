@@ -11,7 +11,6 @@ use EasyCorp\Bundle\EasyAdminBundle\Controller\AbstractCrudController;
 use EasyCorp\Bundle\EasyAdminBundle\Context\AdminContext;
 use EasyCorp\Bundle\EasyAdminBundle\Field\ArrayField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\BooleanField;
-use EasyCorp\Bundle\EasyAdminBundle\Field\IdField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\IntegerField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\TextareaField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\TextField;
@@ -29,22 +28,25 @@ class EmployerCrudController extends AbstractCrudController
         return $crud
             ->setEntityLabelInSingular('Employeur')
             ->setEntityLabelInPlural('Employeurs')
+            ->setPaginatorUseOutputWalkers(true)
             ->setDefaultSort(['isValidated' => 'ASC']);
     }
 
     public function configureFields(string $pageName): iterable
     {
-        yield IdField::new('user.id', 'User ID')->hideOnForm();
+        yield TextField::new('user.email', 'Compte')->hideOnForm();
         yield TextField::new('companyName', 'Entreprise');
         yield TextField::new('nif')->hideOnIndex();
         yield TextField::new('sector', 'Secteur');
         yield TextField::new('companySize', 'Taille')->hideOnIndex();
+        yield TextField::new('countryCode', 'Code pays')->hideOnIndex();
+        yield TextField::new('countryName', 'Pays');
         yield ArrayField::new('cities', 'Villes');
         yield UrlField::new('logoUrl', 'Logo')->hideOnIndex();
         yield TextareaField::new('description')->hideOnIndex();
         yield UrlField::new('website', 'Site')->hideOnIndex();
-        yield BooleanField::new('isValidated', 'Valide');
-        yield BooleanField::new('isDeleted', 'Masque');
+        yield BooleanField::new('isValidated', 'Validé');
+        yield BooleanField::new('isDeleted', 'Masqué');
         yield IntegerField::new('offersUsedThisMonth', 'Offres/mois')->hideOnForm();
         yield IntegerField::new('applicationsViewedThisMonth', 'Candidatures vues')->hideOnForm();
     }

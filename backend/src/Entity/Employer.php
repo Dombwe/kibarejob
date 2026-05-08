@@ -35,6 +35,16 @@ class Employer
     #[ORM\Column(type: Types::JSON)]
     private array $cities = [];
 
+    #[Assert\NotBlank]
+    #[Assert\Length(max: 2)]
+    #[ORM\Column(length: 2, options: ['default' => 'BF'])]
+    private string $countryCode = 'BF';
+
+    #[Assert\NotBlank]
+    #[Assert\Length(max: 100)]
+    #[ORM\Column(length: 100, options: ['default' => 'Burkina Faso'])]
+    private string $countryName = 'Burkina Faso';
+
     #[ORM\Column(type: Types::TEXT, nullable: true)]
     private ?string $logoUrl = null;
 
@@ -66,6 +76,7 @@ class Employer
     private bool $isDeleted = false;
 
     public function __construct() { $this->lastOfferReset = new \DateTimeImmutable('today'); }
+    public function __toString(): string { return $this->companyName ?: $this->user->getEmail(); }
     public function getUser(): User { return $this->user; }
     public function setUser(User $user): self { $this->user = $user; return $this; }
     public function getCompanyName(): string { return $this->companyName; }
@@ -78,6 +89,10 @@ class Employer
     public function setCompanySize(?string $companySize): self { $this->companySize = $companySize; return $this; }
     public function getCities(): array { return $this->cities; }
     public function setCities(array $cities): self { $this->cities = $cities; return $this; }
+    public function getCountryCode(): string { return $this->countryCode; }
+    public function setCountryCode(string $countryCode): self { $this->countryCode = strtoupper($countryCode); return $this; }
+    public function getCountryName(): string { return $this->countryName; }
+    public function setCountryName(string $countryName): self { $this->countryName = $countryName; return $this; }
     public function getLogoUrl(): ?string { return $this->logoUrl; }
     public function setLogoUrl(?string $logoUrl): self { $this->logoUrl = $logoUrl; return $this; }
     public function getDescription(): ?string { return $this->description; }

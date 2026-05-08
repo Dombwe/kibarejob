@@ -38,6 +38,7 @@ class UserCrudController extends AbstractCrudController
         yield EmailField::new('email');
         yield TelephoneField::new('phone')->hideOnIndex();
         yield ArrayField::new('roles');
+        yield BooleanField::new('isEmailVerified', 'Email confirme');
         yield BooleanField::new('isActive', 'Actif');
         yield BooleanField::new('isDeleted', 'Banni/Supprime');
         yield IntegerField::new('profileCompletedPercent', 'Profil %');

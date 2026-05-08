@@ -57,8 +57,52 @@ Reponse:
 
 ```json
 {
-  "token": "...",
+  "message": "Compte cree. Un email de confirmation vient de vous etre envoye.",
+  "emailVerificationRequired": true,
   "user": {}
+}
+```
+
+Le compte doit etre confirme avant connexion.
+
+### GET|POST `/api/auth/verify-email`
+
+Confirme l'adresse email avec le token recu par email.
+
+```json
+{
+  "token": "..."
+}
+```
+
+### POST `/api/auth/resend-verification`
+
+Renvoie un lien de confirmation si le compte existe et n'est pas encore confirme.
+
+```json
+{
+  "email": "awa@example.com"
+}
+```
+
+### POST `/api/auth/forgot-password`
+
+Demande un lien de reinitialisation de mot de passe.
+
+```json
+{
+  "email": "awa@example.com"
+}
+```
+
+### POST `/api/auth/reset-password`
+
+Reinitialise le mot de passe avec le token recu par email.
+
+```json
+{
+  "token": "...",
+  "password": "NewPassword123"
 }
 ```
 

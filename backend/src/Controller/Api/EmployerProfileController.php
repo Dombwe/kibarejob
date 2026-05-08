@@ -95,7 +95,7 @@ class EmployerProfileController extends AbstractController
         $user = $this->getUser();
 
         if (!$user instanceof User) {
-            throw $this->createAccessDeniedException('Utilisateur non authentifie.');
+            throw $this->createAccessDeniedException('Utilisateur non authentifié.');
         }
 
         return $user;
@@ -131,6 +131,12 @@ class EmployerProfileController extends AbstractController
         if (array_key_exists('cities', $payload) && is_array($payload['cities'])) {
             $profile->setCities($payload['cities']);
         }
+        if (array_key_exists('countryCode', $payload) || array_key_exists('country_code', $payload)) {
+            $profile->setCountryCode((string) ($payload['countryCode'] ?? $payload['country_code']));
+        }
+        if (array_key_exists('countryName', $payload) || array_key_exists('country_name', $payload)) {
+            $profile->setCountryName((string) ($payload['countryName'] ?? $payload['country_name']));
+        }
         if (array_key_exists('description', $payload)) {
             $profile->setDescription($this->nullableString($payload['description']));
         }
@@ -151,6 +157,7 @@ class EmployerProfileController extends AbstractController
         $fields = [
             $profile->getCompanyName(),
             $profile->getSector(),
+            $profile->getCountryCode(),
             $profile->getCities(),
             $profile->getDescription(),
             $profile->getLogoUrl(),
@@ -178,6 +185,8 @@ class EmployerProfileController extends AbstractController
             'nif' => $profile->getNif(),
             'sector' => $profile->getSector(),
             'companySize' => $profile->getCompanySize(),
+            'countryCode' => $profile->getCountryCode(),
+            'countryName' => $profile->getCountryName(),
             'cities' => $profile->getCities(),
             'logoUrl' => $profile->getLogoUrl(),
             'description' => $profile->getDescription(),
