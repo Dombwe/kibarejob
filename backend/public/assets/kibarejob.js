@@ -4,6 +4,9 @@ document.addEventListener("DOMContentLoaded", () => {
   initPasswordToggles();
   initCountryCityPicker();
   initToasts();
+  initRecruiterShell();
+  initRecruiterModals();
+  initSettingsTabs();
 });
 
 function initFadeIn() {
@@ -221,6 +224,115 @@ function initCountryCityPicker() {
     countries.find((country) => country.code === defaultCode) ||
     countries.find((country) => country.code === "BF");
   selectCountry(initialCountry, true);
+}
+
+function initRecruiterShell() {
+  const shell = document.querySelector("[data-recruiter-shell]");
+  if (!shell) {
+    return;
+  }
+
+  const sidebar = shell.querySelector("[data-recruiter-sidebar]");
+  const overlay = shell.querySelector("[data-recruiter-overlay]");
+  const toggle = shell.querySelector("[data-recruiter-sidebar-toggle]");
+  const notificationToggle = shell.querySelector("[data-notification-toggle]");
+  const notificationPanel = shell.querySelector("[data-notification-panel]");
+
+  const setSidebarOpen = (isOpen) => {
+    if (!sidebar || !overlay) {
+      return;
+    }
+    sidebar.classList.toggle("-translate-x-full", !isOpen);
+    overlay.classList.toggle("hidden", !isOpen);
+  };
+
+  if (toggle) {
+    toggle.addEventListener("click", () => {
+      setSidebarOpen(sidebar.classList.contains("-translate-x-full"));
+    });
+  }
+
+  if (overlay) {
+    overlay.addEventListener("click", () => setSidebarOpen(false));
+  }
+
+  if (notificationToggle && notificationPanel) {
+    notificationToggle.addEventListener("click", (event) => {
+      event.stopPropagation();
+      notificationPanel.classList.toggle("hidden");
+    });
+
+    document.addEventListener("click", (event) => {
+      if (!notificationPanel.contains(event.target) && !notificationToggle.contains(event.target)) {
+        notificationPanel.classList.add("hidden");
+      }
+    });
+  }
+}
+
+function initRecruiterModals() {
+  document.querySelectorAll("[data-application-card]").forEach((card) => {
+    const target = card.dataset.modalTarget;
+    const modal = document.querySelector(`[data-modal="${target}"]`);
+    if (!modal) {
+      return;
+    }
+
+    const closeButtons = modal.querySelectorAll("[data-modal-close]");
+    const close = () => {
+      modal.classList.add("hidden");
+      modal.classList.remove("flex");
+      document.body.classList.remove("overflow-hidden");
+    };
+
+    card.addEventListener("click", () => {
+      modal.classList.remove("hidden");
+      modal.classList.add("flex");
+      document.body.classList.add("overflow-hidden");
+    });
+
+    modal.addEventListener("click", (event) => {
+      if (event.target === modal) {
+        close();
+      }
+    });
+
+    closeButtons.forEach((button) => button.addEventListener("click", close));
+  });
+}
+
+function initSettingsTabs() {
+  const wrapper = document.querySelector("[data-settings-tabs]");
+  if (!wrapper) {
+    return;
+  }
+
+  const tabs = wrapper.querySelectorAll("[data-settings-tab]");
+  const panels = wrapper.querySelectorAll("[data-settings-panel]");
+
+  const activate = (id) => {
+    tabs.forEach((tab) => {
+      const isActive = tab.dataset.settingsTab === id;
+      tab.classList.toggle("bg-gradient-to-r", isActive);
+      tab.classList.toggle("from-secondary", isActive);
+      tab.classList.toggle("to-primary", isActive);
+      tab.classList.toggle("text-white", isActive);
+      tab.classList.toggle("text-slate-600", !isActive);
+      tab.classList.toggle("hover:bg-slate-100", !isActive);
+    });
+
+    panels.forEach((panel) => {
+      panel.classList.toggle("hidden", panel.dataset.settingsPanel !== id);
+    });
+  };
+
+  tabs.forEach((tab) => {
+    tab.addEventListener("click", () => activate(tab.dataset.settingsTab));
+  });
+
+  if (window.location.hash === "#subscription") {
+    activate("subscription");
+  }
 }
 
 async function loadCities(country, cityPicker) {

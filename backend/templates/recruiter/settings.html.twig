@@ -1,0 +1,109 @@
+{% extends 'recruiter/_layout.html.twig' %}
+
+{% set active = 'settings' %}
+{% block title %}Parametres recruteur - KIBARE-JOB{% endblock %}
+
+{% block recruiter_content %}
+{% set tabs = [
+    { id: 'company', label: 'Entreprise' },
+    { id: 'notifications', label: 'Notifications' },
+    { id: 'team', label: 'Equipe' },
+    { id: 'subscription', label: 'Abonnement' },
+    { id: 'security', label: 'Securite' }
+] %}
+{% set plans = [
+    { name: 'Gratuit', price: '0', current: false, features: ['5 offres actives', '20 candidatures/mois', 'Matching basique', 'Support email'] },
+    { name: 'Standard', price: '25 000', current: true, features: ['20 offres actives', '100 candidatures/mois', 'AI matching avance', 'Statistiques RH'] },
+    { name: 'Pro', price: '75 000', current: false, features: ['Offres illimitees', 'Candidatures illimitees', 'Boost inclus', 'Support prioritaire'] }
+] %}
+
+<div class="p-4 lg:p-8">
+    <div class="mb-8">
+        <h1 class="text-2xl font-black text-slate-950">Parametres</h1>
+        <p class="mt-1 font-semibold text-slate-500">Gerez votre compte et vos preferences</p>
+    </div>
+
+    <div class="flex flex-col gap-6 lg:flex-row" data-settings-tabs>
+        <aside class="lg:w-64">
+            <div class="sticky top-24 rounded-3xl bg-white p-2 shadow-sm ring-1 ring-slate-100">
+                {% for tab in tabs %}
+                    <button type="button" data-settings-tab="{{ tab.id }}" class="flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-left font-black transition {% if loop.first %}bg-gradient-to-r from-secondary to-primary text-white{% else %}text-slate-600 hover:bg-slate-100{% endif %}">{{ tab.label }}</button>
+                {% endfor %}
+            </div>
+        </aside>
+
+        <div class="min-w-0 flex-1">
+            <section data-settings-panel="company" class="rounded-3xl bg-white p-6 shadow-sm ring-1 ring-slate-100">
+                <h2 class="mb-6 text-xl font-black">Informations de l'entreprise</h2>
+                <div class="mb-6 flex items-center gap-6">
+                    <div class="grid h-20 w-20 place-items-center rounded-3xl bg-gradient-to-br from-slate-100 to-slate-200 text-slate-400">
+                        <svg class="h-10 w-10" viewBox="0 0 24 24" fill="none"><path d="M3 21h18M5 21V7l8-4v18M19 21V11l-6-4M9 9h1M9 13h1M9 17h1M15 13h1M15 17h1" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+                    </div>
+                    <div><button class="rounded-xl bg-secondary px-4 py-2 text-sm font-black text-white">Changer le logo</button><p class="mt-1 text-xs font-semibold text-slate-500">PNG, JPG (max 2MB)</p></div>
+                </div>
+                <div class="grid gap-6 md:grid-cols-2">
+                    {% for field in [
+                        {label: 'Nom de l entreprise', value: 'Tech Burkina SARL'},
+                        {label: 'NIF', value: '123456789'},
+                        {label: 'Secteur d activite', value: 'Technologie'},
+                        {label: 'Taille', value: '11-50 employes'},
+                        {label: 'Email professionnel', value: 'contact@techburkina.bf'},
+                        {label: 'Telephone', value: '+226 70 12 34 56'}
+                    ] %}
+                        <label><span class="mb-2 block text-sm font-black text-slate-700">{{ field.label }}</span><input class="w-full rounded-2xl border border-slate-200 px-4 py-3 font-semibold outline-none focus:ring-4 focus:ring-secondary/20" value="{{ field.value }}"></label>
+                    {% endfor %}
+                </div>
+                <div class="mt-6 flex justify-end border-t border-slate-100 pt-6"><button class="rounded-2xl bg-gradient-to-r from-secondary to-primary px-6 py-3 font-black text-white">Enregistrer</button></div>
+            </section>
+
+            <section data-settings-panel="notifications" class="hidden rounded-3xl bg-white p-6 shadow-sm ring-1 ring-slate-100">
+                <h2 class="mb-6 text-xl font-black">Notifications</h2>
+                <div class="space-y-4">
+                    {% for item in [
+                        {label: 'Nouvelle candidature', desc: 'Recevoir un email quand un candidat postule'},
+                        {label: 'Confirmation d entretien', desc: 'Recevoir un email quand un candidat confirme'},
+                        {label: 'SMS de convocation', desc: 'Envoyer un SMS automatique aux candidats'},
+                        {label: 'Notifications navigateur', desc: 'Recevoir des alertes dans votre espace'}
+                    ] %}
+                        <label class="flex items-center justify-between rounded-2xl bg-slate-50 p-4"><span><span class="block font-black">{{ item.label }}</span><span class="text-sm font-semibold text-slate-500">{{ item.desc }}</span></span><input type="checkbox" checked class="h-5 w-5 rounded text-secondary"></label>
+                    {% endfor %}
+                </div>
+            </section>
+
+            <section data-settings-panel="team" class="hidden rounded-3xl bg-white p-6 shadow-sm ring-1 ring-slate-100">
+                <div class="mb-6 flex items-center justify-between"><h2 class="text-xl font-black">Equipe de recrutement</h2><button class="rounded-xl bg-secondary px-4 py-2 text-sm font-black text-white">Inviter</button></div>
+                <div class="space-y-3">
+                    {% for member in [{name:'Mamadou Sawadogo', email:'mamadou@techburkina.bf', role:'Admin', avatar:'MS'}, {name:'Awa Ouedraogo', email:'awa@techburkina.bf', role:'Recruteur', avatar:'AO'}] %}
+                        <div class="flex items-center gap-4 rounded-2xl bg-slate-50 p-4"><div class="grid h-12 w-12 place-items-center rounded-full bg-gradient-to-br from-secondary to-primary font-black text-white">{{ member.avatar }}</div><div class="flex-1"><p class="font-black">{{ member.name }}</p><p class="text-sm font-semibold text-slate-500">{{ member.email }}</p></div><span class="rounded-full bg-secondary/15 px-3 py-1 text-sm font-black text-primary">{{ member.role }}</span></div>
+                    {% endfor %}
+                </div>
+            </section>
+
+            <section id="subscription" data-settings-panel="subscription" class="hidden">
+                <h2 class="mb-6 text-xl font-black">Votre abonnement</h2>
+                <div class="grid gap-6 md:grid-cols-3">
+                    {% for plan in plans %}
+                        <article class="relative rounded-3xl bg-white p-6 shadow-sm ring-1 {% if plan.current %}ring-2 ring-secondary{% else %}ring-slate-100{% endif %}">
+                            {% if plan.current %}<span class="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-secondary px-4 py-1 text-sm font-black text-white">Actuel</span>{% endif %}
+                            <h3 class="text-lg font-black">{{ plan.name }}</h3>
+                            <div class="my-4"><span class="text-3xl font-black">{{ plan.price }}</span><span class="font-semibold text-slate-500"> FCFA/mois</span></div>
+                            <ul class="mb-6 space-y-2">{% for feature in plan.features %}<li class="text-sm font-semibold text-slate-600">✓ {{ feature }}</li>{% endfor %}</ul>
+                            <button class="w-full rounded-2xl py-3 font-black {% if plan.current %}bg-gradient-to-r from-secondary to-primary text-white{% else %}bg-slate-100 text-slate-700{% endif %}">{{ plan.current ? 'Plan actuel' : 'Choisir ce plan' }}</button>
+                        </article>
+                    {% endfor %}
+                </div>
+            </section>
+
+            <section data-settings-panel="security" class="hidden rounded-3xl bg-white p-6 shadow-sm ring-1 ring-slate-100">
+                <h2 class="mb-6 text-xl font-black">Securite</h2>
+                <div class="space-y-4">
+                    {% for label in ['Mot de passe actuel', 'Nouveau mot de passe', 'Confirmer le mot de passe'] %}
+                        <label><span class="mb-2 block text-sm font-black text-slate-700">{{ label }}</span><input type="password" class="w-full rounded-2xl border border-slate-200 px-4 py-3 font-semibold outline-none focus:ring-4 focus:ring-secondary/20" placeholder="********"></label>
+                    {% endfor %}
+                    <button class="rounded-2xl bg-secondary px-6 py-3 font-black text-white">Mettre a jour</button>
+                </div>
+            </section>
+        </div>
+    </div>
+</div>
+{% endblock %}

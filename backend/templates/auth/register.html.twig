@@ -3,7 +3,7 @@
 {% block title %}Creation de compte - KIBARE-JOB{% endblock %}
 
 {% block body %}
-<main class="grid min-h-screen place-items-center bg-[linear-gradient(135deg,#0F172A_0%,#172554_48%,#0F172A_100%)] px-5 py-12">
+<main class="grid min-h-screen place-items-center bg-gradient-to-br from-slate-50 via-white to-stone-50 px-5 py-12">
     <section class="fade-in w-full max-w-2xl rounded-2xl bg-white p-8 shadow-soft">
         <a href="{{ path('home') }}" class="mb-8 inline-flex items-center gap-3 font-black text-primary">
             <span class="grid h-11 w-11 place-items-center rounded-2xl bg-primary text-accent">KJ</span>
@@ -15,51 +15,51 @@
         <form class="mt-8 grid gap-5 md:grid-cols-2" method="post">
             <label class="block md:col-span-2">
                 <span class="text-sm font-black text-slate-700">Email</span>
-                <input class="mt-2 w-full rounded-2xl border border-slate-200 px-4 py-3 outline-none transition focus:border-secondary focus:ring-4 focus:ring-blue-100" type="email" name="email" value="{{ form.email }}" autocomplete="email" required>
+                <input class="mt-2 w-full rounded-2xl border border-slate-200 px-4 py-3 outline-none transition focus:border-secondary focus:ring-4 focus:ring-secondary/20" type="email" name="email" value="{{ form.email }}" autocomplete="email" required>
                 {% for error in errors.email ?? [] %}
-                    <span class="mt-2 block text-sm font-semibold text-red-600">{{ error }}</span>
+                    <span class="mt-2 block text-sm font-semibold text-slate-700">{{ error }}</span>
                 {% endfor %}
             </label>
 
             <label class="block">
                 <span class="text-sm font-black text-slate-700">Mot de passe</span>
                 <span class="relative mt-2 block">
-                    <input class="w-full rounded-2xl border border-slate-200 px-4 py-3 pr-14 outline-none transition focus:border-secondary focus:ring-4 focus:ring-blue-100" type="password" name="password" autocomplete="new-password" required data-password-input>
+                    <input class="w-full rounded-2xl border border-slate-200 px-4 py-3 pr-14 outline-none transition focus:border-secondary focus:ring-4 focus:ring-secondary/20" type="password" name="password" autocomplete="new-password" required data-password-input>
                     <button class="absolute inset-y-0 right-3 my-auto grid h-9 w-9 place-items-center rounded-full text-slate-500 transition hover:bg-slate-100 hover:text-primary" type="button" aria-label="Afficher le mot de passe" data-password-toggle>
                         <span data-password-icon>👁</span>
                     </button>
                 </span>
                 {% for error in errors.password ?? [] %}
-                    <span class="mt-2 block text-sm font-semibold text-red-600">{{ error }}</span>
+                    <span class="mt-2 block text-sm font-semibold text-slate-700">{{ error }}</span>
                 {% endfor %}
             </label>
 
             <label class="block">
                 <span class="text-sm font-black text-slate-700">Confirmer le mot de passe</span>
                 <span class="relative mt-2 block">
-                    <input class="w-full rounded-2xl border border-slate-200 px-4 py-3 pr-14 outline-none transition focus:border-secondary focus:ring-4 focus:ring-blue-100" type="password" name="passwordConfirm" autocomplete="new-password" required data-password-input>
+                    <input class="w-full rounded-2xl border border-slate-200 px-4 py-3 pr-14 outline-none transition focus:border-secondary focus:ring-4 focus:ring-secondary/20" type="password" name="passwordConfirm" autocomplete="new-password" required data-password-input>
                     <button class="absolute inset-y-0 right-3 my-auto grid h-9 w-9 place-items-center rounded-full text-slate-500 transition hover:bg-slate-100 hover:text-primary" type="button" aria-label="Afficher le mot de passe" data-password-toggle>
                         <span data-password-icon>👁</span>
                     </button>
                 </span>
                 {% for error in errors.passwordConfirm ?? [] %}
-                    <span class="mt-2 block text-sm font-semibold text-red-600">{{ error }}</span>
+                    <span class="mt-2 block text-sm font-semibold text-slate-700">{{ error }}</span>
                 {% endfor %}
             </label>
 
             <label class="block">
                 <span class="text-sm font-black text-slate-700">Entreprise</span>
-                <input class="mt-2 w-full rounded-2xl border border-slate-200 px-4 py-3 outline-none transition focus:border-secondary focus:ring-4 focus:ring-blue-100" type="text" name="companyName" value="{{ form.companyName }}" autocomplete="organization" required>
+                <input class="mt-2 w-full rounded-2xl border border-slate-200 px-4 py-3 outline-none transition focus:border-secondary focus:ring-4 focus:ring-secondary/20" type="text" name="companyName" value="{{ form.companyName }}" autocomplete="organization" required>
                 {% for error in errors.companyName ?? [] %}
-                    <span class="mt-2 block text-sm font-semibold text-red-600">{{ error }}</span>
+                    <span class="mt-2 block text-sm font-semibold text-slate-700">{{ error }}</span>
                 {% endfor %}
             </label>
 
             <label class="block">
                 <span class="text-sm font-black text-slate-700">Secteur d'activite</span>
-                <input class="mt-2 w-full rounded-2xl border border-slate-200 px-4 py-3 outline-none transition focus:border-secondary focus:ring-4 focus:ring-blue-100" type="text" name="sector" value="{{ form.sector }}" required>
+                <input class="mt-2 w-full rounded-2xl border border-slate-200 px-4 py-3 outline-none transition focus:border-secondary focus:ring-4 focus:ring-secondary/20" type="text" name="sector" value="{{ form.sector }}" required>
                 {% for error in errors.sector ?? [] %}
-                    <span class="mt-2 block text-sm font-semibold text-red-600">{{ error }}</span>
+                    <span class="mt-2 block text-sm font-semibold text-slate-700">{{ error }}</span>
                 {% endfor %}
             </label>
 
@@ -67,7 +67,7 @@
                 <span class="text-sm font-black text-slate-700">Pays</span>
                 <input type="hidden" name="countryCode" value="{{ form.countryCode|default('BF') }}" data-country-code>
                 <input type="hidden" name="countryName" value="{{ form.countryName|default('Burkina Faso') }}" data-country-name>
-                <button class="mt-2 flex w-full items-center justify-between rounded-2xl border border-slate-200 bg-white px-4 py-3 text-left font-semibold outline-none transition focus:border-secondary focus:ring-4 focus:ring-blue-100" type="button" data-country-trigger aria-expanded="false">
+                <button class="mt-2 flex w-full items-center justify-between rounded-2xl border border-slate-200 bg-white px-4 py-3 text-left font-semibold outline-none transition focus:border-secondary focus:ring-4 focus:ring-secondary/20" type="button" data-country-trigger aria-expanded="false">
                     <span class="flex items-center gap-3" data-country-label>
                         <img class="h-4 w-6 rounded-sm object-cover" src="https://flagcdn.com/24x18/bf.png" alt="">
                         <span>Burkina Faso</span>
@@ -77,46 +77,46 @@
                 <div class="relative hidden" data-country-panel>
                     <div class="absolute z-20 mt-2 w-full overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-soft">
                         <div class="border-b border-slate-100 p-3">
-                            <input class="w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm outline-none transition focus:border-secondary focus:ring-4 focus:ring-blue-100" type="search" placeholder="Rechercher un pays" data-country-search>
+                            <input class="w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm outline-none transition focus:border-secondary focus:ring-4 focus:ring-secondary/20" type="search" placeholder="Rechercher un pays" data-country-search>
                         </div>
                         <div class="max-h-56 overflow-y-auto p-2" data-country-list></div>
                     </div>
                 </div>
                 {% for error in errors.country ?? [] %}
-                    <span class="mt-2 block text-sm font-semibold text-red-600">{{ error }}</span>
+                    <span class="mt-2 block text-sm font-semibold text-slate-700">{{ error }}</span>
                 {% endfor %}
             </div>
 
             <label class="block">
                 <span class="text-sm font-black text-slate-700">Telephone</span>
-                <input class="mt-2 w-full rounded-2xl border border-slate-200 px-4 py-3 outline-none transition focus:border-secondary focus:ring-4 focus:ring-blue-100" type="tel" name="phone" value="{{ form.phone }}" placeholder="+226XXXXXXXX" autocomplete="tel">
+                <input class="mt-2 w-full rounded-2xl border border-slate-200 px-4 py-3 outline-none transition focus:border-secondary focus:ring-4 focus:ring-secondary/20" type="tel" name="phone" value="{{ form.phone }}" placeholder="+226XXXXXXXX" autocomplete="tel">
                 {% for error in errors.phone ?? [] %}
-                    <span class="mt-2 block text-sm font-semibold text-red-600">{{ error }}</span>
+                    <span class="mt-2 block text-sm font-semibold text-slate-700">{{ error }}</span>
                 {% endfor %}
             </label>
 
             <div class="block" data-city-picker data-selected-city="{{ form.city }}">
                 <span class="text-sm font-black text-slate-700">Ville</span>
                 <input type="hidden" name="city" value="{{ form.city }}" data-city-value>
-                <button class="mt-2 flex w-full items-center justify-between rounded-2xl border border-slate-200 bg-white px-4 py-3 text-left font-semibold outline-none transition focus:border-secondary focus:ring-4 focus:ring-blue-100" type="button" data-city-trigger aria-expanded="false">
+                <button class="mt-2 flex w-full items-center justify-between rounded-2xl border border-slate-200 bg-white px-4 py-3 text-left font-semibold outline-none transition focus:border-secondary focus:ring-4 focus:ring-secondary/20" type="button" data-city-trigger aria-expanded="false">
                     <span class="truncate" data-city-label>{{ form.city }}</span>
                     <span class="text-slate-400">⌄</span>
                 </button>
                 <div class="relative hidden" data-city-panel>
                     <div class="absolute z-10 mt-2 w-full overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-soft">
                         <div class="border-b border-slate-100 p-3">
-                            <input class="w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm outline-none transition focus:border-secondary focus:ring-4 focus:ring-blue-100" type="search" placeholder="Rechercher une ville" data-city-search>
+                            <input class="w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm outline-none transition focus:border-secondary focus:ring-4 focus:ring-secondary/20" type="search" placeholder="Rechercher une ville" data-city-search>
                         </div>
                         <div class="max-h-56 overflow-y-auto p-2" data-city-list></div>
                     </div>
                 </div>
                 {% for error in errors.city ?? [] %}
-                    <span class="mt-2 block text-sm font-semibold text-red-600">{{ error }}</span>
+                    <span class="mt-2 block text-sm font-semibold text-slate-700">{{ error }}</span>
                 {% endfor %}
             </div>
 
             <div class="md:col-span-2">
-                <button class="flex w-full items-center justify-center rounded-2xl bg-accent px-6 py-4 font-black text-primary transition duration-300 hover:scale-[1.02]" type="submit">
+                <button class="flex w-full items-center justify-center rounded-2xl bg-primary px-6 py-4 font-black text-white transition duration-300 hover:scale-[1.02] hover:bg-secondary" type="submit">
                     Creer mon compte
                 </button>
                 <p class="mt-6 text-center text-sm font-semibold text-slate-600">

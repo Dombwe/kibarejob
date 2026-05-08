@@ -1,0 +1,118 @@
+{% extends 'base.html.twig' %}
+
+{% set active = active|default('dashboard') %}
+
+{% block body %}
+<div class="min-h-screen bg-slate-50 text-slate-900" data-recruiter-shell>
+    <header class="sticky top-0 z-30 border-b border-slate-200 bg-white/95 backdrop-blur">
+        <div class="flex items-center justify-between px-4 py-3 lg:px-8">
+            <div class="flex items-center gap-4">
+                <button type="button" class="rounded-xl p-2 text-slate-600 transition hover:bg-slate-100 lg:hidden" data-recruiter-sidebar-toggle aria-label="Ouvrir le menu">
+                    <svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+                </button>
+                <a href="{{ path('home') }}" class="flex items-center gap-3">
+                    <span class="grid h-10 w-10 place-items-center rounded-2xl bg-gradient-to-br from-secondary to-primary text-white shadow-lg shadow-secondary/20">
+                        <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M10 6h4a2 2 0 0 1 2 2v1h3a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3V8a2 2 0 0 1 2-2Z" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+                    </span>
+                    <span class="hidden text-xl font-black text-slate-800 sm:block">KIBARE-JOB</span>
+                </a>
+            </div>
+
+            <div class="mx-8 hidden max-w-xl flex-1 md:flex">
+                <label class="relative w-full">
+                    <svg class="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="m21 21-4.3-4.3M10.5 18a7.5 7.5 0 1 1 0-15 7.5 7.5 0 0 1 0 15Z" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+                    <input type="search" class="w-full rounded-2xl border-0 bg-slate-100 py-2.5 pl-11 pr-4 text-sm font-semibold text-slate-700 outline-none transition focus:bg-white focus:ring-4 focus:ring-secondary/20" placeholder="Rechercher des candidats, des offres...">
+                </label>
+            </div>
+
+            <div class="flex items-center gap-3">
+                <a href="{{ path('recruiter_offer_new') }}" class="hidden items-center gap-2 rounded-2xl bg-gradient-to-r from-secondary to-primary px-4 py-2.5 text-sm font-black text-white shadow-lg shadow-secondary/20 transition hover:-translate-y-0.5 sm:inline-flex">
+                    <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+                    Publier une offre
+                </a>
+
+                <div class="relative">
+                    <button type="button" class="relative rounded-2xl p-2.5 text-slate-600 transition hover:bg-slate-100" data-notification-toggle aria-label="Notifications">
+                        <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M18 8a6 6 0 1 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M13.7 21a2 2 0 0 1-3.4 0" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+                        <span class="absolute right-2 top-2 h-2.5 w-2.5 rounded-full bg-slate-500 ring-2 ring-white"></span>
+                    </button>
+                    <div class="hidden absolute right-0 z-50 mt-3 w-80 overflow-hidden rounded-3xl border border-slate-100 bg-white shadow-2xl shadow-slate-200" data-notification-panel>
+                        <div class="border-b border-slate-100 px-5 py-4">
+                            <h3 class="font-black text-slate-950">Notifications</h3>
+                        </div>
+                        <div class="max-h-80 overflow-y-auto">
+                            {% for notif in [
+                                {title: 'Nouvelle candidature', message: 'Mamadou Sawadogo a postule pour Developpeur Web', time: '2h'},
+                                {title: 'Entretien confirme', message: 'Awa Ouedraogo confirme l entretien du 15 mai', time: '4h'},
+                                {title: 'Offre expirant bientot', message: 'L offre Comptable expire dans 3 jours', time: '1j'}
+                            ] %}
+                                <button type="button" class="block w-full border-b border-slate-50 px-5 py-3 text-left transition hover:bg-slate-50">
+                                    <span class="flex items-start justify-between gap-3">
+                                        <span class="text-sm font-black text-slate-800">{{ notif.title }}</span>
+                                        <span class="text-xs font-bold text-slate-400">{{ notif.time }}</span>
+                                    </span>
+                                    <span class="mt-1 block text-sm leading-5 text-slate-500">{{ notif.message }}</span>
+                                </button>
+                            {% endfor %}
+                        </div>
+                        <a href="{{ path('recruiter_applications') }}" class="block bg-slate-50 px-5 py-3 text-sm font-black text-secondary">Voir tout</a>
+                    </div>
+                </div>
+
+                <a href="{{ path('recruiter_settings') }}" class="flex items-center gap-2 rounded-2xl p-2 transition hover:bg-slate-100">
+                    <span class="grid h-8 w-8 place-items-center rounded-full bg-gradient-to-br from-secondary to-primary text-sm font-black text-white">TB</span>
+                    <span class="hidden text-sm font-black text-slate-700 lg:block">Tech Burkina</span>
+                    <svg class="hidden h-4 w-4 text-slate-400 lg:block" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="m6 9 6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <div class="flex">
+        <aside class="fixed inset-y-0 left-0 z-40 w-64 -translate-x-full border-r border-slate-200 bg-white pt-[73px] transition-transform lg:static lg:min-h-[calc(100vh-73px)] lg:translate-x-0 lg:pt-0" data-recruiter-sidebar>
+            <nav class="p-4 space-y-1">
+                {% set nav = [
+                    { key: 'dashboard', label: 'Tableau de bord', route: 'recruiter_dashboard', icon: 'dashboard' },
+                    { key: 'offers', label: 'Mes offres', route: 'recruiter_offers', icon: 'file' },
+                    { key: 'applications', label: 'Candidatures', route: 'recruiter_applications', icon: 'users' },
+                    { key: 'stats', label: 'Statistiques', route: 'recruiter_stats', icon: 'chart' },
+                    { key: 'settings', label: 'Parametres', route: 'recruiter_settings', icon: 'settings' }
+                ] %}
+                {% for item in nav %}
+                    <a href="{{ path(item.route) }}" class="flex items-center gap-3 rounded-2xl px-4 py-3 font-bold transition {% if active == item.key %}bg-gradient-to-r from-secondary to-primary text-white shadow-lg shadow-secondary/20{% else %}text-slate-600 hover:bg-slate-100{% endif %}">
+                        {% if item.icon == 'dashboard' %}
+                            <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M3 13h8V3H3v10ZM13 21h8V11h-8v10ZM13 3v6h8V3h-8ZM3 21h8v-6H3v6Z" stroke="currentColor" stroke-width="2"/></svg>
+                        {% elseif item.icon == 'file' %}
+                            <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6Z" stroke="currentColor" stroke-width="2"/><path d="M14 2v6h6M8 13h8M8 17h6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+                        {% elseif item.icon == 'users' %}
+                            <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8ZM22 21v-2a4 4 0 0 0-3-3.87" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+                        {% elseif item.icon == 'chart' %}
+                            <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M3 3v18h18M7 16V9M12 16V5M17 16v-3" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+                        {% else %}
+                            <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7Z" stroke="currentColor" stroke-width="2"/><path d="M19.4 15a1.8 1.8 0 0 0 .36 1.98l.07.07a2.1 2.1 0 0 1-2.97 2.97l-.07-.07a1.8 1.8 0 0 0-1.98-.36 1.8 1.8 0 0 0-1.1 1.65V21a2.1 2.1 0 0 1-4.2 0v-.1a1.8 1.8 0 0 0-1.1-1.65 1.8 1.8 0 0 0-1.98.36l-.07.07a2.1 2.1 0 1 1-2.97-2.97l.07-.07a1.8 1.8 0 0 0 .36-1.98 1.8 1.8 0 0 0-1.65-1.1H3a2.1 2.1 0 0 1 0-4.2h.1a1.8 1.8 0 0 0 1.65-1.1 1.8 1.8 0 0 0-.36-1.98l-.07-.07A2.1 2.1 0 1 1 7.3 3.24l.07.07a1.8 1.8 0 0 0 1.98.36H9.4A1.8 1.8 0 0 0 10.5 2V2a2.1 2.1 0 1 1 4.2 0v.1a1.8 1.8 0 0 0 1.1 1.65 1.8 1.8 0 0 0 1.98-.36l.07-.07a2.1 2.1 0 1 1 2.97 2.97l-.07.07a1.8 1.8 0 0 0-.36 1.98v.05A1.8 1.8 0 0 0 22 9.5h.1a2.1 2.1 0 0 1 0 4.2H22a1.8 1.8 0 0 0-1.65 1.1Z" stroke="currentColor" stroke-width="2"/></svg>
+                        {% endif %}
+                        <span>{{ item.label }}</span>
+                    </a>
+                {% endfor %}
+            </nav>
+
+            <div class="absolute bottom-0 left-0 right-0 border-t border-slate-100 p-4">
+                <div class="rounded-2xl bg-gradient-to-br from-secondary/10 to-accent/20 p-4">
+                    <div class="mb-2 flex items-center gap-2">
+                        <span class="h-2 w-2 rounded-full bg-accent"></span>
+                        <span class="text-sm font-black text-slate-800">Plan Standard</span>
+                    </div>
+                    <p class="mb-3 text-xs font-semibold text-slate-500">Plus que 45 jours restants</p>
+                    <a href="{{ path('recruiter_settings') }}#subscription" class="block rounded-xl bg-gradient-to-r from-secondary to-primary px-3 py-2 text-center text-sm font-black text-white">Passer a Pro</a>
+                </div>
+            </div>
+        </aside>
+
+        <button type="button" class="fixed inset-0 z-30 hidden bg-slate-950/50 lg:hidden" data-recruiter-overlay aria-label="Fermer le menu"></button>
+
+        <main class="min-h-[calc(100vh-73px)] flex-1">
+            {% block recruiter_content %}{% endblock %}
+        </main>
+    </div>
+</div>
+{% endblock %}

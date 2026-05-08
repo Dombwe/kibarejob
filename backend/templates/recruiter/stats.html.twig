@@ -1,0 +1,121 @@
+{% extends 'recruiter/_layout.html.twig' %}
+
+{% set active = 'stats' %}
+{% block title %}Statistiques RH - KIBARE-JOB{% endblock %}
+
+{% block recruiter_content %}
+{% set stats = [
+    { label: 'Candidatures totales', value: '112', change: '+12%', color: 'primary' },
+    { label: 'Taux de conversion', value: '4.5%', change: '+0.8%', color: 'accent' },
+    { label: 'Delai moyen', value: '18 j', change: '-3 j', color: 'secondary' },
+    { label: 'Candidats actifs', value: '89', change: '+15%', color: 'neutral' }
+] %}
+{% set weekly = [
+    { day: 'Lun', apps: 12, views: 145 }, { day: 'Mar', apps: 19, views: 198 },
+    { day: 'Mer', apps: 15, views: 167 }, { day: 'Jeu', apps: 28, views: 245 },
+    { day: 'Ven', apps: 24, views: 189 }, { day: 'Sam', apps: 8, views: 56 },
+    { day: 'Dim', apps: 3, views: 23 }
+] %}
+{% set funnel = [
+    { name: 'Candidatures', value: 112, width: 100, color: 'bg-secondary' },
+    { name: 'Consultees', value: 78, width: 70, color: 'bg-accent' },
+    { name: 'Entretiens', value: 18, width: 16, color: 'bg-secondary' },
+    { name: 'Recrutements', value: 5, width: 5, color: 'bg-accent' }
+] %}
+{% set skills = [
+    { name: 'JavaScript / React', count: 45 }, { name: 'Marketing Digital', count: 38 },
+    { name: 'Comptabilite', count: 32 }, { name: 'Gestion de Projet', count: 28 },
+    { name: 'Python', count: 25 }, { name: 'Node.js', count: 22 }
+] %}
+{% set locations = [
+    { city: 'Ouagadougou', count: 78, percent: 70, color: 'bg-secondary' },
+    { city: 'Bobo-Dioulasso', count: 22, percent: 20, color: 'bg-secondary' },
+    { city: 'Koudougou', count: 6, percent: 5, color: 'bg-accent' },
+    { city: 'Autres', count: 6, percent: 5, color: 'bg-accent' }
+] %}
+
+<div class="p-4 lg:p-8">
+    <div class="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+            <h1 class="text-2xl font-black text-slate-950">Statistiques RH</h1>
+            <p class="mt-1 font-semibold text-slate-500">Analyse des performances de recrutement</p>
+        </div>
+        <select class="rounded-2xl border border-slate-200 bg-white px-4 py-2 font-semibold text-slate-600 outline-none"><option>30 derniers jours</option><option>90 derniers jours</option><option>Cette annee</option></select>
+    </div>
+
+    <div class="mb-8 grid grid-cols-2 gap-4 lg:grid-cols-4">
+        {% for stat in stats %}
+            <article class="fade-in rounded-3xl bg-white p-5 shadow-sm ring-1 ring-slate-100">
+                <div class="mb-3 flex items-center justify-between">
+                    <div class="grid h-10 w-10 place-items-center rounded-2xl {% if stat.color == 'primary' %}bg-primary/10 text-primary{% elseif stat.color == 'accent' %}bg-accent/35 text-primary{% elseif stat.color == 'secondary' %}bg-secondary/15 text-secondary{% else %}bg-slate-100 text-slate-600{% endif %}">
+                        <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none"><path d="M3 3v18h18M7 16V9M12 16V5M17 16v-3" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+                    </div>
+                    <span class="text-sm font-black text-secondary">↗ {{ stat.change }}</span>
+                </div>
+                <div class="text-3xl font-black text-slate-950">{{ stat.value }}</div>
+                <div class="text-sm font-semibold text-slate-500">{{ stat.label }}</div>
+            </article>
+        {% endfor %}
+    </div>
+
+    <div class="mb-8 grid gap-6 lg:grid-cols-2">
+        <article class="fade-in rounded-3xl bg-white p-6 shadow-sm ring-1 ring-slate-100">
+            <h2 class="mb-6 text-lg font-black">Candidatures et vues</h2>
+            <div class="relative h-64 rounded-3xl bg-gradient-to-b from-secondary/10 to-white p-5">
+                <div class="flex h-full items-end justify-between gap-3">
+                    {% for day in weekly %}
+                        <div class="flex h-full flex-1 flex-col justify-end gap-2 text-center">
+                            <span class="mx-auto w-5 rounded-t-xl bg-secondary/40" style="height: {{ (day.views / 245 * 100)|round }}%; min-height: 12px;"></span>
+                            <span class="mx-auto w-5 rounded-t-xl bg-secondary" style="height: {{ (day.apps / 28 * 100)|round }}%; min-height: 12px;"></span>
+                            <span class="text-xs font-bold text-slate-400">{{ day.day }}</span>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </article>
+
+        <article class="fade-in rounded-3xl bg-white p-6 shadow-sm ring-1 ring-slate-100">
+            <h2 class="mb-6 text-lg font-black">Entonnoir de conversion</h2>
+            <div class="space-y-4">
+                {% for item in funnel %}
+                    <div>
+                        <div class="mb-1 flex justify-between text-sm font-black"><span>{{ item.name }}</span><span class="text-slate-500">{{ item.value }}</span></div>
+                        <div class="h-7 overflow-hidden rounded-xl bg-slate-100"><div class="flex h-full items-center justify-end rounded-xl pr-2 text-xs font-black text-white {{ item.color }}" style="width: {{ item.width }}%;">{{ item.width }}%</div></div>
+                    </div>
+                {% endfor %}
+            </div>
+            <p class="mt-5 rounded-2xl bg-accent/20 p-4 text-sm font-semibold text-primary">Taux de recrutement : 4.5% des candidatures menent a un recrutement.</p>
+        </article>
+    </div>
+
+    <div class="grid gap-6 lg:grid-cols-2">
+        <article class="fade-in rounded-3xl bg-white p-6 shadow-sm ring-1 ring-slate-100">
+            <h2 class="mb-6 text-lg font-black">Top competences</h2>
+            <div class="space-y-4">
+                {% for skill in skills %}
+                    <div class="flex items-center gap-4">
+                        <div class="grid h-8 w-8 place-items-center rounded-full bg-secondary text-sm font-black text-white">{{ loop.index }}</div>
+                        <div class="flex-1">
+                            <div class="mb-1 flex justify-between text-sm font-black"><span>{{ skill.name }}</span><span class="text-slate-500">{{ skill.count }}</span></div>
+                            <div class="h-2 overflow-hidden rounded-full bg-slate-100"><div class="h-full rounded-full bg-gradient-to-r from-secondary to-primary" style="width: {{ (skill.count / 45 * 100)|round }}%;"></div></div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        </article>
+
+        <article class="fade-in rounded-3xl bg-white p-6 shadow-sm ring-1 ring-slate-100">
+            <h2 class="mb-6 text-lg font-black">Provenance geographique</h2>
+            <div class="mx-auto mb-6 grid h-44 w-44 place-items-center rounded-full bg-[conic-gradient(#5F7F99_0_70%,#8496A6_70%_90%,#B8C7B4_90%_95%,#D6D0C5_95%_100%)]"><div class="h-24 w-24 rounded-full bg-white shadow-inner"></div></div>
+            <div class="space-y-2">
+                {% for item in locations %}
+                    <div class="flex items-center justify-between border-b border-slate-50 py-2">
+                        <span class="flex items-center gap-2 text-sm font-black"><span class="h-3 w-3 rounded-full {{ item.color }}"></span>{{ item.city }}</span>
+                        <span class="text-sm font-black">{{ item.count }} <span class="text-xs text-slate-400">({{ item.percent }}%)</span></span>
+                    </div>
+                {% endfor %}
+            </div>
+        </article>
+    </div>
+</div>
+{% endblock %}

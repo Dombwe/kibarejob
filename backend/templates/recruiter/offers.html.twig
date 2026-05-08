@@ -1,0 +1,81 @@
+{% extends 'recruiter/_layout.html.twig' %}
+
+{% set active = 'offers' %}
+{% block title %}Mes offres - KIBARE-JOB{% endblock %}
+
+{% block recruiter_content %}
+{% set offers = [
+    { title: 'Developpeur Web Full Stack', location: 'Ouagadougou', salary: '350000 - 500000', contract: 'CDI', applications: 24, views: 156, status: 'active', postedAt: 'Il y a 5 jours', deadline: '30 Mai 2026', boosted: true },
+    { title: 'Responsable Marketing Digital', location: 'Ouagadougou', salary: '400000 - 600000', contract: 'CDD', applications: 18, views: 98, status: 'active', postedAt: 'Il y a 1 semaine', deadline: '15 Juin 2026', boosted: false },
+    { title: 'Comptable Senior', location: 'Bobo-Dioulasso', salary: '250000 - 350000', contract: 'CDI', applications: 12, views: 67, status: 'active', postedAt: 'Il y a 2 semaines', deadline: '1 Juin 2026', boosted: false },
+    { title: 'Assistant RH', location: 'Ouagadougou', salary: '150000 - 200000', contract: 'Stage', applications: 0, views: 23, status: 'draft', postedAt: 'Non publiee', deadline: null, boosted: false }
+] %}
+
+<div class="p-4 lg:p-8">
+    <div class="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div class="fade-in">
+            <h1 class="text-2xl font-black text-slate-950">Mes offres</h1>
+            <p class="mt-1 font-semibold text-slate-500">3 offres actives</p>
+        </div>
+        <a href="{{ path('recruiter_offer_new') }}" class="fade-in inline-flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-secondary to-primary px-6 py-3 font-black text-white shadow-lg shadow-secondary/20">
+            <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+            Nouvelle offre
+        </a>
+    </div>
+
+    <div class="mb-6 flex flex-col gap-4 sm:flex-row">
+        <label class="relative flex-1">
+            <svg class="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" viewBox="0 0 24 24" fill="none"><path d="m21 21-4.3-4.3M10.5 18a7.5 7.5 0 1 1 0-15 7.5 7.5 0 0 1 0 15Z" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+            <input class="w-full rounded-2xl border border-slate-200 bg-white py-3 pl-11 pr-4 font-semibold outline-none focus:ring-4 focus:ring-secondary/20" placeholder="Rechercher une offre...">
+        </label>
+        <div class="flex flex-wrap gap-2">
+            {% for filter in ['Toutes', 'Active', 'Cloturee', 'Brouillon'] %}
+                <button class="rounded-2xl px-4 py-2 text-sm font-black transition {% if loop.first %}bg-secondary text-white{% else %}border border-slate-200 bg-white text-slate-600 hover:bg-slate-50{% endif %}">{{ filter }}</button>
+            {% endfor %}
+        </div>
+    </div>
+
+    <div class="space-y-4">
+        {% for offer in offers %}
+            <article class="fade-in rounded-3xl bg-white p-5 shadow-sm ring-1 ring-slate-100 transition hover:shadow-md">
+                <div class="flex flex-col gap-4 lg:flex-row lg:items-center">
+                    <div class="flex-1">
+                        <div class="mb-3 flex items-start justify-between gap-3">
+                            <div class="flex items-start gap-3">
+                                <div class="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-gradient-to-br from-secondary to-primary text-white">
+                                    <svg class="h-6 w-6" viewBox="0 0 24 24" fill="none"><path d="M10 6h4a2 2 0 0 1 2 2v1h3a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3V8a2 2 0 0 1 2-2Z" stroke="currentColor" stroke-width="2"/></svg>
+                                </div>
+                                <div>
+                                    <h2 class="text-lg font-black text-slate-950">{{ offer.title }}</h2>
+                                    <p class="mt-1 text-sm font-semibold text-slate-500">{{ offer.location }} · {{ offer.postedAt }}</p>
+                                </div>
+                            </div>
+                            <div class="flex flex-wrap items-center justify-end gap-2">
+                                {% if offer.boosted %}
+                                    <span class="rounded-full bg-gradient-to-r from-secondary to-primary px-3 py-1 text-xs font-black text-white">Boostee</span>
+                                {% endif %}
+                                <span class="rounded-full px-3 py-1 text-xs font-black {% if offer.status == 'active' %}bg-accent/35 text-primary{% elseif offer.status == 'draft' %}bg-accent/30 text-primary{% else %}bg-slate-100 text-slate-700{% endif %}">
+                                    {{ offer.status == 'active' ? 'Active' : (offer.status == 'draft' ? 'Brouillon' : 'Cloturee') }}
+                                </span>
+                            </div>
+                        </div>
+                        <div class="flex flex-wrap items-center gap-3 text-sm font-semibold text-slate-600">
+                            <span class="rounded-lg bg-secondary/15 px-2 py-1 text-primary">{{ offer.contract }}</span>
+                            <span>{{ offer.salary }} FCFA</span>
+                            {% if offer.deadline %}<span>Expire le {{ offer.deadline }}</span>{% endif %}
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-6 border-slate-100 lg:border-l lg:px-6">
+                        <div class="text-center"><div class="font-black text-slate-800">{{ offer.applications }}</div><div class="text-xs font-semibold text-slate-400">Candidatures</div></div>
+                        <div class="text-center"><div class="font-black text-slate-800">{{ offer.views }}</div><div class="text-xs font-semibold text-slate-400">Vues</div></div>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <a href="{{ path('recruiter_applications') }}" class="rounded-2xl bg-secondary/10 px-4 py-2 text-sm font-black text-secondary transition hover:bg-secondary/15">Voir candidats</a>
+                        <button class="rounded-2xl p-2 text-slate-500 transition hover:bg-slate-100" aria-label="Modifier"><svg class="h-5 w-5" viewBox="0 0 24 24" fill="none"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5Z" stroke="currentColor" stroke-width="2"/></svg></button>
+                    </div>
+                </div>
+            </article>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}
