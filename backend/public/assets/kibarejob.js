@@ -71,7 +71,7 @@ function initPasswordToggles() {
       input.type = shouldShow ? "text" : "password";
       toggle.setAttribute("aria-label", shouldShow ? "Cacher le mot de passe" : "Afficher le mot de passe");
       if (icon) {
-        icon.textContent = shouldShow ? "🙈" : "👁";
+        icon.textContent = shouldShow ? "Cacher" : "Voir";
       }
     });
   });
