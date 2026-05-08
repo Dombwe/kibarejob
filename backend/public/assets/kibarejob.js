@@ -8,6 +8,8 @@ document.addEventListener("DOMContentLoaded", () => {
   initRecruiterShell();
   initRecruiterModals();
   initSettingsTabs();
+  initMissionBuilder();
+  initDocumentsBuilder();
 });
 
 function initThemeToggle() {
@@ -361,6 +363,160 @@ function initSettingsTabs() {
   if (window.location.hash === "#subscription") {
     activate("subscription");
   }
+}
+
+function initMissionBuilder() {
+  const builder = document.querySelector("[data-missions-builder]");
+  if (!builder) {
+    return;
+  }
+
+  const list = builder.querySelector("[data-missions-list]");
+  const addButton = builder.querySelector("[data-add-mission]");
+  if (!list || !addButton) {
+    return;
+  }
+
+  const inputClasses =
+    "w-full rounded-2xl border border-slate-200 px-4 py-3 font-semibold outline-none focus:ring-4 focus:ring-secondary/20";
+
+  const refreshPlaceholders = () => {
+    list.querySelectorAll('input[name="missions[]"]').forEach((input, index) => {
+      input.placeholder = `Mission ${index + 1}`;
+    });
+  };
+
+  const createRemoveButton = () => {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className =
+      "grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-slate-100 font-black text-slate-500 transition hover:bg-slate-200 hover:text-primary";
+    button.setAttribute("aria-label", "Supprimer cette mission");
+    button.textContent = "x";
+    button.addEventListener("click", () => {
+      button.closest("[data-mission-row]")?.remove();
+      refreshPlaceholders();
+    });
+
+    return button;
+  };
+
+  const addMission = () => {
+    const row = document.createElement("div");
+    row.className = "flex gap-2";
+    row.dataset.missionRow = "";
+
+    const input = document.createElement("input");
+    input.name = "missions[]";
+    input.className = inputClasses;
+    input.autocomplete = "off";
+
+    row.appendChild(input);
+    row.appendChild(createRemoveButton());
+    list.appendChild(row);
+    refreshPlaceholders();
+    input.focus();
+  };
+
+  addButton.addEventListener("click", addMission);
+}
+
+function initDocumentsBuilder() {
+  const builder = document.querySelector("[data-documents-builder]");
+  if (!builder) {
+    return;
+  }
+
+  const list = builder.querySelector("[data-documents-list]");
+  const select = builder.querySelector("[data-document-select]");
+  const addButton = builder.querySelector("[data-add-document]");
+  if (!list || !select || !addButton) {
+    return;
+  }
+
+  const currentDocuments = () =>
+    Array.from(list.querySelectorAll('input[name="requiredDocuments[]"], input[name="recommendedDocuments[]"]')).map((input) =>
+      normalize(input.value)
+    );
+
+  const renderDocumentState = (row) => {
+    const input = row.querySelector('input[name="requiredDocuments[]"], input[name="recommendedDocuments[]"]');
+    const toggle = row.querySelector("[data-document-toggle]");
+    if (!input || !toggle) {
+      return;
+    }
+
+    const isRequired = input.name === "requiredDocuments[]";
+    toggle.textContent = isRequired ? "Obligatoire" : "Optionnel";
+    toggle.className = isRequired
+      ? "rounded-full bg-primary/10 px-3 py-1 text-xs font-black text-primary transition hover:bg-primary/15"
+      : "rounded-full bg-secondary/10 px-3 py-1 text-xs font-black text-primary transition hover:bg-secondary/15";
+    row.classList.toggle("bg-slate-50", isRequired);
+    row.classList.toggle("bg-white", !isRequired);
+  };
+
+  const toggleDocumentState = (row) => {
+    const input = row.querySelector('input[name="requiredDocuments[]"], input[name="recommendedDocuments[]"]');
+    if (!input) {
+      return;
+    }
+
+    input.name = input.name === "requiredDocuments[]" ? "recommendedDocuments[]" : "requiredDocuments[]";
+    renderDocumentState(row);
+  };
+
+  const bindDocumentRow = (row) => {
+    const toggle = row.querySelector("[data-document-toggle]");
+    if (toggle) {
+      toggle.addEventListener("click", () => toggleDocumentState(row));
+    }
+    renderDocumentState(row);
+  };
+
+  const addDocument = (name) => {
+    const label = String(name || "").trim();
+    if (!label || currentDocuments().includes(normalize(label))) {
+      return;
+    }
+
+    const row = document.createElement("div");
+    row.className = "flex items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-3";
+    row.dataset.documentRow = "";
+
+    const input = document.createElement("input");
+    input.type = "hidden";
+    input.name = "recommendedDocuments[]";
+    input.value = label;
+
+    const title = document.createElement("span");
+    title.className = "font-black text-slate-700";
+    title.textContent = label;
+
+    const toggle = document.createElement("button");
+    toggle.type = "button";
+    toggle.dataset.documentToggle = "";
+
+    const remove = document.createElement("button");
+    remove.type = "button";
+    remove.className =
+      "grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-slate-100 font-black text-slate-500 transition hover:bg-slate-200 hover:text-primary";
+    remove.setAttribute("aria-label", "Supprimer ce document");
+    remove.textContent = "x";
+    remove.addEventListener("click", () => row.remove());
+
+    row.appendChild(input);
+    row.appendChild(title);
+    row.appendChild(toggle);
+    row.appendChild(remove);
+    list.appendChild(row);
+    bindDocumentRow(row);
+  };
+
+  list.querySelectorAll("[data-document-row]").forEach(bindDocumentRow);
+
+  addButton.addEventListener("click", () => {
+    addDocument(select.value);
+  });
 }
 
 async function loadCities(country, cityPicker) {

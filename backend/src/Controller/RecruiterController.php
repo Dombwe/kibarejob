@@ -67,6 +67,8 @@ class RecruiterController extends AbstractController
             $contract = ContractType::tryFrom($contractType) ?? ContractType::Cdi;
             $skills = array_values(array_filter(array_map('trim', explode(',', (string) $request->request->get('requiredSkills')))));
             $missions = array_values(array_filter(array_map('trim', $request->request->all('missions'))));
+            $requiredDocuments = array_values(array_unique(array_filter(array_map('trim', $request->request->all('requiredDocuments')))));
+            $recommendedDocuments = array_values(array_unique(array_filter(array_map('trim', $request->request->all('recommendedDocuments')))));
             $fullDescription = $description;
             if ([] !== $missions) {
                 $fullDescription .= "\n\nMissions principales:\n- " . implode("\n- ", $missions);
@@ -82,6 +84,8 @@ class RecruiterController extends AbstractController
                     ->setRequiredEducation($requiredEducation)
                     ->setRequiredSkills($skills)
                     ->setRequiredExperienceYears((int) $request->request->get('requiredExperienceYears', 0))
+                    ->setRequiredDocuments($requiredDocuments ?: null)
+                    ->setRecommendedDocuments($recommendedDocuments ?: null)
                     ->setSalaryMin($this->nullableInt($request->request->get('salaryMin')))
                     ->setSalaryMax($this->nullableInt($request->request->get('salaryMax')))
                     ->setIsRemoteAllowed((bool) $request->request->get('isRemoteAllowed'))

@@ -4,7 +4,7 @@
 {% block title %}Publier une offre - KIBARE-JOB{% endblock %}
 
 {% block recruiter_content %}
-{% set contracts = ['CDI', 'CDD', 'Stage', 'Freelance', 'Contrat local'] %}
+{% set contracts = ['CDI', 'CDD', 'Stage', 'Freelance', 'Prestation'] %}
 {% set educations = ['Aucun', 'CEP', 'BEPC', 'Bac', 'Licence', 'Master', 'Doctorat'] %}
 {% set skills = ['JavaScript', 'React', 'Node.js', 'Python', 'Symfony', 'Marketing Digital', 'SEO', 'Gestion de projet', 'Leadership', 'Excel'] %}
 
@@ -43,13 +43,17 @@
                         <span class="mb-2 block text-sm font-black text-slate-700">Description du poste *</span>
                         <textarea name="description" rows="6" class="w-full rounded-2xl border border-slate-200 px-4 py-3 font-semibold outline-none focus:ring-4 focus:ring-secondary/20" placeholder="Decrivez le poste, l'entreprise, les attentes..." required></textarea>
                     </label>
-                    <div>
+                    <div data-missions-builder>
                         <span class="mb-2 block text-sm font-black text-slate-700">Missions principales</span>
-                        <div class="space-y-2">
-                            <input name="missions[]" class="w-full rounded-2xl border border-slate-200 px-4 py-3 font-semibold outline-none focus:ring-4 focus:ring-secondary/20" placeholder="Mission 1">
-                            <input name="missions[]" class="w-full rounded-2xl border border-slate-200 px-4 py-3 font-semibold outline-none focus:ring-4 focus:ring-secondary/20" placeholder="Mission 2">
+                        <div class="space-y-2" data-missions-list>
+                            <div class="flex gap-2" data-mission-row>
+                                <input name="missions[]" class="w-full rounded-2xl border border-slate-200 px-4 py-3 font-semibold outline-none focus:ring-4 focus:ring-secondary/20" placeholder="Mission 1">
+                            </div>
+                            <div class="flex gap-2" data-mission-row>
+                                <input name="missions[]" class="w-full rounded-2xl border border-slate-200 px-4 py-3 font-semibold outline-none focus:ring-4 focus:ring-secondary/20" placeholder="Mission 2">
+                            </div>
                         </div>
-                        <button type="button" class="mt-3 inline-flex items-center gap-2 text-sm font-black text-secondary">+ Ajouter une mission</button>
+                        <button type="button" class="mt-3 inline-flex items-center gap-2 text-sm font-black text-secondary transition hover:text-primary" data-add-mission>+ Ajouter une mission</button>
                     </div>
                     <div class="grid gap-6 md:grid-cols-2">
                         <div>
@@ -102,6 +106,33 @@
                             <span class="mb-2 block text-sm font-black text-slate-700">Annees d'experience minimum</span>
                             <input type="number" min="0" name="requiredExperienceYears" value="0" class="w-full rounded-2xl border border-slate-200 px-4 py-3 font-semibold outline-none focus:ring-4 focus:ring-secondary/20">
                         </label>
+                    </div>
+                    <div data-documents-builder>
+                        <span class="mb-2 block text-sm font-black text-slate-700">Documents requis</span>
+                        <p class="mb-3 text-sm font-semibold text-slate-500">Definissez les pieces a fournir par les candidats pour postuler a cette offre.</p>
+                        <div class="space-y-2" data-documents-list>
+                            <div class="flex items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3" data-document-row>
+                                <input type="hidden" name="requiredDocuments[]" value="CV">
+                                <span class="font-black text-slate-700">CV</span>
+                                <button type="button" class="rounded-full bg-primary/10 px-3 py-1 text-xs font-black text-primary transition hover:bg-primary/15" data-document-toggle>Obligatoire</button>
+                            </div>
+                            <div class="flex items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3" data-document-row>
+                                <input type="hidden" name="requiredDocuments[]" value="Lettre de motivation">
+                                <span class="font-black text-slate-700">Lettre de motivation</span>
+                                <button type="button" class="rounded-full bg-primary/10 px-3 py-1 text-xs font-black text-primary transition hover:bg-primary/15" data-document-toggle>Obligatoire</button>
+                            </div>
+                        </div>
+                        <div class="mt-3 flex flex-col gap-2 sm:flex-row">
+                            <select class="min-w-0 flex-1 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-black text-slate-700 outline-none focus:ring-4 focus:ring-secondary/20" data-document-select>
+                                <option value="Diplome">Diplome</option>
+                                <option value="Certificat">Certificat</option>
+                                <option value="Attestation">Attestation</option>
+                                <option value="Permis de conduire">Permis de conduire</option>
+                                <option value="Piece d'identite">Piece d'identite</option>
+                                <option value="Portfolio">Portfolio</option>
+                            </select>
+                            <button type="button" class="inline-flex items-center justify-center gap-2 rounded-2xl bg-secondary/10 px-4 py-3 text-sm font-black text-primary transition hover:bg-secondary/15" data-add-document>+ Ajouter un document</button>
+                        </div>
                     </div>
                     <div>
                         <span class="mb-2 block text-sm font-black text-slate-700">Competences requises *</span>

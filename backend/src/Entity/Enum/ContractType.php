@@ -8,5 +8,6 @@ enum ContractType: string
     case Cdd = 'CDD';
     case Stage = 'Stage';
     case Freelance = 'Freelance';
+    case Prestation = 'Prestation';
     case LocalContract = 'Contrat local';
 }
