@@ -31,6 +31,9 @@ class JobOffer
     #[ORM\Column(length: 255)]
     private string $title = '';
 
+    #[ORM\Column(options: ['default' => 1])]
+    private int $positions = 1;
+
     #[Assert\NotBlank]
     #[ORM\Column(type: Types::TEXT)]
     private string $description = '';
@@ -41,6 +44,9 @@ class JobOffer
     #[Assert\NotBlank]
     #[ORM\Column(length: 50)]
     private string $requiredEducation = '';
+
+    #[ORM\Column(length: 150, nullable: true)]
+    private ?string $educationField = null;
 
     #[ORM\Column(options: ['default' => 0])]
     private int $requiredExperienceYears = 0;
@@ -103,12 +109,16 @@ class JobOffer
     public function setEmployer(User $employer): self { $this->employer = $employer; return $this; }
     public function getTitle(): string { return $this->title; }
     public function setTitle(string $title): self { $this->title = $title; return $this; }
+    public function getPositions(): int { return $this->positions; }
+    public function setPositions(int $positions): self { $this->positions = max(1, $positions); return $this; }
     public function getDescription(): string { return $this->description; }
     public function setDescription(string $description): self { $this->description = $description; return $this; }
     public function getRequiredSkills(): array { return $this->requiredSkills; }
     public function setRequiredSkills(array $requiredSkills): self { $this->requiredSkills = $requiredSkills; return $this; }
     public function getRequiredEducation(): string { return $this->requiredEducation; }
     public function setRequiredEducation(string $requiredEducation): self { $this->requiredEducation = $requiredEducation; return $this; }
+    public function getEducationField(): ?string { return $this->educationField; }
+    public function setEducationField(?string $educationField): self { $this->educationField = $educationField; return $this; }
     public function getRequiredExperienceYears(): int { return $this->requiredExperienceYears; }
     public function setRequiredExperienceYears(int $requiredExperienceYears): self { $this->requiredExperienceYears = $requiredExperienceYears; return $this; }
     public function getContractType(): ContractType { return $this->contractType; }

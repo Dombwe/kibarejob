@@ -10,6 +10,10 @@ document.addEventListener("DOMContentLoaded", () => {
   initSettingsTabs();
   initMissionBuilder();
   initDocumentsBuilder();
+  initSkillsBuilder();
+  initEducationFieldBuilder();
+  initOfferPreview();
+  initOfferWizard();
 });
 
 function initThemeToggle() {
@@ -517,6 +521,492 @@ function initDocumentsBuilder() {
   addButton.addEventListener("click", () => {
     addDocument(select.value);
   });
+}
+
+function initSkillsBuilder() {
+  const builder = document.querySelector("[data-skills-builder]");
+  if (!builder) {
+    return;
+  }
+
+  const input = builder.querySelector("[data-skills-input]");
+  const list = builder.querySelector("[data-skills-list]");
+  const suggestionsWrapper = builder.querySelector("[data-skills-suggestions]");
+  const suggestionLabel = builder.querySelector("[data-skills-suggestion-label]");
+  const titleInput = document.querySelector("[data-job-title-input]");
+  if (!input || !list) {
+    return;
+  }
+
+  let selectedSkills = input.value
+    .split(",")
+    .map((skill) => skill.trim())
+    .filter(Boolean);
+
+  const syncInput = () => {
+    input.value = selectedSkills.join(", ");
+  };
+
+  const suggestionSets = [
+    {
+      label: "Suggestions pour informatique / digital",
+      keywords: ["developpeur", "developer", "web", "mobile", "informatique", "logiciel", "full stack", "frontend", "backend", "data", "it", "reseau"],
+      skills: ["JavaScript", "React", "Node.js", "Symfony", "PHP", "Python", "SQL", "Git", "API REST", "Docker"],
+    },
+    {
+      label: "Suggestions pour comptabilite / finance",
+      keywords: ["comptable", "comptabilite", "finance", "financier", "audit", "caissier", "tresorerie", "controleur"],
+      skills: ["Comptabilite generale", "Sage", "Fiscalite", "Audit", "Tresorerie", "Excel avance", "Reporting financier", "Gestion budgetaire"],
+    },
+    {
+      label: "Suggestions pour marketing / communication",
+      keywords: ["marketing", "communication", "commercial", "vente", "community", "digital", "social media", "relation client"],
+      skills: ["Marketing digital", "SEO", "Reseaux sociaux", "Prospection", "Negociation", "CRM", "Creation de contenu", "Analyse de marche"],
+    },
+    {
+      label: "Suggestions pour ressources humaines",
+      keywords: ["rh", "ressources humaines", "recruteur", "recrutement", "paie", "formation", "talent"],
+      skills: ["Recrutement", "Gestion de la paie", "Administration du personnel", "Droit du travail", "Formation", "SIRH", "Gestion des conflits"],
+    },
+    {
+      label: "Suggestions pour administration / assistanat",
+      keywords: ["assistant", "assistante", "administratif", "secretaire", "office", "accueil", "bureau"],
+      skills: ["Gestion administrative", "Classement", "Accueil", "Redaction professionnelle", "Pack Office", "Organisation", "Gestion d'agenda"],
+    },
+    {
+      label: "Suggestions pour logistique / transport",
+      keywords: ["logistique", "chauffeur", "transport", "stock", "magasinier", "approvisionnement", "livraison"],
+      skills: ["Gestion de stock", "Approvisionnement", "Planification", "Permis de conduire", "Suivi livraison", "Inventaire", "Excel"],
+    },
+    {
+      label: "Suggestions pour gestion de projet",
+      keywords: ["projet", "coordinateur", "coordination", "programme", "chef de projet", "superviseur"],
+      skills: ["Gestion de projet", "Planification", "Suivi-evaluation", "Budget", "Reporting", "Leadership", "Animation d'equipe"],
+    },
+    {
+      label: "Suggestions pour education / formation",
+      keywords: ["enseignant", "formateur", "professeur", "education", "pedagogie", "formation"],
+      skills: ["Pedagogie", "Preparation de cours", "Evaluation", "Animation de formation", "Communication", "Gestion de classe"],
+    },
+    {
+      label: "Suggestions pour sante",
+      keywords: ["sante", "infirmier", "medical", "clinique", "pharmacien", "sage femme", "laboratoire"],
+      skills: ["Soins infirmiers", "Accueil patient", "Gestion dossiers medicaux", "Hygiene hospitaliere", "Sens de l'ecoute", "Travail en equipe"],
+    },
+  ];
+
+  const defaultSuggestions = ["Communication", "Travail en equipe", "Organisation", "Gestion de projet", "Excel", "Leadership", "Analyse", "Reporting"];
+
+  const findSuggestionSet = () => {
+    const title = normalize(titleInput ? titleInput.value : "");
+    return suggestionSets.find((set) => set.keywords.some((keyword) => title.includes(normalize(keyword))));
+  };
+
+  const suggestionSkills = () => {
+    const matchedSet = findSuggestionSet();
+    if (suggestionLabel) {
+      suggestionLabel.textContent = matchedSet ? matchedSet.label : "Suggestions generales";
+    }
+
+    return matchedSet ? matchedSet.skills : defaultSuggestions;
+  };
+
+  const renderSuggestions = () => {
+    if (!suggestionsWrapper) {
+      return;
+    }
+
+    suggestionsWrapper.innerHTML = "";
+    suggestionSkills().forEach((skill) => {
+      const isSelected = selectedSkills.some((item) => normalize(item) === normalize(skill));
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className =
+        "rounded-full bg-slate-100 px-3 py-1 text-xs font-bold text-slate-600 transition hover:bg-secondary/10 hover:text-secondary";
+      button.dataset.skillSuggestion = skill;
+      button.disabled = isSelected;
+      button.classList.toggle("bg-secondary/10", isSelected);
+      button.classList.toggle("text-secondary", isSelected);
+      button.textContent = isSelected ? skill : `+ ${skill}`;
+      button.addEventListener("click", () => addSkill(skill));
+      suggestionsWrapper.appendChild(button);
+    });
+  };
+
+  const render = () => {
+    list.innerHTML = "";
+    selectedSkills.forEach((skill) => {
+      const chip = document.createElement("span");
+      chip.className =
+        "inline-flex items-center gap-2 rounded-full bg-secondary/15 px-3 py-1.5 text-sm font-black text-primary";
+      chip.dataset.skillChip = skill;
+
+      const label = document.createElement("span");
+      label.textContent = skill;
+
+      const remove = document.createElement("button");
+      remove.type = "button";
+      remove.className = "text-primary/70 transition hover:text-primary";
+      remove.setAttribute("aria-label", `Retirer ${skill}`);
+      remove.textContent = "x";
+      remove.addEventListener("click", () => {
+        selectedSkills = selectedSkills.filter((item) => normalize(item) !== normalize(skill));
+        syncInput();
+        render();
+      });
+
+      chip.appendChild(label);
+      chip.appendChild(remove);
+      list.appendChild(chip);
+    });
+
+    renderSuggestions();
+  };
+
+  const addSkill = (skill) => {
+    const label = String(skill || "").trim();
+    if (!label || selectedSkills.some((item) => normalize(item) === normalize(label))) {
+      return;
+    }
+
+    selectedSkills.push(label);
+    syncInput();
+    render();
+  };
+
+  input.addEventListener("input", () => {
+    selectedSkills = input.value
+      .split(",")
+      .map((skill) => skill.trim())
+      .filter(Boolean);
+    render();
+  });
+
+  if (titleInput) {
+    titleInput.addEventListener("input", render);
+  }
+
+  syncInput();
+  render();
+}
+
+function initEducationFieldBuilder() {
+  const builder = document.querySelector("[data-education-field-builder]");
+  if (!builder) {
+    return;
+  }
+
+  const input = builder.querySelector("[data-education-field-input]");
+  const list = builder.querySelector("[data-education-field-list]");
+  const suggestionsWrapper = builder.querySelector("[data-education-field-suggestions]");
+  const label = builder.querySelector("[data-education-field-label]");
+  const titleInput = document.querySelector("[data-job-title-input]");
+  if (!input || !list || !suggestionsWrapper) {
+    return;
+  }
+
+  let selectedFields = input.value
+    .split(",")
+    .map((field) => field.trim())
+    .filter(Boolean);
+
+  const suggestionSets = [
+    {
+      label: "Domaines conseilles pour informatique / digital",
+      keywords: ["developpeur", "developer", "web", "mobile", "informatique", "logiciel", "full stack", "frontend", "backend", "data", "it", "reseau"],
+      fields: ["Informatique", "Genie logiciel", "Systemes et reseaux", "Data science", "Telecommunications", "Mathematiques appliquees"],
+    },
+    {
+      label: "Domaines conseilles pour comptabilite / finance",
+      keywords: ["comptable", "comptabilite", "finance", "financier", "audit", "caissier", "tresorerie", "controleur"],
+      fields: ["Comptabilite", "Finance", "Audit et controle", "Fiscalite", "Gestion", "Banque et assurance"],
+    },
+    {
+      label: "Domaines conseilles pour marketing / commerce",
+      keywords: ["marketing", "communication", "commercial", "vente", "community", "digital", "social media", "relation client"],
+      fields: ["Marketing", "Communication", "Commerce", "Gestion commerciale", "Publicite", "Journalisme"],
+    },
+    {
+      label: "Domaines conseilles pour ressources humaines",
+      keywords: ["rh", "ressources humaines", "recruteur", "recrutement", "paie", "formation", "talent"],
+      fields: ["Ressources humaines", "Droit social", "Psychologie du travail", "Administration", "Gestion", "Sciences sociales"],
+    },
+    {
+      label: "Domaines conseilles pour administration / assistanat",
+      keywords: ["assistant", "assistante", "administratif", "secretaire", "office", "accueil", "bureau"],
+      fields: ["Administration", "Secretariat", "Gestion administrative", "Bureautique", "Communication", "Droit"],
+    },
+    {
+      label: "Domaines conseilles pour logistique / transport",
+      keywords: ["logistique", "chauffeur", "transport", "stock", "magasinier", "approvisionnement", "livraison"],
+      fields: ["Logistique", "Transport", "Supply chain", "Gestion des stocks", "Approvisionnement", "Maintenance"],
+    },
+    {
+      label: "Domaines conseilles pour gestion de projet",
+      keywords: ["projet", "coordinateur", "coordination", "programme", "chef de projet", "superviseur"],
+      fields: ["Gestion de projet", "Management", "Suivi-evaluation", "Developpement", "Administration", "Economie"],
+    },
+    {
+      label: "Domaines conseilles pour education / formation",
+      keywords: ["enseignant", "formateur", "professeur", "education", "pedagogie", "formation"],
+      fields: ["Education", "Pedagogie", "Sciences de l'education", "Formation professionnelle", "Lettres", "Mathematiques"],
+    },
+    {
+      label: "Domaines conseilles pour sante",
+      keywords: ["sante", "infirmier", "medical", "clinique", "pharmacien", "sage femme", "laboratoire"],
+      fields: ["Sante", "Soins infirmiers", "Medecine", "Pharmacie", "Biologie", "Laboratoire"],
+    },
+  ];
+
+  const defaultFields = ["Gestion", "Commerce", "Communication", "Informatique", "Finance", "Administration", "Logistique", "Ressources humaines"];
+
+  const findSuggestionSet = () => {
+    const title = normalize(titleInput ? titleInput.value : "");
+    return suggestionSets.find((set) => set.keywords.some((keyword) => title.includes(normalize(keyword))));
+  };
+
+  const syncInput = () => {
+    input.value = selectedFields.join(", ");
+  };
+
+  const addField = (field) => {
+    const label = String(field || "").trim();
+    if (!label || selectedFields.some((item) => normalize(item) === normalize(label))) {
+      return;
+    }
+
+    selectedFields.push(label);
+    syncInput();
+    render();
+  };
+
+  const renderChips = () => {
+    list.innerHTML = "";
+    selectedFields.forEach((field) => {
+      const chip = document.createElement("span");
+      chip.className =
+        "inline-flex items-center gap-2 rounded-full bg-secondary/15 px-3 py-1.5 text-sm font-black text-primary";
+
+      const text = document.createElement("span");
+      text.textContent = field;
+
+      const remove = document.createElement("button");
+      remove.type = "button";
+      remove.className = "text-primary/70 transition hover:text-primary";
+      remove.setAttribute("aria-label", `Retirer ${field}`);
+      remove.textContent = "x";
+      remove.addEventListener("click", () => {
+        selectedFields = selectedFields.filter((item) => normalize(item) !== normalize(field));
+        syncInput();
+        render();
+      });
+
+      chip.appendChild(text);
+      chip.appendChild(remove);
+      list.appendChild(chip);
+    });
+  };
+
+  const render = () => {
+    const matchedSet = findSuggestionSet();
+    const fields = matchedSet ? matchedSet.fields : defaultFields;
+    if (label) {
+      label.textContent = matchedSet ? matchedSet.label : "Suggestions generales";
+    }
+
+    renderChips();
+    suggestionsWrapper.innerHTML = "";
+    fields.forEach((field) => {
+      const isSelected = selectedFields.some((item) => normalize(item) === normalize(field));
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className =
+        "rounded-full bg-slate-100 px-3 py-1 text-xs font-bold text-slate-600 transition hover:bg-secondary/10 hover:text-secondary";
+      button.disabled = isSelected;
+      button.classList.toggle("bg-secondary/10", isSelected);
+      button.classList.toggle("text-secondary", isSelected);
+      button.textContent = isSelected ? field : `+ ${field}`;
+      button.addEventListener("click", () => addField(field));
+      suggestionsWrapper.appendChild(button);
+    });
+  };
+
+  input.addEventListener("input", () => {
+    selectedFields = input.value
+      .split(",")
+      .map((field) => field.trim())
+      .filter(Boolean);
+    render();
+  });
+
+  if (titleInput) {
+    titleInput.addEventListener("input", render);
+  }
+
+  syncInput();
+  render();
+}
+
+function initOfferPreview() {
+  const form = document.querySelector("[data-offer-form]");
+  const preview = document.querySelector("[data-offer-preview]");
+  if (!form || !preview) {
+    return;
+  }
+
+  const title = preview.querySelector("[data-preview-title]");
+  const meta = preview.querySelector("[data-preview-meta]");
+  const description = preview.querySelector("[data-preview-description]");
+  const profile = preview.querySelector("[data-preview-profile]");
+  const documents = preview.querySelector("[data-preview-documents]");
+  const skills = preview.querySelector("[data-preview-skills]");
+
+  const valueOf = (selector, fallback = "") => {
+    const field = form.querySelector(selector);
+    return field && field.value ? field.value.trim() : fallback;
+  };
+
+  const listValue = (selector) =>
+    valueOf(selector)
+      .split(",")
+      .map((item) => item.trim())
+      .filter(Boolean);
+
+  const render = () => {
+    if (title) {
+      title.textContent = valueOf("[data-job-title-input]", "Titre du poste");
+    }
+
+    if (meta) {
+      const contract = valueOf("[data-contract-input]", "Contrat");
+      const location = valueOf("[data-location-input]", "Lieu");
+      const positions = Math.max(1, parseInt(valueOf('input[name="positions"]', "1"), 10) || 1);
+      meta.textContent = `${contract} · ${location} · ${positions} poste${positions > 1 ? "s" : ""}`;
+    }
+
+    if (description) {
+      description.textContent =
+        valueOf("[data-description-input]") ||
+        "Votre offre apparaitra dans le feed candidat avec le score de matching et les documents requis.";
+    }
+
+    if (profile) {
+      const level = valueOf("[data-education-level-input]", "Niveau non renseigne");
+      const fields = listValue("[data-education-field-input]");
+      profile.textContent = `${level} · ${fields.length ? fields.join(", ") : "Domaine non renseigne"}`;
+    }
+
+    if (documents) {
+      const required = Array.from(form.querySelectorAll('input[name="requiredDocuments[]"]')).map((input) => input.value);
+      const recommended = Array.from(form.querySelectorAll('input[name="recommendedDocuments[]"]')).map((input) => `${input.value} (optionnel)`);
+      const allDocuments = [...required, ...recommended].filter(Boolean);
+      documents.textContent = allDocuments.length ? allDocuments.join(", ") : "Aucun document renseigne";
+    }
+
+    if (skills) {
+      skills.innerHTML = "";
+      const selectedSkills = listValue("[data-skills-input]");
+      if (!selectedSkills.length) {
+        const empty = document.createElement("span");
+        empty.className = "text-sm font-semibold text-slate-500";
+        empty.textContent = "Aucune competence renseignee";
+        skills.appendChild(empty);
+        return;
+      }
+
+      selectedSkills.slice(0, 8).forEach((skill) => {
+        const chip = document.createElement("span");
+        chip.className = "rounded-full bg-secondary/15 px-3 py-1 text-xs font-black text-primary";
+        chip.textContent = skill;
+        skills.appendChild(chip);
+      });
+    }
+  };
+
+  form.addEventListener("input", render);
+  form.addEventListener("change", render);
+  form.addEventListener("click", () => window.setTimeout(render, 0));
+  render();
+}
+
+function initOfferWizard() {
+  const wizard = document.querySelector("[data-offer-wizard]");
+  if (!wizard) {
+    return;
+  }
+
+  const panels = Array.from(wizard.querySelectorAll("[data-offer-step-panel]"));
+  const triggers = Array.from(wizard.querySelectorAll("[data-offer-step-trigger]"));
+  const progress = wizard.querySelector("[data-offer-progress]");
+  const prevButton = wizard.querySelector("[data-offer-prev]");
+  const nextButton = wizard.querySelector("[data-offer-next]");
+  const submitButton = wizard.querySelector("[data-offer-submit]");
+  let currentStep = 0;
+
+  const isStepValid = (step) => {
+    const panel = panels[step];
+    if (!panel) {
+      return true;
+    }
+
+    const fields = Array.from(panel.querySelectorAll("input, select, textarea"));
+    const invalidField = fields.find((field) => !field.checkValidity());
+    if (invalidField) {
+      invalidField.reportValidity();
+      return false;
+    }
+
+    return true;
+  };
+
+  const goToStep = (step, validateCurrent = false) => {
+    const targetStep = Math.max(0, Math.min(step, panels.length - 1));
+    if (validateCurrent && targetStep > currentStep && !isStepValid(currentStep)) {
+      return;
+    }
+
+    currentStep = targetStep;
+    panels.forEach((panel, index) => {
+      panel.classList.toggle("hidden", index !== currentStep);
+    });
+
+    triggers.forEach((trigger, index) => {
+      const isActive = index === currentStep;
+      const isDone = index < currentStep;
+      trigger.classList.toggle("bg-primary", isActive);
+      trigger.classList.toggle("text-white", isActive);
+      trigger.classList.toggle("bg-secondary/10", isDone && !isActive);
+      trigger.classList.toggle("text-primary", isDone && !isActive);
+      trigger.classList.toggle("bg-slate-50", !isActive && !isDone);
+      trigger.classList.toggle("text-slate-500", !isActive && !isDone);
+    });
+
+    if (progress) {
+      progress.style.width = `${((currentStep + 1) / panels.length) * 100}%`;
+    }
+
+    if (prevButton) {
+      prevButton.classList.toggle("invisible", currentStep === 0);
+    }
+    if (nextButton && submitButton) {
+      const isLastStep = currentStep === panels.length - 1;
+      nextButton.classList.toggle("hidden", isLastStep);
+      submitButton.classList.toggle("hidden", !isLastStep);
+    }
+  };
+
+  triggers.forEach((trigger, index) => {
+    trigger.addEventListener("click", () => goToStep(index, index > currentStep));
+  });
+
+  if (prevButton) {
+    prevButton.addEventListener("click", () => goToStep(currentStep - 1));
+  }
+  if (nextButton) {
+    nextButton.addEventListener("click", () => goToStep(currentStep + 1, true));
+  }
+
+  goToStep(0);
 }
 
 async function loadCities(country, cityPicker) {

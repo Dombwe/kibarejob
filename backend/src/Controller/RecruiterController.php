@@ -52,6 +52,7 @@ class RecruiterController extends AbstractController
             $contractType = (string) $request->request->get('contractType', ContractType::Cdi->value);
             $location = trim((string) $request->request->get('location'));
             $requiredEducation = (string) $request->request->get('requiredEducation', 'Aucun');
+            $educationField = trim((string) $request->request->get('educationField'));
             $deadline = (string) $request->request->get('deadline');
 
             if ('' === $title) {
@@ -78,10 +79,12 @@ class RecruiterController extends AbstractController
                 $offer = (new JobOffer())
                     ->setEmployer($user)
                     ->setTitle($title)
+                    ->setPositions(max(1, (int) $request->request->get('positions', 1)))
                     ->setDescription($fullDescription)
                     ->setContractType($contract)
                     ->setLocation($location)
                     ->setRequiredEducation($requiredEducation)
+                    ->setEducationField('' === $educationField ? null : $educationField)
                     ->setRequiredSkills($skills)
                     ->setRequiredExperienceYears((int) $request->request->get('requiredExperienceYears', 0))
                     ->setRequiredDocuments($requiredDocuments ?: null)
