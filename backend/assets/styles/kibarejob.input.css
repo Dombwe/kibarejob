@@ -24,6 +24,23 @@
   ::-webkit-scrollbar-track {
     background: #f8fafc;
   }
+
+  .dark {
+    color-scheme: dark;
+  }
+
+  .dark body {
+    background: #111827;
+    color: #e5e7eb;
+  }
+
+  .dark ::-webkit-scrollbar-thumb {
+    background: #475569;
+  }
+
+  .dark ::-webkit-scrollbar-track {
+    background: #111827;
+  }
 }
 
 @layer components {
@@ -36,5 +53,163 @@
   .fade-in.is-visible {
     opacity: 1;
     transform: translateY(0);
+  }
+
+  .theme-toggle {
+    align-items: center;
+    background: rgba(255, 255, 255, 0.88);
+    border: 1px solid rgba(148, 163, 184, 0.32);
+    border-radius: 999px;
+    bottom: 1.25rem;
+    box-shadow: 0 18px 45px rgba(38, 56, 73, 0.16);
+    color: #263849;
+    display: inline-flex;
+    gap: 0.625rem;
+    padding: 0.5rem 0.75rem 0.5rem 0.5rem;
+    position: fixed;
+    right: 1.25rem;
+    transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease, transform 0.2s ease;
+    z-index: 60;
+  }
+
+  .theme-toggle:hover {
+    transform: translateY(-1px);
+  }
+
+  .theme-toggle__track {
+    background: #e2e8f0;
+    border-radius: 999px;
+    display: inline-flex;
+    height: 1.75rem;
+    padding: 0.1875rem;
+    width: 3rem;
+  }
+
+  .theme-toggle__thumb {
+    background: linear-gradient(135deg, #5f7f99, #263849);
+    border-radius: 999px;
+    box-shadow: 0 8px 18px rgba(38, 56, 73, 0.2);
+    height: 1.375rem;
+    transition: transform 0.2s ease, background 0.2s ease;
+    width: 1.375rem;
+  }
+
+  .theme-toggle__label {
+    font-size: 0.75rem;
+    font-weight: 900;
+    min-width: 2.2rem;
+  }
+
+  .dark .theme-toggle {
+    background: rgba(30, 41, 59, 0.88);
+    border-color: rgba(184, 199, 180, 0.25);
+    color: #e5e7eb;
+  }
+
+  .dark .theme-toggle__track {
+    background: rgba(15, 23, 42, 0.92);
+  }
+
+  .dark .theme-toggle__thumb {
+    background: linear-gradient(135deg, #b8c7b4, #5f7f99);
+    transform: translateX(1.25rem);
+  }
+}
+
+@layer utilities {
+  .dark .bg-white,
+  .dark .bg-white\/70,
+  .dark .bg-white\/85,
+  .dark .bg-white\/95 {
+    background-color: rgba(30, 41, 59, 0.94) !important;
+  }
+
+  .dark .bg-slate-50,
+  .dark .bg-stone-50 {
+    background-color: #111827 !important;
+  }
+
+  .dark .bg-slate-100 {
+    background-color: rgba(51, 65, 85, 0.78) !important;
+  }
+
+  .dark .bg-slate-200 {
+    background-color: rgba(71, 85, 105, 0.72) !important;
+  }
+
+  .dark .bg-secondary\/10,
+  .dark .bg-secondary\/15,
+  .dark .bg-accent\/20,
+  .dark .bg-accent\/25,
+  .dark .bg-accent\/30,
+  .dark .bg-accent\/35,
+  .dark .bg-primary\/10 {
+    background-color: rgba(184, 199, 180, 0.12) !important;
+  }
+
+  .dark .bg-gradient-to-br.from-slate-50,
+  .dark .bg-gradient-to-br.from-slate-50.via-white,
+  .dark .bg-gradient-to-br.from-slate-50.via-white.to-stone-50 {
+    background-image: linear-gradient(135deg, #111827 0%, #172033 55%, #1e293b 100%) !important;
+  }
+
+  .dark .bg-gradient-to-b.from-secondary\/10,
+  .dark .bg-gradient-to-br.from-secondary\/10,
+  .dark .bg-gradient-to-r.from-secondary\/10 {
+    background-image: linear-gradient(135deg, rgba(95, 127, 153, 0.14), rgba(184, 199, 180, 0.08)) !important;
+  }
+
+  .dark .text-slate-950,
+  .dark .text-slate-900,
+  .dark .text-slate-800,
+  .dark .text-primary {
+    color: #f8fafc !important;
+  }
+
+  .dark .text-slate-700,
+  .dark .text-slate-600,
+  .dark .text-slate-500 {
+    color: #cbd5e1 !important;
+  }
+
+  .dark .text-slate-400 {
+    color: #94a3b8 !important;
+  }
+
+  .dark .text-secondary {
+    color: #b8c7b4 !important;
+  }
+
+  .dark .border-slate-100,
+  .dark .border-slate-200,
+  .dark .ring-slate-100 {
+    border-color: rgba(148, 163, 184, 0.18) !important;
+    --tw-ring-color: rgba(148, 163, 184, 0.18) !important;
+  }
+
+  .dark .shadow-soft,
+  .dark .shadow-sm,
+  .dark .shadow-lg,
+  .dark .shadow-xl,
+  .dark .shadow-2xl {
+    --tw-shadow-color: rgba(0, 0, 0, 0.35) !important;
+  }
+
+  .dark input,
+  .dark textarea,
+  .dark select {
+    background-color: rgba(15, 23, 42, 0.58) !important;
+    border-color: rgba(148, 163, 184, 0.22) !important;
+    color: #f8fafc !important;
+  }
+
+  .dark input::placeholder,
+  .dark textarea::placeholder {
+    color: #94a3b8 !important;
+  }
+
+  .dark .hover\:bg-slate-50:hover,
+  .dark .hover\:bg-slate-100:hover {
+    background-color: rgba(51, 65, 85, 0.74) !important;
   }
 }

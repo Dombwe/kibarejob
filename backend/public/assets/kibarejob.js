@@ -1,4 +1,5 @@
 document.addEventListener("DOMContentLoaded", () => {
+  initThemeToggle();
   initFadeIn();
   initLoginLoader();
   initPasswordToggles();
@@ -8,6 +9,33 @@ document.addEventListener("DOMContentLoaded", () => {
   initRecruiterModals();
   initSettingsTabs();
 });
+
+function initThemeToggle() {
+  const toggle = document.querySelector("[data-theme-toggle]");
+  if (!toggle) {
+    return;
+  }
+
+  const label = toggle.querySelector("[data-theme-label]");
+  const root = document.documentElement;
+
+  const render = () => {
+    const isDark = root.classList.contains("dark");
+    toggle.setAttribute("aria-pressed", String(isDark));
+    if (label) {
+      label.textContent = isDark ? "Dark" : "Light";
+    }
+  };
+
+  toggle.addEventListener("click", () => {
+    const nextTheme = root.classList.contains("dark") ? "light" : "dark";
+    root.classList.toggle("dark", nextTheme === "dark");
+    localStorage.setItem("kibarejob-theme", nextTheme);
+    render();
+  });
+
+  render();
+}
 
 function initFadeIn() {
   const elements = document.querySelectorAll(".fade-in");
