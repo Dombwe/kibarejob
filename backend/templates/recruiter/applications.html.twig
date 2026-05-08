@@ -4,13 +4,14 @@
 {% block title %}Candidatures - KIBARE-JOB{% endblock %}
 
 {% block recruiter_content %}
-{% set applications = [
+{% set applications = applications|default([
     { candidate: 'Mamadou Sawadogo', avatar: 'MS', age: 28, location: 'Ouagadougou', job: 'Developpeur Web Full Stack', status: 'new', label: 'Nouvelle', score: 92, skills: ['JavaScript','React','Node.js','Python'], education: 'Licence en Informatique', experience: '3 ans', appliedAt: 'Il y a 2h' },
     { candidate: 'Awa Ouedraogo', avatar: 'AO', age: 26, location: 'Ouagadougou', job: 'Responsable Marketing Digital', status: 'interview', label: 'Entretien', score: 85, skills: ['Marketing Digital','SEO','Google Ads','Analytics'], education: 'Master en Marketing', experience: '5 ans', appliedAt: 'Il y a 5h' },
     { candidate: 'Ibrahim Traore', avatar: 'IT', age: 32, location: 'Bobo-Dioulasso', job: 'Comptable Senior', status: 'viewed', label: 'Consultee', score: 78, skills: ['Comptabilite','Sage','Fiscalite','Audit'], education: 'Licence en Comptabilite', experience: '7 ans', appliedAt: 'Il y a 1j' },
     { candidate: 'Fatou Coulibaly', avatar: 'FC', age: 29, location: 'Ouagadougou', job: 'Chef de Projet IT', status: 'shortlisted', label: 'Shortlistee', score: 88, skills: ['Gestion de projet','Agile','Scrum','Budget'], education: 'Master en Gestion de Projet', experience: '6 ans', appliedAt: 'Il y a 2j' },
     { candidate: 'Youssouf Zongo', avatar: 'YZ', age: 24, location: 'Koudougou', job: 'Developpeur Web Full Stack', status: 'rejected', label: 'Refusee', score: 45, skills: ['HTML','CSS','JavaScript'], education: 'Bac+2 en Informatique', experience: '1 an', appliedAt: 'Il y a 3j' }
-] %}
+]) %}
+{% set statusCounts = statusCounts|default({all: applications|length, new: 1, viewed: 1, interview: 1, hired: 0}) %}
 
 <div class="p-4 lg:p-8">
     <div class="mb-6">
@@ -24,8 +25,14 @@
             <input class="w-full rounded-2xl border border-slate-200 bg-white py-3 pl-11 pr-4 font-semibold outline-none focus:ring-4 focus:ring-secondary/20" placeholder="Rechercher par candidat ou offre...">
         </label>
         <div class="flex flex-wrap gap-2">
-            {% for filter in ['Toutes', 'Nouvelles', 'Consultees', 'Shortlistees', 'Entretiens'] %}
-                <button class="rounded-2xl px-4 py-2 text-sm font-black transition {% if loop.first %}bg-secondary text-white{% else %}border border-slate-200 bg-white text-slate-600 hover:bg-slate-50{% endif %}">{{ filter }}</button>
+            {% for filter in [
+                {label: 'Toutes', count: statusCounts.all},
+                {label: 'Nouvelles', count: statusCounts.new},
+                {label: 'Consultees', count: statusCounts.viewed},
+                {label: 'Entretiens', count: statusCounts.interview},
+                {label: 'Recrutees', count: statusCounts.hired}
+            ] %}
+                <button class="rounded-2xl px-4 py-2 text-sm font-black transition {% if loop.first %}bg-secondary text-white{% else %}border border-slate-200 bg-white text-slate-600 hover:bg-slate-50{% endif %}">{{ filter.label }} ({{ filter.count }})</button>
             {% endfor %}
         </div>
     </div>
@@ -38,7 +45,7 @@
                     <div class="min-w-0 flex-1">
                         <div class="flex items-center justify-between gap-2">
                             <h2 class="truncate font-black text-slate-900">{{ app.candidate }}</h2>
-                            <span class="shrink-0 rounded-full px-2 py-0.5 text-xs font-black {% if app.status == 'new' %}bg-secondary/15 text-primary{% elseif app.status == 'interview' %}bg-secondary/15 text-primary{% elseif app.status == 'shortlisted' %}bg-accent/35 text-primary{% elseif app.status == 'rejected' %}bg-slate-100 text-slate-700{% else %}bg-accent/30 text-primary{% endif %}">{{ app.label }}</span>
+                            <span class="shrink-0 rounded-full px-2 py-0.5 text-xs font-black {% if app.status == 'sent' or app.status == 'new' %}bg-secondary/15 text-primary{% elseif app.status == 'interview' %}bg-secondary/15 text-primary{% elseif app.status == 'hired' %}bg-accent/35 text-primary{% elseif app.status == 'rejected' %}bg-slate-100 text-slate-700{% else %}bg-accent/30 text-primary{% endif %}">{{ app.label }}</span>
                         </div>
                         <p class="truncate text-sm font-semibold text-slate-500">{{ app.job }}</p>
                         <p class="mt-1 text-xs font-semibold text-slate-400">{{ app.age }} ans · {{ app.location }}</p>
@@ -98,6 +105,11 @@
                         </div>
                     </div>
                 </div>
+            </div>
+        {% else %}
+            <div class="rounded-3xl bg-white p-10 text-center shadow-sm ring-1 ring-slate-100 md:col-span-2 xl:col-span-3">
+                <h2 class="text-xl font-black text-slate-950">Aucune candidature recue</h2>
+                <p class="mt-2 font-semibold text-slate-500">Les candidatures apparaitront ici lorsque les candidats aimeront vos offres.</p>
             </div>
         {% endfor %}
     </div>

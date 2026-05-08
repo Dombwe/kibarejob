@@ -11,11 +11,22 @@
     { id: 'subscription', label: 'Abonnement' },
     { id: 'security', label: 'Securite' }
 ] %}
-{% set plans = [
+{% set company = company|default({
+    name: 'Tech Burkina SARL',
+    nif: '123456789',
+    sector: 'Technologie',
+    size: '11-50 employes',
+    email: 'contact@techburkina.bf',
+    phone: '+226 70 12 34 56',
+    city: 'Ouagadougou',
+    country: 'Burkina Faso'
+}) %}
+{% set plans = plans|default([
     { name: 'Gratuit', price: '0', current: false, features: ['5 offres actives', '20 candidatures/mois', 'Matching basique', 'Support email'] },
     { name: 'Standard', price: '25 000', current: true, features: ['20 offres actives', '100 candidatures/mois', 'AI matching avance', 'Statistiques RH'] },
     { name: 'Pro', price: '75 000', current: false, features: ['Offres illimitees', 'Candidatures illimitees', 'Boost inclus', 'Support prioritaire'] }
-] %}
+]) %}
+{% set team = team|default([{name:'Mamadou Sawadogo', email:'mamadou@techburkina.bf', role:'Admin', avatar:'MS'}]) %}
 
 <div class="p-4 lg:p-8">
     <div class="mb-8">
@@ -43,12 +54,14 @@
                 </div>
                 <div class="grid gap-6 md:grid-cols-2">
                     {% for field in [
-                        {label: 'Nom de l entreprise', value: 'Tech Burkina SARL'},
-                        {label: 'NIF', value: '123456789'},
-                        {label: 'Secteur d activite', value: 'Technologie'},
-                        {label: 'Taille', value: '11-50 employes'},
-                        {label: 'Email professionnel', value: 'contact@techburkina.bf'},
-                        {label: 'Telephone', value: '+226 70 12 34 56'}
+                        {label: 'Nom de l entreprise', value: company.name},
+                        {label: 'NIF', value: company.nif},
+                        {label: 'Secteur d activite', value: company.sector},
+                        {label: 'Taille', value: company.size},
+                        {label: 'Email professionnel', value: company.email},
+                        {label: 'Telephone', value: company.phone},
+                        {label: 'Ville', value: company.city},
+                        {label: 'Pays', value: company.country}
                     ] %}
                         <label><span class="mb-2 block text-sm font-black text-slate-700">{{ field.label }}</span><input class="w-full rounded-2xl border border-slate-200 px-4 py-3 font-semibold outline-none focus:ring-4 focus:ring-secondary/20" value="{{ field.value }}"></label>
                     {% endfor %}
@@ -73,7 +86,7 @@
             <section data-settings-panel="team" class="hidden rounded-3xl bg-white p-6 shadow-sm ring-1 ring-slate-100">
                 <div class="mb-6 flex items-center justify-between"><h2 class="text-xl font-black">Equipe de recrutement</h2><button class="rounded-xl bg-secondary px-4 py-2 text-sm font-black text-white">Inviter</button></div>
                 <div class="space-y-3">
-                    {% for member in [{name:'Mamadou Sawadogo', email:'mamadou@techburkina.bf', role:'Admin', avatar:'MS'}, {name:'Awa Ouedraogo', email:'awa@techburkina.bf', role:'Recruteur', avatar:'AO'}] %}
+                    {% for member in team %}
                         <div class="flex items-center gap-4 rounded-2xl bg-slate-50 p-4"><div class="grid h-12 w-12 place-items-center rounded-full bg-gradient-to-br from-secondary to-primary font-black text-white">{{ member.avatar }}</div><div class="flex-1"><p class="font-black">{{ member.name }}</p><p class="text-sm font-semibold text-slate-500">{{ member.email }}</p></div><span class="rounded-full bg-secondary/15 px-3 py-1 text-sm font-black text-primary">{{ member.role }}</span></div>
                     {% endfor %}
                 </div>

@@ -26,12 +26,12 @@
     }
 ] %}
 
-{% set stats = [
+{% set stats = homeStats|default([
     { value: '10K+', label: 'Candidats' },
     { value: '500+', label: 'Entreprises' },
     { value: '2K+', label: 'Recrutements' },
     { value: '95%', label: 'Satisfaction' }
-] %}
+]) %}
 
 <main class="min-h-screen overflow-hidden bg-gradient-to-br from-slate-50 via-white to-stone-50 text-slate-900">
     <header class="px-4 py-6 md:px-8">
@@ -50,8 +50,13 @@
                 <a href="#features" class="transition hover:text-secondary">Fonctionnalites</a>
                 <a href="#stats" class="transition hover:text-secondary">Statistiques</a>
                 <a href="#contact" class="transition hover:text-secondary">Contact</a>
-                <a href="{{ path('app_register') }}" class="rounded-full border border-slate-200 bg-white px-5 py-2.5 text-slate-700 shadow-sm transition hover:border-secondary/30 hover:text-secondary hover:shadow-md">Creer un compte</a>
-                <a href="{{ path('app_login') }}" class="rounded-full bg-primary px-5 py-2.5 text-white shadow-sm transition hover:bg-secondary hover:shadow-md">Connexion</a>
+                {% if app.user %}
+                    <a href="{{ path('recruiter_entry') }}" class="rounded-full border border-slate-200 bg-white px-5 py-2.5 text-slate-700 shadow-sm transition hover:border-secondary/30 hover:text-secondary hover:shadow-md">Mon espace</a>
+                    <a href="{{ path('app_logout') }}" class="rounded-full bg-primary px-5 py-2.5 text-white shadow-sm transition hover:bg-secondary hover:shadow-md">Deconnexion</a>
+                {% else %}
+                    <a href="{{ path('app_register') }}" class="rounded-full border border-slate-200 bg-white px-5 py-2.5 text-slate-700 shadow-sm transition hover:border-secondary/30 hover:text-secondary hover:shadow-md">Creer un compte</a>
+                    <a href="{{ path('app_login') }}" class="rounded-full bg-primary px-5 py-2.5 text-white shadow-sm transition hover:bg-secondary hover:shadow-md">Connexion</a>
+                {% endif %}
             </nav>
         </div>
     </header>
