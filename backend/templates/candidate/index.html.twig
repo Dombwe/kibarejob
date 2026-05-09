@@ -3,55 +3,200 @@
 {% block title %}Candidats - KIBARE-JOB{% endblock %}
 
 {% block body %}
-<main class="min-h-screen bg-slate-50">
-    <section class="bg-primary px-5 py-8 text-white">
+{% set strengths = [
+    {title: 'Offres adaptees a votre profil', text: 'KIBARE-JOB classe les offres selon vos competences, votre ville, votre niveau d etude et vos documents.', icon: 'match'},
+    {title: 'Candidature rapide', text: 'Vous aimez une offre, votre dossier est prepare avec votre CV, votre lettre et les documents demandes.', icon: 'swipe'},
+    {title: 'CV meme sans fichier', text: 'Si vous n avez pas encore de CV, l application vous aide a construire un profil exploitable par les recruteurs.', icon: 'cv'},
+    {title: 'Documents toujours prets', text: 'Diplomes, attestations et certificats restent organises et disponibles pour les offres qui les exigent.', icon: 'docs'}
+] %}
+
+{% set steps = [
+    {number: '01', title: 'Telechargez l application', text: 'Installez KIBARE-JOB sur Android ou iPhone depuis la section telechargement.'},
+    {number: '02', title: 'Completez votre profil', text: 'Ajoutez vos informations, competences, ville, niveau d etude et documents.'},
+    {number: '03', title: 'Swipez les offres', text: 'Parcourez les offres comme des cartes. Ignorez ce qui ne vous convient pas, aimez ce qui vous interesse.'},
+    {number: '04', title: 'Suivez vos candidatures', text: 'Retrouvez les offres envoyees, vues, retenues ou refusees depuis votre espace candidat.'}
+] %}
+
+<main class="min-h-screen bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100">
+    <header class="border-b border-slate-200 bg-white/90 px-4 py-5 backdrop-blur dark:border-slate-800 dark:bg-slate-950/90 md:px-8">
         <nav class="mx-auto flex max-w-7xl items-center justify-between">
-            <a href="{{ path('home') }}" class="font-black">KIBARE-JOB</a>
-            <a href="{{ path('app_login') }}" class="rounded-full bg-white px-5 py-2 text-sm font-black text-primary transition duration-300 hover:scale-105">Connexion</a>
+            <a href="{{ path('home') }}" class="flex items-center gap-3">
+                <span class="grid h-10 w-10 place-items-center rounded-2xl bg-gradient-to-br from-secondary to-primary text-white shadow-lg shadow-secondary/20">
+                    <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M10 6h4a2 2 0 0 1 2 2v1h3a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3V8a2 2 0 0 1 2-2Z" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+                </span>
+                <span class="text-xl font-black text-primary dark:text-white">KIBARE-JOB</span>
+            </a>
+            <div class="hidden items-center gap-6 text-sm font-black text-slate-700 dark:text-slate-200 md:flex">
+                <a href="#avantages" class="transition hover:text-primary dark:hover:text-secondary">Avantages</a>
+                <a href="#fonctionnement" class="transition hover:text-primary dark:hover:text-secondary">Comment ca marche</a>
+                <a href="#telechargement" class="transition hover:text-primary dark:hover:text-secondary">Telechargement</a>
+            </div>
         </nav>
-        <div class="fade-in mx-auto grid max-w-7xl gap-12 py-20 lg:grid-cols-[.9fr_1.1fr]">
-            <div>
-                <p class="font-black uppercase tracking-[0.2em] text-accent">Application candidat</p>
-                <h1 class="mt-4 text-5xl font-black leading-tight sm:text-6xl">Swipe les offres. Postule en un geste.</h1>
-                <p class="mt-6 max-w-xl text-lg leading-8 text-white/75">Une experience inspiree du mobile: cartes rapides, documents toujours prets, candidature automatique et suivi clair.</p>
-                <div class="mt-9 flex flex-col gap-4 sm:flex-row">
-                    <a href="#" class="rounded-2xl bg-accent px-7 py-4 text-center font-black text-primary transition duration-300 hover:scale-105">Android</a>
-                    <a href="#" class="rounded-2xl border border-white/20 px-7 py-4 text-center font-black text-white transition duration-300 hover:scale-105">iOS</a>
+    </header>
+
+    <section class="overflow-hidden px-4 py-16 md:px-8 md:py-20">
+        <div class="mx-auto grid max-w-7xl gap-12 lg:grid-cols-[1fr_.85fr] lg:items-center">
+            <div class="fade-in">
+                <p class="inline-flex rounded-full border border-secondary/15 bg-white px-4 py-2 text-sm font-black text-secondary shadow-sm dark:border-secondary/25 dark:bg-slate-900">Application mobile candidat</p>
+                <h1 class="mt-6 max-w-3xl text-4xl font-black leading-tight text-slate-950 dark:text-white md:text-6xl">
+                    Trouvez les offres qui vous correspondent vraiment.
+                </h1>
+                <p class="mt-6 max-w-2xl text-lg leading-8 text-slate-600 dark:text-slate-300">
+                    KIBARE-JOB vous aide a decouvrir les offres utiles, organiser vos documents, valoriser votre profil et postuler plus vite depuis votre telephone.
+                </p>
+                <div class="mt-8 flex flex-col gap-4 sm:flex-row">
+                    <a href="#telechargement" class="inline-flex items-center justify-center rounded-full bg-gradient-to-r from-secondary to-primary px-7 py-4 font-black text-white shadow-lg shadow-secondary/20 transition hover:-translate-y-0.5">Telecharger l application</a>
+                    <a href="#fonctionnement" class="inline-flex items-center justify-center rounded-full border border-slate-200 bg-white px-7 py-4 font-black text-slate-700 shadow-sm transition hover:-translate-y-0.5 hover:border-secondary/30 hover:text-primary dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100">Voir comment ca marche</a>
+                </div>
+                <div class="mt-8 grid max-w-xl grid-cols-3 gap-3">
+                    <div class="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-100 dark:bg-slate-900 dark:ring-slate-800">
+                        <p class="text-2xl font-black text-primary">1 swipe</p>
+                        <p class="mt-1 text-sm font-semibold text-slate-500 dark:text-slate-400">pour postuler</p>
+                    </div>
+                    <div class="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-100 dark:bg-slate-900 dark:ring-slate-800">
+                        <p class="text-2xl font-black text-primary">CV</p>
+                        <p class="mt-1 text-sm font-semibold text-slate-500 dark:text-slate-400">assiste</p>
+                    </div>
+                    <div class="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-100 dark:bg-slate-900 dark:ring-slate-800">
+                        <p class="text-2xl font-black text-primary">Offline</p>
+                        <p class="mt-1 text-sm font-semibold text-slate-500 dark:text-slate-400">connexion faible</p>
+                    </div>
                 </div>
             </div>
-            <div class="flex gap-5 overflow-x-auto pb-6">
-                {% for item in [
-                    {title: 'Feed', score: '88%', color: 'bg-accent'},
-                    {title: 'Documents', score: '12', color: 'bg-secondary'},
-                    {title: 'Matching', score: '94%', color: 'bg-accent'}
-                ] %}
-                    <article class="min-w-[260px] rounded-[2rem] bg-slate-950 p-4 shadow-soft">
-                        <div class="rounded-[1.5rem] bg-white p-5 text-primary">
-                            <div class="h-56 rounded-2xl {{ item.color }} p-5 text-white">
-                                <p class="text-sm font-bold">{{ item.title }}</p>
-                                <p class="mt-20 text-5xl font-black">{{ item.score }}</p>
+
+            <div class="fade-in relative">
+                <div class="absolute -right-16 -top-16 h-48 w-48 rounded-full bg-secondary/10"></div>
+                <div class="relative mx-auto max-w-sm rounded-[2rem] bg-slate-950 p-4 shadow-2xl shadow-slate-300/70 dark:shadow-black/40">
+                    <div class="rounded-[1.5rem] bg-white p-5 dark:bg-slate-900">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-xs font-black uppercase tracking-wide text-slate-400">Match</p>
+                                <h2 class="text-xl font-black text-slate-950 dark:text-white">Comptable Senior</h2>
                             </div>
-                            <div class="mt-5 h-3 rounded-full bg-slate-100"></div>
-                            <div class="mt-3 h-3 w-2/3 rounded-full bg-slate-100"></div>
+                            <span class="rounded-full bg-secondary/15 px-3 py-1 text-sm font-black text-primary">92%</span>
                         </div>
+                        <div class="mt-5 rounded-3xl bg-gradient-to-br from-primary to-secondary p-5 text-white">
+                            <p class="text-sm font-bold text-white/80">Ouagadougou · CDI</p>
+                            <p class="mt-16 text-3xl font-black">Swipez pour postuler</p>
+                        </div>
+                        <div class="mt-5 space-y-3">
+                            <div class="rounded-2xl bg-slate-50 p-4 dark:bg-slate-800">
+                                <p class="text-sm font-black text-slate-700 dark:text-slate-200">Documents demandes</p>
+                                <p class="mt-1 text-sm font-semibold text-slate-500 dark:text-slate-400">CV, diplome, attestation</p>
+                            </div>
+                            <div class="rounded-2xl bg-slate-50 p-4 dark:bg-slate-800">
+                                <p class="text-sm font-black text-slate-700 dark:text-slate-200">Votre dossier</p>
+                                <p class="mt-1 text-sm font-semibold text-slate-500 dark:text-slate-400">Pret a envoyer</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="avantages" class="bg-white px-4 py-16 dark:bg-slate-900 md:px-8">
+        <div class="mx-auto max-w-7xl">
+            <div class="max-w-2xl">
+                <p class="text-sm font-black uppercase tracking-wide text-secondary">Points forts</p>
+                <h2 class="mt-3 text-3xl font-black text-slate-950 dark:text-white md:text-4xl">Pourquoi utiliser KIBARE-JOB ?</h2>
+                <p class="mt-4 leading-7 text-slate-600 dark:text-slate-300">L application est pensee pour les candidats au Burkina Faso et en Afrique: simple, rapide et adaptee au mobile.</p>
+            </div>
+            <div class="mt-10 grid gap-5 md:grid-cols-2 lg:grid-cols-4">
+                {% for item in strengths %}
+                    <article class="fade-in rounded-3xl bg-slate-50 p-6 ring-1 ring-slate-100 transition hover:-translate-y-1 hover:bg-secondary/5 hover:shadow-lg dark:bg-slate-950 dark:ring-slate-800 dark:hover:bg-slate-900">
+                        <div class="grid h-12 w-12 place-items-center rounded-2xl bg-secondary/15 text-primary">
+                            {% if item.icon == 'match' %}
+                                <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none"><path d="m3 17 6-6 4 4 7-8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M14 7h6v6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+                            {% elseif item.icon == 'swipe' %}
+                                <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none"><path d="M7 12h10M13 8l4 4-4 4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M5 4h14v16H5z" stroke="currentColor" stroke-width="2"/></svg>
+                            {% elseif item.icon == 'cv' %}
+                                <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none"><path d="M7 3h7l5 5v13H7z" stroke="currentColor" stroke-width="2"/><path d="M14 3v6h5M10 13h6M10 17h4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+                            {% else %}
+                                <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none"><path d="M4 7h16M4 12h16M4 17h10" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+                            {% endif %}
+                        </div>
+                        <h3 class="mt-5 text-lg font-black text-slate-950 dark:text-white">{{ item.title }}</h3>
+                        <p class="mt-3 leading-7 text-slate-600 dark:text-slate-300">{{ item.text }}</p>
                     </article>
                 {% endfor %}
             </div>
         </div>
     </section>
 
-    <section class="mx-auto max-w-7xl px-5 py-20">
-        <div class="grid gap-6 md:grid-cols-3">
-            {% for guide in [
-                {title: 'Swipe gauche/droite', text: 'Refuse ou aime une offre selon ton interet et ton niveau de compatibilite.'},
-                {title: 'Matching automatique', text: 'Le score t’aide a comprendre pourquoi une offre correspond a ton profil.'},
-                {title: 'Candidature en 1 clic', text: 'Le CV, la lettre et les documents utiles sont prepares automatiquement.'}
-            ] %}
-                <article class="fade-in rounded-2xl bg-white p-7 shadow-soft transition duration-300 hover:scale-[1.02]">
-                    <h2 class="text-2xl font-black text-primary">{{ guide.title }}</h2>
-                    <p class="mt-4 leading-7 text-slate-600">{{ guide.text }}</p>
-                </article>
-            {% endfor %}
+    <section id="fonctionnement" class="px-4 py-16 md:px-8">
+        <div class="mx-auto max-w-7xl">
+            <div class="grid gap-10 lg:grid-cols-[.8fr_1fr] lg:items-start">
+                <div>
+                    <p class="text-sm font-black uppercase tracking-wide text-secondary">Parcours candidat</p>
+                    <h2 class="mt-3 text-3xl font-black text-slate-950 dark:text-white md:text-4xl">Comment ca marche ?</h2>
+                    <p class="mt-4 leading-7 text-slate-600 dark:text-slate-300">L objectif est simple: vous faire passer moins de temps a chercher, et plus de temps a saisir les bonnes opportunites.</p>
+                </div>
+                <div class="grid gap-4">
+                    {% for step in steps %}
+                        <article class="fade-in flex gap-4 rounded-3xl bg-white p-5 shadow-sm ring-1 ring-slate-100 dark:bg-slate-900 dark:ring-slate-800">
+                            <span class="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-primary text-sm font-black text-white">{{ step.number }}</span>
+                            <div>
+                                <h3 class="font-black text-slate-950 dark:text-white">{{ step.title }}</h3>
+                                <p class="mt-2 leading-7 text-slate-600 dark:text-slate-300">{{ step.text }}</p>
+                            </div>
+                        </article>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="telechargement" class="bg-slate-950 px-4 py-16 text-white md:px-8">
+        <div class="mx-auto max-w-7xl">
+            <div class="grid gap-10 lg:grid-cols-[.85fr_1.15fr] lg:items-center">
+                <div>
+                    <p class="text-sm font-black uppercase tracking-wide text-accent">Telechargement</p>
+                    <h2 class="mt-3 text-3xl font-black md:text-4xl">Installez l application sur votre telephone.</h2>
+                    <p class="mt-5 leading-8 text-white/70">KIBARE-JOB sera disponible sur Android et iOS. La section ci-dessous montre comment telecharger l application selon votre telephone.</p>
+                </div>
+                <div class="grid gap-5 md:grid-cols-2">
+                    <article class="rounded-3xl bg-white p-6 text-slate-900">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-sm font-black uppercase tracking-wide text-slate-400">Android</p>
+                                <h3 class="mt-1 text-2xl font-black text-slate-950">Google Play</h3>
+                            </div>
+                            <span class="grid h-12 w-12 place-items-center rounded-2xl bg-secondary/15 text-primary">
+                                <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none"><path d="m5 3 14 9L5 21V3Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>
+                            </span>
+                        </div>
+                        <ol class="mt-6 space-y-3 text-sm font-semibold text-slate-600">
+                            <li>1. Ouvrez Google Play Store.</li>
+                            <li>2. Recherchez <strong>KIBARE-JOB</strong>.</li>
+                            <li>3. Appuyez sur Installer.</li>
+                            <li>4. Creez votre compte candidat et completez votre profil.</li>
+                        </ol>
+                        <a href="#" class="mt-6 inline-flex w-full items-center justify-center rounded-2xl bg-primary px-5 py-3 font-black text-white transition hover:bg-secondary">Telecharger sur Android</a>
+                        <p class="mt-3 text-xs font-semibold text-slate-400">Lien officiel a connecter au lancement public.</p>
+                    </article>
+
+                    <article class="rounded-3xl bg-white p-6 text-slate-900">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-sm font-black uppercase tracking-wide text-slate-400">iPhone</p>
+                                <h3 class="mt-1 text-2xl font-black text-slate-950">App Store</h3>
+                            </div>
+                            <span class="grid h-12 w-12 place-items-center rounded-2xl bg-secondary/15 text-primary">
+                                <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none"><path d="M12 3v18M5 8h14M7 16h10" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+                            </span>
+                        </div>
+                        <ol class="mt-6 space-y-3 text-sm font-semibold text-slate-600">
+                            <li>1. Ouvrez l App Store.</li>
+                            <li>2. Recherchez <strong>KIBARE-JOB</strong>.</li>
+                            <li>3. Appuyez sur Obtenir.</li>
+                            <li>4. Ouvrez l application et commencez a swiper les offres.</li>
+                        </ol>
+                        <a href="#" class="mt-6 inline-flex w-full items-center justify-center rounded-2xl border border-slate-200 bg-slate-50 px-5 py-3 font-black text-primary transition hover:bg-secondary/10">Telecharger sur iOS</a>
+                        <p class="mt-3 text-xs font-semibold text-slate-400">Lien officiel a connecter au lancement public.</p>
+                    </article>
+                </div>
+            </div>
         </div>
     </section>
 </main>
