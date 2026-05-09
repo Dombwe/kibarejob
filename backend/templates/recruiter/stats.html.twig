@@ -1,4 +1,4 @@
-{% extends 'recruiter/_layout.html.twig' %}
+﻿{% extends 'recruiter/_layout.html.twig' %}
 
 {% set active = 'stats' %}
 {% block title %}Statistiques RH - KIBARE-JOB{% endblock %}
@@ -7,7 +7,7 @@
 {% set stats = stats|default([
     { label: 'Candidatures totales', value: '112', change: '+12%', color: 'primary' },
     { label: 'Taux de conversion', value: '4.5%', change: '+0.8%', color: 'accent' },
-    { label: 'Delai moyen', value: '18 j', change: '-3 j', color: 'secondary' },
+    { label: 'Délai moyen', value: '18 j', change: '-3 j', color: 'secondary' },
     { label: 'Candidats actifs', value: '89', change: '+15%', color: 'neutral' }
 ]) %}
 {% set weekly = weekly|default([
@@ -18,13 +18,13 @@
 ]) %}
 {% set funnel = funnel|default([
     { name: 'Candidatures', value: 112, width: 100, color: 'bg-secondary' },
-    { name: 'Consultees', value: 78, width: 70, color: 'bg-accent' },
+    { name: 'Consultées', value: 78, width: 70, color: 'bg-accent' },
     { name: 'Entretiens', value: 18, width: 16, color: 'bg-secondary' },
     { name: 'Recrutements', value: 5, width: 5, color: 'bg-accent' }
 ]) %}
 {% set skills = skills|default([
     { name: 'JavaScript / React', count: 45 }, { name: 'Marketing Digital', count: 38 },
-    { name: 'Comptabilite', count: 32 }, { name: 'Gestion de Projet', count: 28 },
+    { name: 'Comptabilité', count: 32 }, { name: 'Gestion de Projet', count: 28 },
     { name: 'Python', count: 25 }, { name: 'Node.js', count: 22 }
 ]) %}
 {% set locations = locations|default([
@@ -40,7 +40,7 @@
             <h1 class="text-2xl font-black text-slate-950">Statistiques RH</h1>
             <p class="mt-1 font-semibold text-slate-500">Analyse des performances de recrutement</p>
         </div>
-        <select class="rounded-2xl border border-slate-200 bg-white px-4 py-2 font-semibold text-slate-600 outline-none"><option>30 derniers jours</option><option>90 derniers jours</option><option>Cette annee</option></select>
+        <select class="rounded-2xl border border-slate-200 bg-white px-4 py-2 font-semibold text-slate-600 outline-none"><option>30 derniers jours</option><option>90 derniers jours</option><option>Cette année</option></select>
     </div>
 
     <div class="mb-8 grid grid-cols-2 gap-4 lg:grid-cols-4">
@@ -90,7 +90,7 @@
 
     <div class="grid gap-6 lg:grid-cols-2">
         <article class="fade-in rounded-3xl bg-white p-6 shadow-sm ring-1 ring-slate-100">
-            <h2 class="mb-6 text-lg font-black">Top competences</h2>
+            <h2 class="mb-6 text-lg font-black">Top compétences</h2>
             <div class="space-y-4">
                 {% for skill in skills %}
                     <div class="flex items-center gap-4">
@@ -101,7 +101,7 @@
                         </div>
                     </div>
                 {% else %}
-                    <div class="rounded-2xl bg-slate-50 p-5 text-sm font-semibold text-slate-500">Aucune competence disponible pour le moment.</div>
+                    <div class="rounded-2xl bg-slate-50 p-5 text-sm font-semibold text-slate-500">Aucune compétence disponible pour le moment.</div>
                 {% endfor %}
             </div>
         </article>
@@ -123,3 +123,5 @@
     </div>
 </div>
 {% endblock %}
+
+

@@ -100,9 +100,9 @@ class AuthEmailService
             ->from($this->mailFrom)
             ->to($user->getEmail())
             ->subject('Reinitialisation de votre mot de passe KIBARE-JOB')
-            ->text("Une demande de reinitialisation a ete faite.\n\nUtilisez ce lien valable 1h :\n{$url}\n")
+            ->text("Une demande de réinitialisation a été faite.\n\nUtilisez ce lien valable 1h :\n{$url}\n")
             ->html(sprintf(
-                '<p>Une demande de reinitialisation a ete faite.</p><p>Utilisez ce lien valable 1h :</p><p><a href="%s">Reinitialiser mon mot de passe</a></p>',
+                '<p>Une demande de réinitialisation a été faite.</p><p>Utilisez ce lien valable 1h :</p><p><a href="%s">Réinitialiser mon mot de passe</a></p>',
                 htmlspecialchars($url, ENT_QUOTES)
             )));
     }

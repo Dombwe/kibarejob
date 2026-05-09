@@ -1,4 +1,4 @@
-{% extends 'base.html.twig' %}
+﻿{% extends 'base.html.twig' %}
 
 {% block title %}Connexion - KIBARE-JOB{% endblock %}
 
@@ -30,7 +30,7 @@
                 </a>
                 <div class="mt-24">
                     <p class="mb-4 inline-flex rounded-full border border-white/20 bg-white/10 px-4 py-2 text-sm font-bold text-white/85">Espace recruteur</p>
-                    <h1 class="max-w-sm text-4xl font-black leading-tight">Connectez-vous a votre tableau de bord premium.</h1>
+                    <h1 class="max-w-sm text-4xl font-black leading-tight">Connectez-vous à votre tableau de bord premium.</h1>
                     <p class="mt-5 max-w-md leading-7 text-white/75">Publiez vos offres, suivez les candidatures et analysez vos recrutements dans une interface claire et professionnelle.</p>
                 </div>
                 <div class="absolute bottom-10 left-10 right-10 grid grid-cols-3 gap-3">
@@ -49,7 +49,7 @@
                         <span class="grid h-10 w-10 place-items-center rounded-2xl bg-primary text-accent">KJ</span>
                         KIBARE-JOB
                     </a>
-                    <a href="{{ path('app_register') }}" class="ml-auto rounded-full border border-slate-200 px-4 py-2 text-sm font-black text-slate-600 transition hover:border-secondary/30 hover:text-secondary">Creer un compte</a>
+                    <a href="{{ path('app_register') }}" class="ml-auto rounded-full border border-slate-200 px-4 py-2 text-sm font-black text-slate-600 transition hover:border-secondary/30 hover:text-secondary">Créer un compte</a>
                 </div>
 
                 <div class="mx-auto max-w-md">
@@ -62,7 +62,7 @@
                     {% endfor %}
                     {% if error %}
                         <div class="mt-5 rounded-2xl bg-slate-100 px-4 py-3 text-sm font-semibold text-slate-700">
-                            Email ou mot de passe incorrect. Verifiez vos informations puis reessayez.
+                            Email ou mot de passe incorrect. Vérifiez vos informations puis réessayez.
                         </div>
                     {% endif %}
 
@@ -81,7 +81,7 @@
                             </span>
                         </label>
                         <div class="flex justify-end">
-                            <a href="{{ path('app_forgot_password') }}" class="text-sm font-black text-secondary transition hover:text-primary">Mot de passe oublie ?</a>
+                            <a href="{{ path('app_forgot_password') }}" class="text-sm font-black text-secondary transition hover:text-primary">Mot de passe oublié ?</a>
                         </div>
                         <button class="flex w-full items-center justify-center rounded-2xl bg-primary px-6 py-4 font-black text-white transition duration-300 hover:scale-[1.02] hover:bg-secondary" type="submit">
                             <span data-login-label>Se connecter</span>
@@ -91,7 +91,7 @@
 
                     <p class="mt-7 text-center text-sm font-semibold text-slate-600">
                         Pas encore de compte ?
-                        <a href="{{ path('app_register') }}" class="font-black text-secondary transition hover:text-primary">Creer un compte recruteur</a>
+                        <a href="{{ path('app_register') }}" class="font-black text-secondary transition hover:text-primary">Créer un compte recruteur</a>
                     </p>
                 </div>
             </div>
@@ -99,3 +99,7 @@
     </div>
 </main>
 {% endblock %}
+
+
+
+

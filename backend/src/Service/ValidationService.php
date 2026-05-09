@@ -61,7 +61,7 @@ class ValidationService
         $errors = [];
 
         if (strlen($password) < 8) {
-            $errors[] = 'Le mot de passe doit contenir au moins 8 caracteres.';
+            $errors[] = 'Le mot de passe doit contenir au moins 8 caractères.';
         }
 
         if (!preg_match('/[A-Za-z]/', $password) || !preg_match('/[0-9]/', $password)) {
@@ -117,15 +117,15 @@ class ValidationService
         $errors = [];
 
         if (!$file->isValid()) {
-            $errors[] = 'Le fichier envoye est invalide.';
+            $errors[] = 'Le fichier envoyé est invalide.';
         }
 
         if ($file->getSize() > $maxBytes) {
-            $errors[] = sprintf('Le fichier ne doit pas depasser %d Mo.', (int) ($maxBytes / 1024 / 1024));
+            $errors[] = sprintf('Le fichier ne doit pas dépasser %d Mo.', (int) ($maxBytes / 1024 / 1024));
         }
 
         if (!in_array($file->getMimeType(), $allowedMimeTypes, true)) {
-            $errors[] = 'Type de fichier non autorise.';
+            $errors[] = 'Type de fichier non autorisé.';
         }
 
         return $errors;

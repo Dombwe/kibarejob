@@ -33,7 +33,7 @@ class CandidatureController extends AbstractController
     {
         $user = $this->getUser();
         if (!$user instanceof User) {
-            throw $this->createAccessDeniedException('Utilisateur non authentifie.');
+            throw $this->createAccessDeniedException('Utilisateur non authentifié.');
         }
 
         return $user;
@@ -66,3 +66,5 @@ class CandidatureController extends AbstractController
         ];
     }
 }
+
+

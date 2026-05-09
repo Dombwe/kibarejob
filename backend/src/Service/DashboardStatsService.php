@@ -129,13 +129,13 @@ class DashboardStatsService
                 'candidate' => $candidate,
                 'avatar' => $this->initials($candidate),
                 'age' => $this->age($profile?->getBirthDate()),
-                'location' => $profile?->getCity() ?: 'Non renseigne',
+                'location' => $profile?->getCity() ?: 'Non renseigné',
                 'job' => $swipe->getOffer()->getTitle(),
                 'status' => $swipe->getStatus()->value,
                 'label' => $this->statusLabel($swipe->getStatus()),
                 'score' => $swipe->getMatchScore() ?? 0,
                 'skills' => $profile?->getSkills() ?: [],
-                'education' => $profile?->getEducationLevel() ?: 'Non renseigne',
+                'education' => $profile?->getEducationLevel() ?: 'Non renseigné',
                 'experience' => $this->experienceLabel($swipe->getOffer()->getRequiredExperienceYears()),
                 'appliedAt' => 'Il y a ' . $this->relativeTime($swipe->getSentAt()),
             ];
@@ -696,7 +696,7 @@ class DashboardStatsService
     {
         $counts = [];
         foreach ($swipes as $swipe) {
-            $city = $swipe->getCandidate()->getCandidateProfile()?->getCity() ?: 'Non renseigne';
+            $city = $swipe->getCandidate()->getCandidateProfile()?->getCity() ?: 'Non renseigné';
             $counts[$city] = ($counts[$city] ?? 0) + 1;
         }
         arsort($counts);
@@ -723,7 +723,7 @@ class DashboardStatsService
         $plans = [
             ['id' => 'free', 'name' => 'Gratuit', 'price' => '0', 'features' => ['1 offre active', '10 candidatures par offre', 'Matching basique', 'Support email']],
             ['id' => 'standard', 'name' => 'Standard', 'price' => '25 000', 'features' => ['5 offres actives', '100 candidatures par offre', 'Matching avance', 'Statistiques RH']],
-            ['id' => 'pro', 'name' => 'Pro', 'price' => '75 000', 'features' => ['Offres illimitees', 'Candidatures illimitees', 'Boost inclus', 'Support prioritaire']],
+            ['id' => 'pro', 'name' => 'Pro', 'price' => '75 000', 'features' => ['Offres illimitées', 'Candidatures illimitées', 'Boost inclus', 'Support prioritaire']],
         ];
 
         return array_map(static function (array $plan) use ($current): array {
@@ -753,7 +753,7 @@ class DashboardStatsService
 
     private function experienceLabel(int $years): string
     {
-        return 0 === $years ? 'Debutant' : $years . ' an' . ($years > 1 ? 's' : '');
+        return 0 === $years ? 'Débutant' : $years . ' an' . ($years > 1 ? 's' : '');
     }
 
     private function compactNumber(int $value): string

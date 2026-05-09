@@ -1,14 +1,14 @@
-{% extends 'recruiter/_layout.html.twig' %}
+﻿{% extends 'recruiter/_layout.html.twig' %}
 
 {% set active = 'offers' %}
 {% block title %}Mes offres - KIBARE-JOB{% endblock %}
 
 {% block recruiter_content %}
 {% set offers = offers|default([
-    { title: 'Developpeur Web Full Stack', location: 'Ouagadougou', salary: '350000 - 500000', contract: 'CDI', applications: 24, views: 156, status: 'active', postedAt: 'Il y a 5 jours', deadline: '30 Mai 2026', boosted: true },
+    { title: 'Développeur Web Full Stack', location: 'Ouagadougou', salary: '350000 - 500000', contract: 'CDI', applications: 24, views: 156, status: 'active', postedAt: 'Il y a 5 jours', deadline: '30 Mai 2026', boosted: true },
     { title: 'Responsable Marketing Digital', location: 'Ouagadougou', salary: '400000 - 600000', contract: 'CDD', applications: 18, views: 98, status: 'active', postedAt: 'Il y a 1 semaine', deadline: '15 Juin 2026', boosted: false },
     { title: 'Comptable Senior', location: 'Bobo-Dioulasso', salary: '250000 - 350000', contract: 'CDI', applications: 12, views: 67, status: 'active', postedAt: 'Il y a 2 semaines', deadline: '1 Juin 2026', boosted: false },
-    { title: 'Assistant RH', location: 'Ouagadougou', salary: '150000 - 200000', contract: 'Stage', applications: 0, views: 23, status: 'draft', postedAt: 'Non publiee', deadline: null, boosted: false }
+    { title: 'Assistant RH', location: 'Ouagadougou', salary: '150000 - 200000', contract: 'Stage', applications: 0, views: 23, status: 'draft', postedAt: 'Non publiée', deadline: null, boosted: false }
 ]) %}
 {% set activeOffersCount = activeOffersCount|default(3) %}
 
@@ -30,7 +30,7 @@
             <input class="w-full rounded-2xl border border-slate-200 bg-white py-3 pl-11 pr-4 font-semibold outline-none focus:ring-4 focus:ring-secondary/20" placeholder="Rechercher une offre...">
         </label>
         <div class="flex flex-wrap gap-2">
-            {% for filter in ['Toutes', 'Active', 'Cloturee', 'Brouillon'] %}
+            {% for filter in ['Toutes', 'Active', 'Clôturée', 'Brouillon'] %}
                 <button class="rounded-2xl px-4 py-2 text-sm font-black transition {% if loop.first %}bg-secondary text-white{% else %}border border-slate-200 bg-white text-slate-600 hover:bg-slate-50{% endif %}">{{ filter }}</button>
             {% endfor %}
         </div>
@@ -48,7 +48,7 @@
                                 </div>
                                 <div>
                                     <h2 class="text-lg font-black text-slate-950">{{ offer.title }}</h2>
-                                    <p class="mt-1 text-sm font-semibold text-slate-500">{{ offer.location }} · {{ offer.postedAt }}</p>
+                                    <p class="mt-1 text-sm font-semibold text-slate-500">{{ offer.location }} Â· {{ offer.postedAt }}</p>
                                 </div>
                             </div>
                             <div class="flex flex-wrap items-center justify-end gap-2">
@@ -56,7 +56,7 @@
                                     <span class="rounded-full bg-gradient-to-r from-secondary to-primary px-3 py-1 text-xs font-black text-white">Boostee</span>
                                 {% endif %}
                                 <span class="rounded-full px-3 py-1 text-xs font-black {% if offer.status == 'active' %}bg-accent/35 text-primary{% elseif offer.status == 'draft' %}bg-accent/30 text-primary{% else %}bg-slate-100 text-slate-700{% endif %}">
-                                    {{ offer.status == 'active' ? 'Active' : (offer.status == 'draft' ? 'Brouillon' : 'Cloturee') }}
+                                    {{ offer.status == 'active' ? 'Active' : (offer.status == 'draft' ? 'Brouillon' : 'Clôturée') }}
                                 </span>
                             </div>
                         </div>
@@ -78,11 +78,13 @@
             </article>
         {% else %}
             <div class="rounded-3xl bg-white p-10 text-center shadow-sm ring-1 ring-slate-100">
-                <h2 class="text-xl font-black text-slate-950">Aucune offre publiee</h2>
-                <p class="mt-2 font-semibold text-slate-500">Creez votre premiere offre pour commencer a recevoir des candidatures.</p>
+                <h2 class="text-xl font-black text-slate-950">Aucune offre publiée</h2>
+                <p class="mt-2 font-semibold text-slate-500">Créez votre première offre pour commencer à recevoir des candidatures.</p>
                 <a href="{{ path('recruiter_offer_new') }}" class="mt-6 inline-flex rounded-2xl bg-gradient-to-r from-secondary to-primary px-6 py-3 font-black text-white">Nouvelle offre</a>
             </div>
         {% endfor %}
     </div>
 </div>
 {% endblock %}
+
+

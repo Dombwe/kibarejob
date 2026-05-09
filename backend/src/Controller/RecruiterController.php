@@ -100,7 +100,7 @@ class RecruiterController extends AbstractController
 
                 $entityManager->persist($offer);
                 $entityManager->flush();
-                $this->addFlash('success', 'Votre offre a ete publiee avec succes.');
+                $this->addFlash('success', 'Votre offre a été publiée avec succès.');
 
                 return $this->redirectToRoute('recruiter_offers');
             }

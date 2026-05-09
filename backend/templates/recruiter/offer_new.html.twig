@@ -1,4 +1,4 @@
-{% extends 'recruiter/_layout.html.twig' %}
+﻿{% extends 'recruiter/_layout.html.twig' %}
 
 {% set active = 'offers' %}
 {% block title %}Publier une offre - KIBARE-JOB{% endblock %}
@@ -6,7 +6,7 @@
 {% block recruiter_content %}
 {% set contracts = ['CDI', 'CDD', 'Stage', 'Freelance', 'Prestation'] %}
 {% set educations = ['Aucun', 'CEP', 'BEPC', 'Bac', 'Bac +1', 'Bac +2', 'Licence', 'Master', 'Doctorat'] %}
-{% set skills = ['Communication', 'Travail en equipe', 'Organisation', 'Gestion de projet', 'Excel', 'Leadership', 'Analyse', 'Reporting'] %}
+{% set skills = ['Communication', 'Travail en équipe', 'Organisation', 'Gestion de projet', 'Excel', 'Leadership', 'Analyse', 'Reporting'] %}
 
 <div class="min-h-[calc(100vh-73px)] bg-slate-50">
     <div class="border-b border-slate-200 bg-white">
@@ -56,12 +56,12 @@
             <section class="fade-in rounded-3xl bg-white p-6 shadow-sm ring-1 ring-slate-100" data-offer-step-panel="0">
                 <h2 class="mb-6 text-xl font-black text-slate-950">Informations de l'offre</h2>
                 {% if errors|default([]) is not empty %}
-                    <div class="mb-6 rounded-2xl bg-slate-100 px-4 py-3 text-sm font-semibold text-slate-700">Certains champs obligatoires sont incomplets. Verifiez le formulaire puis reessayez.</div>
+                    <div class="mb-6 rounded-2xl bg-slate-100 px-4 py-3 text-sm font-semibold text-slate-700">Certains champs obligatoires sont incomplets. Vérifiez le formulaire puis réessayez.</div>
                 {% endif %}
                 <div class="space-y-6">
                     <label class="block">
                         <span class="mb-2 block text-sm font-black text-slate-700">Titre du poste *</span>
-                        <input name="title" class="w-full rounded-2xl border border-slate-200 px-4 py-3 font-semibold outline-none focus:ring-4 focus:ring-secondary/20" placeholder="Ex: Developpeur Web Full Stack" required data-job-title-input>
+                        <input name="title" class="w-full rounded-2xl border border-slate-200 px-4 py-3 font-semibold outline-none focus:ring-4 focus:ring-secondary/20" placeholder="Ex: Développeur Web Full Stack" required data-job-title-input>
                     </label>
                     <label class="block">
                         <span class="mb-2 block text-sm font-black text-slate-700">Nombre de postes *</span>
@@ -100,7 +100,7 @@
                     </div>
                     <div class="grid gap-6 md:grid-cols-2">
                         <label class="flex items-center justify-between rounded-2xl bg-slate-50 p-4">
-                            <span><span class="block font-black">Teletravail autorise</span><span class="text-sm font-semibold text-slate-500">Optionnel</span></span>
+                            <span><span class="block font-black">Télétravail autorisé</span><span class="text-sm font-semibold text-slate-500">Optionnel</span></span>
                             <input type="checkbox" name="isRemoteAllowed" value="1" class="h-5 w-5 rounded text-secondary">
                         </label>
                         <label class="block">
@@ -145,19 +145,19 @@
                     </div>
                     <div>
                         <label class="block">
-                            <span class="mb-2 block text-sm font-black text-slate-700">Annees d'experience minimum</span>
-                            <input type="number" min="0" name="requiredExperienceYears" value="0" class="w-full rounded-2xl border border-slate-200 px-4 py-3 font-semibold outline-none focus:ring-4 focus:ring-secondary/20">
+                            <span class="mb-2 block text-sm font-black text-slate-700">Annees d'expérience minimum</span>
+                            <input type="number" min="0" name="requiredExpérienceYears" value="0" class="w-full rounded-2xl border border-slate-200 px-4 py-3 font-semibold outline-none focus:ring-4 focus:ring-secondary/20">
                         </label>
                     </div>
                 </div>
             </section>
 
             <section class="fade-in rounded-3xl bg-white p-6 shadow-sm ring-1 ring-slate-100" data-offer-step-panel="2">
-                <h2 class="mb-6 text-xl font-black text-slate-950">Documents et competences</h2>
+                <h2 class="mb-6 text-xl font-black text-slate-950">Documents et compétences</h2>
                 <div class="space-y-6">
                     <div data-documents-builder>
                         <span class="mb-2 block text-sm font-black text-slate-700">Documents requis</span>
-                        <p class="mb-3 text-sm font-semibold text-slate-500">Definissez les pieces a fournir par les candidats pour postuler a cette offre.</p>
+                        <p class="mb-3 text-sm font-semibold text-slate-500">Définissez les pièces a fournir par les candidats pour postuler a cette offre.</p>
                         <div class="space-y-2" data-documents-list>
                             <div class="flex items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3" data-document-row>
                                 <input type="hidden" name="requiredDocuments[]" value="CV">
@@ -183,7 +183,7 @@
                         </div>
                     </div>
                     <div data-skills-builder>
-                        <span class="mb-2 block text-sm font-black text-slate-700">Competences requises *</span>
+                        <span class="mb-2 block text-sm font-black text-slate-700">Compétences requises *</span>
                         <div class="mb-3 flex flex-wrap gap-2" data-skills-list>
                             {% for skill in ['JavaScript','React','Node.js'] %}
                                 <span class="inline-flex items-center gap-2 rounded-full bg-secondary/15 px-3 py-1.5 text-sm font-black text-primary" data-skill-chip="{{ skill }}">
@@ -206,13 +206,13 @@
             <section class="fade-in rounded-3xl bg-gradient-to-r from-secondary/10 to-accent/20 p-6" data-offer-preview data-offer-step-panel="3">
                 <h3 class="mb-4 font-black text-slate-950">Apercu de votre offre</h3>
                 <div class="rounded-2xl bg-white p-4">
-                    <p class="text-lg font-black" data-preview-title>Developpeur Web Full Stack</p>
-                    <p class="mt-1 text-sm font-semibold text-slate-500" data-preview-meta>CDI · Ouagadougou · 1 poste</p>
-                    <p class="mt-2 text-sm leading-6 text-slate-500" data-preview-description>Votre offre apparaitra dans le feed candidat avec le score de matching et les documents requis.</p>
+                    <p class="text-lg font-black" data-preview-title>Développeur Web Full Stack</p>
+                    <p class="mt-1 text-sm font-semibold text-slate-500" data-preview-meta>CDI Â· Ouagadougou Â· 1 poste</p>
+                    <p class="mt-2 text-sm leading-6 text-slate-500" data-preview-description>Votre offre apparaîtra dans le feed candidat avec le score de matching et les documents requis.</p>
                     <div class="mt-4 grid gap-3 md:grid-cols-2">
                         <div class="rounded-2xl bg-slate-50 p-3">
                             <p class="text-xs font-black uppercase tracking-wide text-slate-400">Profil</p>
-                            <p class="mt-1 text-sm font-semibold text-slate-700" data-preview-profile>Licence · Domaine non renseigne</p>
+                            <p class="mt-1 text-sm font-semibold text-slate-700" data-preview-profile>Licence Â· Domaine non renseigné</p>
                         </div>
                         <div class="rounded-2xl bg-slate-50 p-3">
                             <p class="text-xs font-black uppercase tracking-wide text-slate-400">Documents</p>
@@ -239,3 +239,6 @@
     </main>
 </div>
 {% endblock %}
+
+
+

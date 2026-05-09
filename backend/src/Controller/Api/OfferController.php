@@ -39,7 +39,7 @@ class OfferController extends AbstractController
         if (!$this->subscriptionService->canCreateOffer($employer)) {
             return $this->json([
                 'success' => false,
-                'error' => 'Limite d offres gratuites atteinte. Abonnez-vous au plan Standard ou Pro pour creer plus d offres.',
+                'error' => 'Limite d\'offres gratuites atteinte. Abonnez-vous au plan Standard ou Pro pour créer plus d\'offres.',
                 'remaining_offers' => $this->subscriptionService->getRemainingOffers($employer),
                 'upgrade_url' => '/api/subscription/plans',
             ], JsonResponse::HTTP_FORBIDDEN);
@@ -154,8 +154,8 @@ class OfferController extends AbstractController
         if (array_key_exists('requiredEducation', $payload) || array_key_exists('required_education', $payload)) {
             $offer->setRequiredEducation((string) ($payload['requiredEducation'] ?? $payload['required_education']));
         }
-        if (array_key_exists('requiredExperienceYears', $payload) || array_key_exists('required_experience_years', $payload)) {
-            $offer->setRequiredExperienceYears((int) ($payload['requiredExperienceYears'] ?? $payload['required_experience_years']));
+        if (array_key_exists('requiredExperienceYears', $payload) || array_key_exists('required_expérience_years', $payload)) {
+            $offer->setRequiredExperienceYears((int) ($payload['requiredExperienceYears'] ?? $payload['required_expérience_years']));
         }
         if (array_key_exists('contractType', $payload) || array_key_exists('contract_type', $payload)) {
             $offer->setContractType(ContractType::from((string) ($payload['contractType'] ?? $payload['contract_type'])));
@@ -239,3 +239,5 @@ class OfferController extends AbstractController
         ];
     }
 }
+
+

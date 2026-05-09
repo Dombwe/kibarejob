@@ -1,15 +1,15 @@
-{% extends 'recruiter/_layout.html.twig' %}
+﻿{% extends 'recruiter/_layout.html.twig' %}
 
 {% set active = 'settings' %}
-{% block title %}Parametres recruteur - KIBARE-JOB{% endblock %}
+{% block title %}Paramètres recruteur - KIBARE-JOB{% endblock %}
 
 {% block recruiter_content %}
 {% set tabs = [
     { id: 'company', label: 'Entreprise' },
     { id: 'notifications', label: 'Notifications' },
-    { id: 'team', label: 'Equipe' },
+    { id: 'team', label: 'Équipe' },
     { id: 'subscription', label: 'Abonnement' },
-    { id: 'security', label: 'Securite' }
+    { id: 'security', label: 'Sécurité' }
 ] %}
 {% set company = company|default({
     name: 'Tech Burkina SARL',
@@ -23,15 +23,15 @@
 }) %}
 {% set plans = plans|default([
     { name: 'Gratuit', price: '0', current: false, features: ['5 offres actives', '20 candidatures/mois', 'Matching basique', 'Support email'] },
-    { name: 'Standard', price: '25 000', current: true, features: ['20 offres actives', '100 candidatures/mois', 'AI matching avance', 'Statistiques RH'] },
-    { name: 'Pro', price: '75 000', current: false, features: ['Offres illimitees', 'Candidatures illimitees', 'Boost inclus', 'Support prioritaire'] }
+    { name: 'Standard', price: '25 000', current: true, features: ['20 offres actives', '100 candidatures/mois', 'AI matching avancé', 'Statistiques RH'] },
+    { name: 'Pro', price: '75 000', current: false, features: ['Offres illimitées', 'Candidatures illimitées', 'Boost inclus', 'Support prioritaire'] }
 ]) %}
 {% set team = team|default([{name:'Mamadou Sawadogo', email:'mamadou@techburkina.bf', role:'Admin', avatar:'MS'}]) %}
 
 <div class="p-4 lg:p-8">
     <div class="mb-8">
-        <h1 class="text-2xl font-black text-slate-950">Parametres</h1>
-        <p class="mt-1 font-semibold text-slate-500">Gerez votre compte et vos preferences</p>
+        <h1 class="text-2xl font-black text-slate-950">Paramètres</h1>
+        <p class="mt-1 font-semibold text-slate-500">Gérez votre compte et vos préférences</p>
     </div>
 
     <div class="flex flex-col gap-6 lg:flex-row" data-settings-tabs>
@@ -54,12 +54,12 @@
                 </div>
                 <div class="grid gap-6 md:grid-cols-2">
                     {% for field in [
-                        {label: 'Nom de l entreprise', value: company.name},
+                        {label: "Nom de l'entreprise", value: company.name},
                         {label: 'NIF', value: company.nif},
-                        {label: 'Secteur d activite', value: company.sector},
+                        {label: "Secteur d'activité", value: company.sector},
                         {label: 'Taille', value: company.size},
                         {label: 'Email professionnel', value: company.email},
-                        {label: 'Telephone', value: company.phone},
+                        {label: 'Téléphone', value: company.phone},
                         {label: 'Ville', value: company.city},
                         {label: 'Pays', value: company.country}
                     ] %}
@@ -74,7 +74,7 @@
                 <div class="space-y-4">
                     {% for item in [
                         {label: 'Nouvelle candidature', desc: 'Recevoir un email quand un candidat postule'},
-                        {label: 'Confirmation d entretien', desc: 'Recevoir un email quand un candidat confirme'},
+                        {label: "Confirmation d'entretien", desc: 'Recevoir un email quand un candidat confirme'},
                         {label: 'SMS de convocation', desc: 'Envoyer un SMS automatique aux candidats'},
                         {label: 'Notifications navigateur', desc: 'Recevoir des alertes dans votre espace'}
                     ] %}
@@ -84,7 +84,7 @@
             </section>
 
             <section data-settings-panel="team" class="hidden rounded-3xl bg-white p-6 shadow-sm ring-1 ring-slate-100">
-                <div class="mb-6 flex items-center justify-between"><h2 class="text-xl font-black">Equipe de recrutement</h2><button class="rounded-xl bg-secondary px-4 py-2 text-sm font-black text-white">Inviter</button></div>
+                <div class="mb-6 flex items-center justify-between"><h2 class="text-xl font-black">Équipe de recrutement</h2><button class="rounded-xl bg-secondary px-4 py-2 text-sm font-black text-white">Inviter</button></div>
                 <div class="space-y-3">
                     {% for member in team %}
                         <div class="flex items-center gap-4 rounded-2xl bg-slate-50 p-4"><div class="grid h-12 w-12 place-items-center rounded-full bg-gradient-to-br from-secondary to-primary font-black text-white">{{ member.avatar }}</div><div class="flex-1"><p class="font-black">{{ member.name }}</p><p class="text-sm font-semibold text-slate-500">{{ member.email }}</p></div><span class="rounded-full bg-secondary/15 px-3 py-1 text-sm font-black text-primary">{{ member.role }}</span></div>
@@ -108,15 +108,18 @@
             </section>
 
             <section data-settings-panel="security" class="hidden rounded-3xl bg-white p-6 shadow-sm ring-1 ring-slate-100">
-                <h2 class="mb-6 text-xl font-black">Securite</h2>
+                <h2 class="mb-6 text-xl font-black">Sécurité</h2>
                 <div class="space-y-4">
                     {% for label in ['Mot de passe actuel', 'Nouveau mot de passe', 'Confirmer le mot de passe'] %}
                         <label><span class="mb-2 block text-sm font-black text-slate-700">{{ label }}</span><input type="password" class="w-full rounded-2xl border border-slate-200 px-4 py-3 font-semibold outline-none focus:ring-4 focus:ring-secondary/20" placeholder="********"></label>
                     {% endfor %}
-                    <button class="rounded-2xl bg-secondary px-6 py-3 font-black text-white">Mettre a jour</button>
+                    <button class="rounded-2xl bg-secondary px-6 py-3 font-black text-white">Mettre à jour</button>
                 </div>
             </section>
         </div>
     </div>
 </div>
 {% endblock %}
+
+
+

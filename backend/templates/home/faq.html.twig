@@ -1,4 +1,4 @@
-{% extends 'base.html.twig' %}
+﻿{% extends 'base.html.twig' %}
 
 {% block title %}FAQ - KIBARE-JOB{% endblock %}
 
@@ -7,25 +7,25 @@
     {
         category: 'Candidats',
         items: [
-            {question: 'KIBARE-JOB est-il gratuit pour les candidats ?', answer: 'Oui. Pendant la phase de lancement, l application candidat est gratuite afin de faciliter l acces aux offres et aux candidatures.'},
-            {question: 'Comment les candidats postulent-ils aux offres ?', answer: 'Les candidats utilisent l application mobile. Ils completent leur profil, ajoutent leurs documents, puis peuvent aimer une offre pour envoyer une candidature preparee.'},
-            {question: 'Puis-je utiliser KIBARE-JOB si je n ai pas encore de CV ?', answer: 'Oui. L application aide les candidats a construire un profil exploitable et a valoriser leurs competences, experiences et documents.'}
+            {question: 'KIBARE-JOB est-il gratuit pour les candidats ?', answer: "Oui. Pendant la phase de lancement, l'application candidat est gratuite afin de faciliter l'accès aux offres et aux candidatures."},
+            {question: 'Comment les candidats postulent-ils aux offres ?', answer: "Les candidats utilisent l'application mobile. Ils complètent leur profil, ajoutent leurs documents, puis peuvent aimer une offre pour envoyer une candidature préparée."},
+            {question: "Puis-je utiliser KIBARE-JOB si je n'ai pas encore de CV ?", answer: "Oui. L'application aide les candidats à construire un profil exploitable et à valoriser leurs compétences, expériences et documents."}
         ]
     },
     {
         category: 'Recruteurs',
         items: [
-            {question: 'A quoi sert l espace recruteur ?', answer: 'L espace recruteur permet de publier des offres, suivre les candidatures, consulter les scores de matching et organiser le traitement des profils.'},
-            {question: 'Comment sont classes les candidats ?', answer: 'KIBARE-JOB analyse les competences, la localisation, le niveau d etude, l experience et les documents afin de proposer un score de compatibilite.'},
-            {question: 'Puis-je demander des documents precis dans une offre ?', answer: 'Oui. Lors de la publication d une offre, vous pouvez definir les documents requis ou optionnels comme le CV, la lettre, les diplomes, certificats ou attestations.'}
+            {question: "À quoi sert l'espace recruteur ?", answer: "L'espace recruteur permet de publier des offres, suivre les candidatures, consulter les scores de matching et organiser le traitement des profils."},
+            {question: 'Comment sont classés les candidats ?', answer: "KIBARE-JOB analyse les compétences, la localisation, le niveau d'étude, l'expérience et les documents afin de proposer un score de compatibilité."},
+            {question: 'Puis-je demander des documents précis dans une offre ?', answer: "Oui. Lors de la publication d'une offre, vous pouvez définir les documents requis ou optionnels comme le CV, la lettre, les diplômes, certificats ou attestations."}
         ]
     },
     {
         category: 'Plateforme',
         items: [
-            {question: 'KIBARE-JOB fonctionne-t-il avec une connexion faible ?', answer: 'La plateforme est pensee pour le contexte local, avec une experience mobile rapide et un objectif de consommation de donnees reduite.'},
-            {question: 'Les emails de confirmation sont-ils obligatoires ?', answer: 'Oui. Pour securiser les comptes recruteurs, l adresse email doit etre confirmee avant la connexion.'},
-            {question: 'Comment contacter l equipe KIBARE-JOB ?', answer: 'Vous pouvez utiliser la page Contact pour envoyer une demande, une question, une proposition de partenariat ou un retour produit.'}
+            {question: 'KIBARE-JOB fonctionne-t-il avec une connexion faible ?', answer: 'La plateforme est pensée pour le contexte local, avec une expérience mobile rapide et un objectif de consommation de données réduite.'},
+            {question: 'Les emails de confirmation sont-ils obligatoires ?', answer: "Oui. Pour sécuriser les comptes recruteurs, l'adresse email doit être confirmée avant la connexion."},
+            {question: "Comment contacter l'équipe KIBARE-JOB ?", answer: 'Vous pouvez utiliser la page Contact pour envoyer une demande, une question, une proposition de partenariat ou un retour produit.'}
         ]
     }
 ] %}
@@ -61,7 +61,7 @@
                     Tout comprendre sur KIBARE-JOB.
                 </h1>
                 <p class="mx-auto mt-6 max-w-2xl text-lg leading-8 text-slate-600 dark:text-slate-300">
-                    Retrouvez les reponses essentielles pour les candidats, les recruteurs et les partenaires qui souhaitent utiliser la plateforme.
+                    Retrouvez les réponses essentielles pour les candidats, les recruteurs et les partenaires qui souhaitent utiliser la plateforme.
                 </p>
             </div>
 
@@ -92,10 +92,12 @@
                     Envoyez-nous votre question et nous vous repondrons rapidement avec les informations utiles.
                 </p>
                 <a href="{{ path('contact') }}" class="mt-6 inline-flex items-center justify-center rounded-full bg-gradient-to-r from-secondary to-primary px-7 py-4 font-black text-white shadow-lg shadow-secondary/20 transition hover:-translate-y-0.5">
-                    Contacter l equipe
+                    Contacter l équipe
                 </a>
             </div>
         </div>
     </section>
 </main>
 {% endblock %}
+
+

@@ -52,7 +52,7 @@ class SubscriptionController extends AbstractController
 
         $payment = $this->paymentService->initiatePayment($user, $planId ?: $planCode, $method);
         if (!$this->paymentService->verifyPayment($payment['transactionId'])) {
-            return $this->json(['message' => 'Paiement non confirme.'], JsonResponse::HTTP_PAYMENT_REQUIRED);
+            return $this->json(['message' => 'Paiement non confirmé.'], JsonResponse::HTTP_PAYMENT_REQUIRED);
         }
 
         $this->applySubscription($user, $planCode);
@@ -88,7 +88,7 @@ class SubscriptionController extends AbstractController
         $this->entityManager->flush();
 
         return $this->json([
-            'message' => 'Abonnement resilie.',
+            'message' => 'Abonnement résilié.',
             'status' => $this->subscriptionStatus($user),
         ]);
     }
@@ -158,7 +158,7 @@ class SubscriptionController extends AbstractController
     {
         $user = $this->getUser();
         if (!$user instanceof User) {
-            throw $this->createAccessDeniedException('Utilisateur non authentifie.');
+            throw $this->createAccessDeniedException('Utilisateur non authentifié.');
         }
 
         return $user;
@@ -194,7 +194,7 @@ class SubscriptionController extends AbstractController
                 'target' => 'employeur',
                 'price' => 20000,
                 'mockPrice' => 0,
-                'features' => ['5_offres_actives', '100_candidatures_par_offre', 'export_csv', 'statistiques_avancees'],
+                'features' => ['5_offres_actives', '100_candidatures_par_offre', 'export_csv', 'statistiques_avancées'],
             ],
             [
                 'id' => 'employer_pro',
@@ -202,7 +202,7 @@ class SubscriptionController extends AbstractController
                 'target' => 'employeur',
                 'price' => 75000,
                 'mockPrice' => 0,
-                'features' => ['offres_illimitees', 'candidatures_illimitees', 'api_access', 'support_prioritaire'],
+                'features' => ['offres_illimitees', 'candidatures_illimitees', 'api_accèss', 'support_prioritaire'],
             ],
         ];
     }
@@ -225,3 +225,5 @@ class SubscriptionController extends AbstractController
         ];
     }
 }
+
+

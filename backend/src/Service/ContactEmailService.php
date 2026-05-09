@@ -30,7 +30,7 @@ class ContactEmailService
             "Nouveau message depuis le formulaire de contact KIBARE-JOB\n\nNom: %s\nEmail: %s\nTelephone: %s\nProfil: %s\nObjet: %s\n\nMessage:\n%s\n",
             $data['full_name'],
             $data['email'],
-            $data['phone'] ?: 'Non renseigne',
+            $data['phone'] ?: 'Non renseigné',
             $profileLabel,
             $data['subject'],
             $data['message']
@@ -47,7 +47,7 @@ class ContactEmailService
             <p style="white-space: pre-line;">%s</p>',
             htmlspecialchars($data['full_name'], ENT_QUOTES),
             htmlspecialchars($data['email'], ENT_QUOTES),
-            htmlspecialchars($data['phone'] ?: 'Non renseigne', ENT_QUOTES),
+            htmlspecialchars($data['phone'] ?: 'Non renseigné', ENT_QUOTES),
             htmlspecialchars($profileLabel, ENT_QUOTES),
             htmlspecialchars($data['subject'], ENT_QUOTES),
             htmlspecialchars($data['message'], ENT_QUOTES)

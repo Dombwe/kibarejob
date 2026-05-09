@@ -67,19 +67,19 @@ class WebAuthController extends AbstractController
                 $errors['email'][] = 'Email invalide.';
             }
             if ($userRepository->findOneBy(['email' => $form['email']]) instanceof User) {
-                $errors['email'][] = 'Cet email est deja utilise.';
+                $errors['email'][] = 'Cet email est déjà utilisé';
             }
             if (!$validationService->isValidBurkinaPhone($form['phone'] ?: null)) {
-                $errors['phone'][] = 'Le telephone doit respecter le format +226XXXXXXXX.';
+                $errors['phone'][] = 'Le téléphone doit respecter le format +226XXXXXXXX.';
             }
             if ('' === $form['companyName']) {
-                $errors['companyName'][] = 'Le nom de l entreprise est obligatoire.';
+                $errors['companyName'][] = "Le nom de l'entreprise est obligatoire.";
             }
             if ('' === $form['sector']) {
-                $errors['sector'][] = 'Le secteur d activite est obligatoire.';
+                $errors['sector'][] = "Le secteur d'activité est obligatoire.";
             }
             if (!preg_match('/^[A-Z]{2}$/', $form['countryCode'])) {
-                $errors['country'][] = 'Le pays selectionne est invalide.';
+                $errors['country'][] = 'Le pays sélectionné est invalide.';
             }
             if ('' === $form['countryName']) {
                 $errors['country'][] = 'Le pays est obligatoire.';
@@ -119,7 +119,7 @@ class WebAuthController extends AbstractController
                 $entityManager->flush();
                 $authEmailService->sendEmailVerification($user, $verificationToken);
 
-                $this->addFlash('success', 'Un email de confirmation a ete envoye dans votre boite mail.');
+                $this->addFlash('success', 'Un email de confirmation a été envoyé dans votre boîte mail.');
 
                 return $this->redirectToRoute('app_login');
             }
@@ -151,7 +151,7 @@ class WebAuthController extends AbstractController
         ]);
 
         if (!$user instanceof User || !$authEmailService->isEmailVerificationTokenValid($user, $token)) {
-            $this->addFlash('error', 'Lien de confirmation invalide ou expire.');
+            $this->addFlash('error', 'Lien de confirmation invalide ou expiré.');
 
             return $this->redirectToRoute('app_login');
         }
@@ -159,7 +159,7 @@ class WebAuthController extends AbstractController
         $authEmailService->markEmailVerified($user);
         $entityManager->flush();
 
-        $this->addFlash('success', 'Adresse email confirmee. Vous pouvez maintenant vous connecter.');
+        $this->addFlash('success', 'Adresse email confirmée. Vous pouvez maintenant vous connecter.');
 
         return $this->redirectToRoute('app_login');
     }
@@ -189,7 +189,7 @@ class WebAuthController extends AbstractController
                     $authEmailService->sendPasswordReset($user, $token);
                 }
 
-                $this->addFlash('success', 'Si un compte existe avec cet email, un lien de reinitialisation a ete envoye.');
+                $this->addFlash('success', 'Si un compte existe avec cet email, un lien de réinitialisation a été envoyé.');
 
                 return $this->redirectToRoute('app_login');
             }
@@ -216,7 +216,7 @@ class WebAuthController extends AbstractController
         ]);
 
         if (!$user instanceof User || !$authEmailService->isPasswordResetTokenValid($user, $token)) {
-            $this->addFlash('error', 'Lien de reinitialisation invalide ou expire.');
+            $this->addFlash('error', 'Lien de réinitialisation invalide ou expiré.');
 
             return $this->redirectToRoute('app_login');
         }
@@ -242,7 +242,7 @@ class WebAuthController extends AbstractController
                 $authEmailService->markEmailVerified($user);
                 $entityManager->flush();
 
-                $this->addFlash('success', 'Mot de passe reinitialise. Vous pouvez vous connecter.');
+                $this->addFlash('success', 'Mot de passe réinitialisé. Vous pouvez vous connecter.');
 
                 return $this->redirectToRoute('app_login');
             }
@@ -283,7 +283,7 @@ class WebAuthController extends AbstractController
         $googleUser = $clientRegistry->getClient('google')->fetchUser();
 
         if (!$googleUser instanceof GoogleUser || null === $googleUser->getEmail()) {
-            $this->addFlash('error', 'Impossible de recuperer le compte Google.');
+            $this->addFlash('error', 'Impossible de récupérer le compte Google.');
 
             return $this->redirectToRoute('app_login');
         }
@@ -307,7 +307,7 @@ class WebAuthController extends AbstractController
                 ->setCity('Ouagadougou')
                 ->setEducationLevel('Aucun')
                 ->setSkills([])
-                ->setLanguages([['name' => 'Francais', 'level' => 'Debutant']])
+                ->setLanguages([['name' => 'Français', 'level' => 'Débutant']])
                 ->setAvailability('Immediate');
 
             $entityManager->persist($user);

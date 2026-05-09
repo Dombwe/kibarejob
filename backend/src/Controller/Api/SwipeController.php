@@ -60,11 +60,11 @@ class SwipeController extends AbstractController
         $direction = SwipeDirection::from((string) ($payload['direction'] ?? 'like'));
 
         if ($direction === SwipeDirection::Superlike && !$this->subscriptionService->canSuperSwipe($user)) {
-            return $this->json(['error' => 'Le super swipe est reserve au plan Premium.'], JsonResponse::HTTP_FORBIDDEN);
+            return $this->json(['error' => 'Le super swipe est réservé au plan Premium.'], JsonResponse::HTTP_FORBIDDEN);
         }
 
         if ($this->swipeRepository->findOneBy(['candidate' => $user, 'offer' => $offer, 'isDeleted' => false]) instanceof Swipe) {
-            return $this->json(['error' => 'Cette offre a deja ete swipee.'], JsonResponse::HTTP_CONFLICT);
+            return $this->json(['error' => 'Cette offre a déjà été swipée.'], JsonResponse::HTTP_CONFLICT);
         }
 
         $swipe = (new Swipe())
@@ -98,7 +98,7 @@ class SwipeController extends AbstractController
     {
         $user = $this->getUser();
         if (!$user instanceof User) {
-            throw $this->createAccessDeniedException('Utilisateur non authentifie.');
+            throw $this->createAccessDeniedException('Utilisateur non authentifié.');
         }
 
         return $user;
@@ -114,3 +114,5 @@ class SwipeController extends AbstractController
         return is_array($payload) ? $payload : [];
     }
 }
+
+

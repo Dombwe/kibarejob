@@ -52,7 +52,7 @@ class AuthController extends AbstractController
 
         if (!$user->isEmailVerified()) {
             return $this->json([
-                'message' => 'Adresse email non confirmee. Verifiez votre boite mail avant de vous connecter.',
+                'message' => 'Adresse email non confirmée. Vérifiez votre boîte mail avant de vous connecter.',
                 'emailVerificationRequired' => true,
             ], JsonResponse::HTTP_FORBIDDEN);
         }
@@ -82,15 +82,15 @@ class AuthController extends AbstractController
         }
 
         if (!$this->validationService->isValidBurkinaPhone($phone)) {
-            $errors['phone'][] = 'Le telephone doit respecter le format +226XXXXXXXX.';
+            $errors['phone'][] = 'Le téléphone doit respecter le format +226XXXXXXXX.';
         }
 
         if ($this->userRepository->findOneBy(['email' => $email]) instanceof User) {
-            $errors['email'][] = 'Cet email est deja utilise.';
+            $errors['email'][] = 'Cet email est déjà utilisé.';
         }
 
         if ($phone && $this->userRepository->findOneBy(['phone' => $phone]) instanceof User) {
-            $errors['phone'][] = 'Ce telephone est deja utilise.';
+            $errors['phone'][] = 'Ce téléphone est déjà utilisé.';
         }
 
         $passwordErrors = $this->validationService->validatePassword($password);
@@ -119,7 +119,7 @@ class AuthController extends AbstractController
             $profile = (new Employer())
                 ->setUser($user)
                 ->setCompanyName((string) ($payload['companyName'] ?? $payload['company_name'] ?? 'Entreprise'))
-                ->setSector((string) ($payload['sector'] ?? 'Non renseigne'))
+                ->setSector((string) ($payload['sector'] ?? 'Non renseigné'))
                 ->setCountryCode((string) ($payload['countryCode'] ?? $payload['country_code'] ?? 'BF'))
                 ->setCountryName((string) ($payload['countryName'] ?? $payload['country_name'] ?? 'Burkina Faso'))
                 ->setCities($this->arrayValue($payload['cities'] ?? ['Ouagadougou']));
@@ -132,7 +132,7 @@ class AuthController extends AbstractController
                 ->setCity((string) ($payload['city'] ?? 'Ouagadougou'))
                 ->setEducationLevel((string) ($payload['educationLevel'] ?? $payload['education_level'] ?? 'Aucun'))
                 ->setSkills($this->arrayValue($payload['skills'] ?? []))
-                ->setLanguages($this->arrayValue($payload['languages'] ?? [['name' => 'Francais', 'level' => 'Debutant']]))
+                ->setLanguages($this->arrayValue($payload['languages'] ?? [['name' => 'Français', 'level' => 'Débutant']]))
                 ->setAvailability((string) ($payload['availability'] ?? 'Immediate'));
             $this->entityManager->persist($profile);
         }
@@ -142,7 +142,7 @@ class AuthController extends AbstractController
         $this->authEmailService->sendEmailVerification($user, $verificationToken);
 
         $response = [
-            'message' => 'Compte cree. Un email de confirmation vient de vous etre envoye.',
+            'message' => 'Compte créé. Un email de confirmation vient de vous être envoyé.',
             'emailVerificationRequired' => true,
             'user' => $this->serializeUser($user),
         ];
@@ -165,14 +165,14 @@ class AuthController extends AbstractController
         ]);
 
         if (!$user instanceof User || !$this->authEmailService->isEmailVerificationTokenValid($user, $token)) {
-            return $this->json(['message' => 'Lien de confirmation invalide ou expire.'], JsonResponse::HTTP_BAD_REQUEST);
+            return $this->json(['message' => 'Lien de confirmation invalide ou expiré.'], JsonResponse::HTTP_BAD_REQUEST);
         }
 
         $this->authEmailService->markEmailVerified($user);
         $this->entityManager->flush();
 
         return $this->json([
-            'message' => 'Adresse email confirmee. Vous pouvez maintenant vous connecter.',
+            'message' => 'Adresse email confirmée. Vous pouvez maintenant vous connecter.',
             'user' => $this->serializeUser($user),
         ]);
     }
@@ -191,7 +191,7 @@ class AuthController extends AbstractController
         }
 
         $response = [
-            'message' => 'Si un compte non confirme existe avec cet email, un nouveau lien a ete envoye.',
+            'message' => 'Si un compte non confirmé existe avec cet email, un nouveau lien a été envoyé.',
         ];
 
         return $this->json(isset($token) ? $this->withLocalDebugToken($response, 'verificationToken', $token) : $response);
@@ -211,7 +211,7 @@ class AuthController extends AbstractController
         }
 
         $response = [
-            'message' => 'Si un compte existe avec cet email, un lien de reinitialisation a ete envoye.',
+            'message' => 'Si un compte existe avec cet email, un lien de réinitialisation a été envoyé.',
         ];
 
         return $this->json(isset($token) ? $this->withLocalDebugToken($response, 'passwordResetToken', $token) : $response);
@@ -225,7 +225,7 @@ class AuthController extends AbstractController
         $password = (string) ($payload['password'] ?? '');
 
         if ('' === $token) {
-            return $this->json(['message' => 'Token de reinitialisation manquant.'], JsonResponse::HTTP_BAD_REQUEST);
+            return $this->json(['message' => 'Token de réinitialisation manquant.'], JsonResponse::HTTP_BAD_REQUEST);
         }
 
         $passwordErrors = $this->validationService->validatePassword($password);
@@ -238,7 +238,7 @@ class AuthController extends AbstractController
         ]);
 
         if (!$user instanceof User || !$this->authEmailService->isPasswordResetTokenValid($user, $token)) {
-            return $this->json(['message' => 'Lien de reinitialisation invalide ou expire.'], JsonResponse::HTTP_BAD_REQUEST);
+            return $this->json(['message' => 'Lien de réinitialisation invalide ou expiré.'], JsonResponse::HTTP_BAD_REQUEST);
         }
 
         $user->setPasswordHash($this->passwordHasher->hashPassword($user, $password));
@@ -246,7 +246,7 @@ class AuthController extends AbstractController
         $this->authEmailService->markEmailVerified($user);
         $this->entityManager->flush();
 
-        return $this->json(['message' => 'Mot de passe reinitialise. Vous pouvez vous connecter.']);
+        return $this->json(['message' => 'Mot de passe réinitialisé. Vous pouvez vous connecter.']);
     }
 
     #[Route('/refresh', name: 'api_auth_refresh', methods: ['POST'])]
@@ -261,7 +261,7 @@ class AuthController extends AbstractController
 
         $refreshToken = $this->refreshTokenManager->get($tokenValue);
         if (null === $refreshToken || !$refreshToken->isValid()) {
-            return $this->json(['message' => 'Refresh token invalide ou expire.'], JsonResponse::HTTP_UNAUTHORIZED);
+            return $this->json(['message' => 'Refresh token invalide ou expiré.'], JsonResponse::HTTP_UNAUTHORIZED);
         }
 
         $user = $this->userRepository->findOneBy(['email' => $refreshToken->getUsername()]);

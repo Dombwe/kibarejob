@@ -87,7 +87,7 @@ class ProfileController extends AbstractController
         $this->entityManager->flush();
 
         return $this->json([
-            'message' => 'CV envoye avec succes.',
+            'message' => 'CV envoyé avec succès.',
             'cvUrl' => $profile->getCvOriginalUrl(),
             'file' => $upload,
         ], JsonResponse::HTTP_CREATED);
@@ -98,7 +98,7 @@ class ProfileController extends AbstractController
         $user = $this->getUser();
 
         if (!$user instanceof User) {
-            throw $this->createAccessDeniedException('Utilisateur non authentifie.');
+            throw $this->createAccessDeniedException('Utilisateur non authentifié.');
         }
 
         return $user;

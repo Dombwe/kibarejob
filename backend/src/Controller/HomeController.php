@@ -49,11 +49,11 @@ class HomeController extends AbstractController
             ];
 
             if (!$this->isCsrfTokenValid('contact_form', (string) $request->request->get('_csrf_token'))) {
-                $errors[] = 'Le formulaire a expire. Merci de reessayer.';
+                $errors[] = 'Le formulaire a expiré. Merci de réessayer.';
             }
 
             if ('' !== trim((string) $request->request->get('website'))) {
-                $errors[] = 'Votre message n a pas pu etre envoye.';
+                $errors[] = "Votre message n'a pas pu être envoyé.";
             }
 
             if (strlen($formData['full_name']) < 2) {
@@ -73,17 +73,17 @@ class HomeController extends AbstractController
             }
 
             if (strlen($formData['message']) < 15) {
-                $errors[] = 'Votre message doit contenir au moins 15 caracteres.';
+                $errors[] = 'Votre message doit contenir au moins 15 caractères.';
             }
 
             if ([] === $errors) {
                 try {
                     $contactEmail->send($formData);
-                    $this->addFlash('success', 'Votre message a bien ete envoye. Notre equipe vous recontactera rapidement.');
+                    $this->addFlash('success', 'Votre message a bien été envoyé. Notre équipe vous recontactera rapidement.');
 
                     return $this->redirectToRoute('contact');
                 } catch (\Throwable) {
-                    $errors[] = 'Impossible d envoyer le message pour le moment. Verifiez la configuration mail puis reessayez.';
+                    $errors[] = "Impossible d'envoyer le message pour le moment. Vérifiez la configuration mail puis réessayez.";
                 }
             }
         }

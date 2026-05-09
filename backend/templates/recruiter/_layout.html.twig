@@ -1,4 +1,4 @@
-{% extends 'base.html.twig' %}
+﻿{% extends 'base.html.twig' %}
 
 {% set active = active|default('dashboard') %}
 
@@ -36,15 +36,15 @@
                         <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M18 8a6 6 0 1 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M13.7 21a2 2 0 0 1-3.4 0" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
                         <span class="absolute right-2 top-2 h-2.5 w-2.5 rounded-full bg-slate-500 ring-2 ring-white"></span>
                     </button>
-                    <div class="hidden absolute right-0 z-50 mt-3 w-80 overflow-hidden rounded-3xl border border-slate-100 bg-white shadow-2xl shadow-slate-200" data-notification-panel>
+                    <div class="hidden'absolute right-0 z-50 mt-3 w-80 overflow-hidden rounded-3xl border border-slate-100 bg-white shadow-2xl shadow-slate-200" data-notification-panel>
                         <div class="border-b border-slate-100 px-5 py-4">
                             <h3 class="font-black text-slate-950">Notifications</h3>
                         </div>
                         <div class="max-h-80 overflow-y-auto">
                             {% for notif in [
-                                {title: 'Nouvelle candidature', message: 'Mamadou Sawadogo a postule pour Developpeur Web', time: '2h'},
+                                {title: 'Nouvelle candidature', message: 'Mamadou Sawadogo a postule pour Développeur Web', time: '2h'},
                                 {title: 'Entretien confirme', message: 'Awa Ouedraogo confirme l entretien du 15 mai', time: '4h'},
-                                {title: 'Offre expirant bientot', message: 'L offre Comptable expire dans 3 jours', time: '1j'}
+                                {title: 'Offre expirant bientôt', message: "L'offre Comptable expire dans 3 jours", time: '1j'}
                             ] %}
                                 <button type="button" class="block w-full border-b border-slate-50 px-5 py-3 text-left transition hover:bg-slate-50">
                                     <span class="flex items-start justify-between gap-3">
@@ -65,9 +65,9 @@
                     <svg class="hidden h-4 w-4 text-slate-400 lg:block" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="m6 9 6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
                 </a>
 
-                <a href="{{ path('app_logout') }}" class="hidden items-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-black text-slate-600 shadow-sm transition hover:border-primary/20 hover:bg-slate-50 hover:text-primary md:inline-flex" title="Se deconnecter">
+                <a href="{{ path('app_logout') }}" class="hidden items-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-black text-slate-600 shadow-sm transition hover:border-primary/20 hover:bg-slate-50 hover:text-primary md:inline-flex" title="Se déconnecter">
                     <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M10 17l5-5-5-5M15 12H3M21 3v18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                    Deconnexion
+                    Déconnexion
                 </a>
             </div>
         </div>
@@ -81,7 +81,7 @@
                     { key: 'offers', label: 'Mes offres', route: 'recruiter_offers', icon: 'file' },
                     { key: 'applications', label: 'Candidatures', route: 'recruiter_applications', icon: 'users' },
                     { key: 'stats', label: 'Statistiques', route: 'recruiter_stats', icon: 'chart' },
-                    { key: 'settings', label: 'Parametres', route: 'recruiter_settings', icon: 'settings' }
+                    { key: 'settings', label: 'Paramètres', route: 'recruiter_settings', icon: 'settings' }
                 ] %}
                 {% for item in nav %}
                     <a href="{{ path(item.route) }}" class="flex items-center gap-3 rounded-2xl px-4 py-3 font-bold transition {% if active == item.key %}bg-gradient-to-r from-secondary to-primary text-white shadow-lg shadow-secondary/20{% else %}text-slate-600 hover:bg-slate-100{% endif %}">
@@ -108,11 +108,11 @@
                         <span class="text-sm font-black text-slate-800">Plan Standard</span>
                     </div>
                     <p class="mb-3 text-xs font-semibold text-slate-500">Plus que 45 jours restants</p>
-                    <a href="{{ path('recruiter_settings') }}#subscription" class="block rounded-xl bg-gradient-to-r from-secondary to-primary px-3 py-2 text-center text-sm font-black text-white">Passer a Pro</a>
+                        <a href="{{ path('recruiter_settings') }}#subscription" class="block rounded-xl bg-gradient-to-r from-secondary to-primary px-3 py-2 text-center text-sm font-black text-white">Passer à Pro</a>
                 </div>
                 <a href="{{ path('app_logout') }}" class="mt-3 flex items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-black text-slate-600 transition hover:border-primary/20 hover:bg-slate-50 hover:text-primary">
                     <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M10 17l5-5-5-5M15 12H3M21 3v18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                    Se deconnecter
+                        Se déconnecter
                 </a>
             </div>
         </aside>
@@ -125,3 +125,5 @@
     </div>
 </div>
 {% endblock %}
+
+

@@ -1,4 +1,4 @@
-{% extends 'base.html.twig' %}
+﻿{% extends 'base.html.twig' %}
 
 {% block title %}KIBARE-JOB - Trouvez l'emploi parfait au Burkina Faso{% endblock %}
 
@@ -6,22 +6,22 @@
 {% set features = [
     {
         title: 'Swipe intelligent',
-        description: 'Decouvrez les offres comme sur Tinder, avec une experience rapide et mobile.',
+        description: 'Decouvrez les offres comme sur Tinder, avec une expérience rapide et mobile.',
         icon: 'zap'
     },
     {
-        title: 'CV genere par IA',
-        description: 'Sans CV ? KIBARE-JOB vous aide a construire un profil professionnel.',
+        title: 'CV généré par IA',
+        description: 'Sans CV ? KIBARE-JOB vous aide à construire un profil professionnel.',
         icon: 'shield'
     },
     {
-        title: 'Matching precis',
-        description: 'Les offres sont classees selon vos competences, documents et disponibilite.',
+        title: 'Matching précis',
+        description: 'Les offres sont classees selon vos compétences, documents et disponibilite.',
         icon: 'trend'
     },
     {
         title: 'Concu pour la BF',
-        description: 'Une plateforme adaptee au contexte local et aux connexions mobiles.',
+        description: 'Une plateforme adaptée au contexte local et aux connexions mobiles.',
         icon: 'globe'
     }
 ] %}
@@ -47,15 +47,15 @@
             </a>
 
             <nav class="hidden items-center gap-7 text-sm font-semibold text-slate-600 md:flex">
-                <a href="#features" class="transition hover:text-secondary">Fonctionnalites</a>
+                <a href="#features" class="transition hover:text-secondary">Fonctionnalités</a>
                 <a href="#stats" class="transition hover:text-secondary">Statistiques</a>
                 <a href="{{ path('faq') }}" class="transition hover:text-secondary">FAQ</a>
                 <a href="{{ path('contact') }}" class="transition hover:text-secondary">Contact</a>
                 {% if app.user %}
                     <a href="{{ path('recruiter_entry') }}" class="rounded-full border border-slate-200 bg-white px-5 py-2.5 text-slate-700 shadow-sm transition hover:border-secondary/30 hover:text-secondary hover:shadow-md">Mon espace</a>
-                    <a href="{{ path('app_logout') }}" class="rounded-full bg-primary px-5 py-2.5 text-white shadow-sm transition hover:bg-secondary hover:shadow-md">Deconnexion</a>
+                    <a href="{{ path('app_logout') }}" class="rounded-full bg-primary px-5 py-2.5 text-white shadow-sm transition hover:bg-secondary hover:shadow-md">Déconnexion</a>
                 {% else %}
-                    <a href="{{ path('app_register') }}" class="rounded-full border border-slate-200 bg-white px-5 py-2.5 text-slate-700 shadow-sm transition hover:border-secondary/30 hover:text-secondary hover:shadow-md">Creer un compte</a>
+                    <a href="{{ path('app_register') }}" class="rounded-full border border-slate-200 bg-white px-5 py-2.5 text-slate-700 shadow-sm transition hover:border-secondary/30 hover:text-secondary hover:shadow-md">Créer un compte</a>
                     <a href="{{ path('app_login') }}" class="rounded-full bg-primary px-5 py-2.5 text-white shadow-sm transition hover:bg-secondary hover:shadow-md">Connexion</a>
                 {% endif %}
             </nav>
@@ -71,7 +71,7 @@
                     <span class="text-transparent bg-clip-text bg-gradient-to-r from-primary to-secondary">Burkina Faso</span>
                 </h1>
                 <p class="mx-auto mt-6 max-w-2xl text-lg leading-8 text-slate-600 md:text-xl">
-                    La plateforme de recrutement qui fonctionne comme Tinder. Swipez, postulez, recrutez et avancez plus vite.
+                    La plateforme de recrutement qui fonctionne comme Tinder. Swipez, postulez, recrutez et avancéz plus vite.
                 </p>
                 <div class="mt-8 flex flex-col justify-center gap-4 sm:flex-row">
                     <a href="{{ path('candidate_landing') }}" class="inline-flex items-center justify-center gap-3 rounded-full bg-gradient-to-r from-secondary to-primary px-8 py-4 font-black text-white shadow-lg shadow-secondary/20 transition hover:-translate-y-0.5 hover:shadow-xl hover:shadow-secondary/25">
@@ -94,10 +94,10 @@
                                 <svg class="h-8 w-8" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M8 2h8a2 2 0 0 1 2 2v16a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2Z" stroke="currentColor" stroke-width="2"/><path d="M11 18h2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
                             </div>
                             <h2 class="text-2xl font-black text-slate-950">Application Mobile</h2>
-                            <p class="mt-3 leading-7 text-slate-600">Pour les candidats. Swipez les offres, laissez l'IA creer votre CV et postuler automatiquement.</p>
+                            <p class="mt-3 leading-7 text-slate-600">Pour les candidats. Swipez les offres, laissez l'IA créer votre CV et postuler automatiquement.</p>
                             <ul class="mt-6 space-y-3 text-sm font-semibold text-slate-500">
                                 <li class="flex items-center gap-3"><span class="h-1.5 w-1.5 rounded-full bg-secondary"></span>Swipez les offres d'emploi</li>
-                                <li class="flex items-center gap-3"><span class="h-1.5 w-1.5 rounded-full bg-secondary"></span>CV genere automatiquement</li>
+                                <li class="flex items-center gap-3"><span class="h-1.5 w-1.5 rounded-full bg-secondary"></span>CV généré automatiquement</li>
                                 <li class="flex items-center gap-3"><span class="h-1.5 w-1.5 rounded-full bg-secondary"></span>Matching intelligent</li>
                                 <li class="flex items-center gap-3"><span class="h-1.5 w-1.5 rounded-full bg-secondary"></span>Mode hors-ligne</li>
                             </ul>
@@ -113,12 +113,12 @@
                                 <svg class="h-8 w-8" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 5h16v11H4V5Z" stroke="currentColor" stroke-width="2"/><path d="M9 20h6M12 16v4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
                             </div>
                             <h2 class="text-2xl font-black text-slate-950">Dashboard Recruteur</h2>
-                            <p class="mt-3 leading-7 text-slate-600">Pour les entreprises. Publiez des offres, recevez des candidatures qualifiees et recrutez plus vite.</p>
+                            <p class="mt-3 leading-7 text-slate-600">Pour les entreprises. Publiez des offres, recevez des candidatures qualifiées et recrutez plus vite.</p>
                             <ul class="mt-6 space-y-3 text-sm font-semibold text-slate-500">
                                 <li class="flex items-center gap-3"><span class="h-1.5 w-1.5 rounded-full bg-primary"></span>Publication d'offres simple</li>
                                 <li class="flex items-center gap-3"><span class="h-1.5 w-1.5 rounded-full bg-primary"></span>Candidatures scorees par IA</li>
-                                <li class="flex items-center gap-3"><span class="h-1.5 w-1.5 rounded-full bg-primary"></span>Statistiques RH completes</li>
-                                <li class="flex items-center gap-3"><span class="h-1.5 w-1.5 rounded-full bg-primary"></span>Email integre</li>
+                                <li class="flex items-center gap-3"><span class="h-1.5 w-1.5 rounded-full bg-primary"></span>Statistiques RH complètes</li>
+                                <li class="flex items-center gap-3"><span class="h-1.5 w-1.5 rounded-full bg-primary"></span>Email intégré</li>
                             </ul>
                         </div>
                     </article>
@@ -131,7 +131,7 @@
         <div class="mx-auto max-w-7xl">
             <div class="fade-in mx-auto mb-12 max-w-2xl text-center">
                 <h2 class="text-3xl font-black text-slate-950 md:text-4xl">Pourquoi choisir KIBARE-JOB ?</h2>
-                <p class="mt-4 leading-7 text-slate-600">Une plateforme concue pour le contexte burkinabe, avec des fonctionnalites adaptees a la realite locale.</p>
+                <p class="mt-4 leading-7 text-slate-600">Une plateforme conçue pour le contexte burkinabè, avec des fonctionnalités adaptées à la réalité locale.</p>
             </div>
 
             <div class="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
@@ -171,8 +171,8 @@
 
     <section id="contact" class="px-4 py-16">
         <div class="fade-in mx-auto max-w-4xl text-center">
-            <h2 class="text-3xl font-black text-slate-950 md:text-4xl">Pret a trouver votre prochain talent ou emploi ?</h2>
-            <p class="mx-auto mt-5 max-w-2xl leading-7 text-slate-600">Rejoignez les candidats et recruteurs qui veulent une experience plus simple, plus rapide et mieux adaptee au marche local.</p>
+            <h2 class="text-3xl font-black text-slate-950 md:text-4xl">Prêt a trouver votre prochain talent ou emploi ?</h2>
+            <p class="mx-auto mt-5 max-w-2xl leading-7 text-slate-600">Rejoignez les candidats et recruteurs qui veulent une expérience plus simple, plus rapide et mieux adaptée au marché local.</p>
             <div class="mt-8 flex flex-col justify-center gap-4 sm:flex-row">
                 <a href="{{ path('candidate_landing') }}" class="inline-flex items-center justify-center gap-3 rounded-full bg-secondary px-6 py-3 font-black text-white shadow-lg shadow-secondary/20 transition hover:bg-primary">Je cherche un emploi</a>
                 <a href="{{ path('recruiter_entry') }}" class="inline-flex items-center justify-center gap-3 rounded-full bg-primary px-6 py-3 font-black text-white shadow-lg shadow-primary/20 transition hover:bg-secondary">Je recrute</a>
@@ -191,10 +191,14 @@
             <p>Concu avec soin au Burkina Faso</p>
             <div class="flex gap-5">
                 <a href="#" class="transition hover:text-secondary">CGU</a>
-                <a href="#" class="transition hover:text-secondary">Confidentialite</a>
+                <a href="#" class="transition hover:text-secondary">Confidentialité</a>
                 <a href="{{ path('contact') }}" class="transition hover:text-secondary">Contact</a>
             </div>
         </div>
     </footer>
 </main>
 {% endblock %}
+
+
+
+

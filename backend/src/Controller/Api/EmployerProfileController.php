@@ -84,7 +84,7 @@ class EmployerProfileController extends AbstractController
         $this->entityManager->flush();
 
         return $this->json([
-            'message' => 'Logo envoye avec succes.',
+            'message' => 'Logo envoyé avec succès.',
             'logoUrl' => $profile->getLogoUrl(),
             'file' => $upload,
         ], JsonResponse::HTTP_CREATED);

@@ -1,15 +1,15 @@
-{% extends 'recruiter/_layout.html.twig' %}
+﻿{% extends 'recruiter/_layout.html.twig' %}
 
 {% set active = 'applications' %}
 {% block title %}Candidatures - KIBARE-JOB{% endblock %}
 
 {% block recruiter_content %}
 {% set applications = applications|default([
-    { candidate: 'Mamadou Sawadogo', avatar: 'MS', age: 28, location: 'Ouagadougou', job: 'Developpeur Web Full Stack', status: 'new', label: 'Nouvelle', score: 92, skills: ['JavaScript','React','Node.js','Python'], education: 'Licence en Informatique', experience: '3 ans', appliedAt: 'Il y a 2h' },
-    { candidate: 'Awa Ouedraogo', avatar: 'AO', age: 26, location: 'Ouagadougou', job: 'Responsable Marketing Digital', status: 'interview', label: 'Entretien', score: 85, skills: ['Marketing Digital','SEO','Google Ads','Analytics'], education: 'Master en Marketing', experience: '5 ans', appliedAt: 'Il y a 5h' },
-    { candidate: 'Ibrahim Traore', avatar: 'IT', age: 32, location: 'Bobo-Dioulasso', job: 'Comptable Senior', status: 'viewed', label: 'Consultee', score: 78, skills: ['Comptabilite','Sage','Fiscalite','Audit'], education: 'Licence en Comptabilite', experience: '7 ans', appliedAt: 'Il y a 1j' },
-    { candidate: 'Fatou Coulibaly', avatar: 'FC', age: 29, location: 'Ouagadougou', job: 'Chef de Projet IT', status: 'shortlisted', label: 'Shortlistee', score: 88, skills: ['Gestion de projet','Agile','Scrum','Budget'], education: 'Master en Gestion de Projet', experience: '6 ans', appliedAt: 'Il y a 2j' },
-    { candidate: 'Youssouf Zongo', avatar: 'YZ', age: 24, location: 'Koudougou', job: 'Developpeur Web Full Stack', status: 'rejected', label: 'Refusee', score: 45, skills: ['HTML','CSS','JavaScript'], education: 'Bac+2 en Informatique', experience: '1 an', appliedAt: 'Il y a 3j' }
+    { candidate: 'Mamadou Sawadogo', avatar: 'MS', age: 28, location: 'Ouagadougou', job: 'Développeur Web Full Stack', status: 'new', label: 'Nouvelle', score: 92, skills: ['JavaScript','React','Node.js','Python'], education: 'Licence en Informatique', expérience: '3 ans', appliedAt: 'Il y a 2h' },
+    { candidate: 'Awa Ouedraogo', avatar: 'AO', age: 26, location: 'Ouagadougou', job: 'Responsable Marketing Digital', status: 'interview', label: 'Entretien', score: 85, skills: ['Marketing Digital','SEO','Google Ads','Analytics'], education: 'Master en Marketing', expérience: '5 ans', appliedAt: 'Il y a 5h' },
+    { candidate: 'Ibrahim Traore', avatar: 'IT', age: 32, location: 'Bobo-Dioulasso', job: 'Comptable Senior', status: 'viewed', label: 'Consultée', score: 78, skills: ['Comptabilité','Sage','Fiscalité','Audit'], education: 'Licence en Comptabilité', expérience: '7 ans', appliedAt: 'Il y a 1j' },
+    { candidate: 'Fatou Coulibaly', avatar: 'FC', age: 29, location: 'Ouagadougou', job: 'Chef de Projet IT', status: 'shortlisted', label: 'Shortlistée', score: 88, skills: ['Gestion de projet','Agile','Scrum','Budget'], education: 'Master en Gestion de Projet', expérience: '6 ans', appliedAt: 'Il y a 2j' },
+    { candidate: 'Youssouf Zongo', avatar: 'YZ', age: 24, location: 'Koudougou', job: 'Développeur Web Full Stack', status: 'rejected', label: 'Refusée', score: 45, skills: ['HTML','CSS','JavaScript'], education: 'Bac+2 en Informatique', expérience: '1 an', appliedAt: 'Il y a 3j' }
 ]) %}
 {% set statusCounts = statusCounts|default({all: applications|length, new: 1, viewed: 1, interview: 1, hired: 0}) %}
 
@@ -28,9 +28,9 @@
             {% for filter in [
                 {label: 'Toutes', count: statusCounts.all},
                 {label: 'Nouvelles', count: statusCounts.new},
-                {label: 'Consultees', count: statusCounts.viewed},
+                {label: 'Consultées', count: statusCounts.viewed},
                 {label: 'Entretiens', count: statusCounts.interview},
-                {label: 'Recrutees', count: statusCounts.hired}
+                {label: 'Recrutées', count: statusCounts.hired}
             ] %}
                 <button class="rounded-2xl px-4 py-2 text-sm font-black transition {% if loop.first %}bg-secondary text-white{% else %}border border-slate-200 bg-white text-slate-600 hover:bg-slate-50{% endif %}">{{ filter.label }} ({{ filter.count }})</button>
             {% endfor %}
@@ -48,7 +48,7 @@
                             <span class="shrink-0 rounded-full px-2 py-0.5 text-xs font-black {% if app.status == 'sent' or app.status == 'new' %}bg-secondary/15 text-primary{% elseif app.status == 'interview' %}bg-secondary/15 text-primary{% elseif app.status == 'hired' %}bg-accent/35 text-primary{% elseif app.status == 'rejected' %}bg-slate-100 text-slate-700{% else %}bg-accent/30 text-primary{% endif %}">{{ app.label }}</span>
                         </div>
                         <p class="truncate text-sm font-semibold text-slate-500">{{ app.job }}</p>
-                        <p class="mt-1 text-xs font-semibold text-slate-400">{{ app.age }} ans · {{ app.location }}</p>
+                        <p class="mt-1 text-xs font-semibold text-slate-400">{{ app.age }} ans Â· {{ app.location }}</p>
                     </div>
                 </div>
 
@@ -75,31 +75,31 @@
             <div class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-950/50 p-4" data-modal="candidate-{{ loop.index }}">
                 <div class="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-3xl bg-white shadow-2xl">
                     <div class="sticky top-0 z-10 flex items-center justify-between border-b border-slate-100 bg-white px-6 py-4">
-                        <h3 class="text-xl font-black text-slate-950">Detail du candidat</h3>
+                        <h3 class="text-xl font-black text-slate-950">Détail du candidat</h3>
                         <button type="button" class="rounded-full p-2 hover:bg-slate-100" data-modal-close><svg class="h-5 w-5" viewBox="0 0 24 24" fill="none"><path d="M18 6 6 18M6 6l12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button>
                     </div>
                     <div class="p-6">
                         <div class="mb-6 flex items-center gap-4">
                             <div class="grid h-20 w-20 place-items-center rounded-3xl bg-gradient-to-br from-secondary to-primary text-2xl font-black text-white">{{ app.avatar }}</div>
-                            <div><h4 class="text-2xl font-black text-slate-950">{{ app.candidate }}</h4><p class="font-semibold text-slate-500">{{ app.age }} ans · {{ app.location }}</p><p class="text-sm font-semibold text-slate-400">{{ app.job }}</p></div>
+                            <div><h4 class="text-2xl font-black text-slate-950">{{ app.candidate }}</h4><p class="font-semibold text-slate-500">{{ app.age }} ans Â· {{ app.location }}</p><p class="text-sm font-semibold text-slate-400">{{ app.job }}</p></div>
                         </div>
                         <div class="mb-6 rounded-3xl bg-gradient-to-r from-secondary/10 to-accent/20 p-5">
                             <h4 class="mb-4 font-black text-slate-900">Score de match : {{ app.score }}%</h4>
                             <div class="grid grid-cols-3 gap-4 text-center">
-                                {% for score in [{value:95,label:'Competences'}, {value:85,label:'Experience'}, {value:100,label:'Etudes'}] %}
+                                {% for score in [{value:95,label:'Compétences'}, {value:85,label:'Expérience'}, {value:100,label:'Études'}] %}
                                     <div><div class="mx-auto mb-2 grid h-14 w-14 place-items-center rounded-full bg-white text-sm font-black text-secondary shadow-sm">{{ score.value }}%</div><p class="text-xs font-bold text-slate-500">{{ score.label }}</p></div>
                                 {% endfor %}
                             </div>
                         </div>
                         <div class="mb-6 grid gap-4 md:grid-cols-2">
                             <div class="rounded-2xl bg-slate-50 p-4"><p class="mb-1 font-black">Formation</p><p class="text-sm font-semibold text-slate-600">{{ app.education }}</p></div>
-                            <div class="rounded-2xl bg-slate-50 p-4"><p class="mb-1 font-black">Experience</p><p class="text-sm font-semibold text-slate-600">{{ app.experience }}</p></div>
+                            <div class="rounded-2xl bg-slate-50 p-4"><p class="mb-1 font-black">Expérience</p><p class="text-sm font-semibold text-slate-600">{{ app.expérience }}</p></div>
                         </div>
                         <div class="mb-6 flex flex-wrap gap-2">
                             {% for skill in app.skills %}<span class="rounded-full bg-secondary/10 px-3 py-1.5 text-sm font-bold text-primary">{{ skill }}</span>{% endfor %}
                         </div>
                         <div class="grid gap-3 sm:grid-cols-3">
-                            <button class="rounded-2xl bg-gradient-to-r from-secondary to-primary px-4 py-3 font-black text-white">Telecharger CV</button>
+                            <button class="rounded-2xl bg-gradient-to-r from-secondary to-primary px-4 py-3 font-black text-white">Télécharger CV</button>
                             <button class="rounded-2xl bg-accent px-4 py-3 font-black text-white">Shortlister</button>
                             <button class="rounded-2xl bg-secondary px-4 py-3 font-black text-white">Convoquer</button>
                         </div>
@@ -109,9 +109,12 @@
         {% else %}
             <div class="rounded-3xl bg-white p-10 text-center shadow-sm ring-1 ring-slate-100 md:col-span-2 xl:col-span-3">
                 <h2 class="text-xl font-black text-slate-950">Aucune candidature recue</h2>
-                <p class="mt-2 font-semibold text-slate-500">Les candidatures apparaitront ici lorsque les candidats aimeront vos offres.</p>
+                <p class="mt-2 font-semibold text-slate-500">Les candidatures apparaîtront ici lorsque les candidats aimeront vos offres.</p>
             </div>
         {% endfor %}
     </div>
 </div>
 {% endblock %}
+
+
+

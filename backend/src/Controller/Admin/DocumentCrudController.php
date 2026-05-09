@@ -45,11 +45,11 @@ class DocumentCrudController extends AbstractCrudController
         yield DateField::new('expiryDate', 'Expiration')->hideOnIndex();
         yield TextField::new('documentNumber', 'Reference')->hideOnIndex();
         yield UrlField::new('fileUrl', 'Fichier');
-        yield BooleanField::new('isVerified', 'Verifie');
+        yield BooleanField::new('isVerified', 'Verifié');
         yield IntegerField::new('confidenceScore', 'Score');
         yield BooleanField::new('isPublic', 'Public');
-        yield BooleanField::new('isPinned', 'Epingle');
-        yield BooleanField::new('isDeleted', 'Masque');
+        yield BooleanField::new('isPinned', 'Epinglé');
+        yield BooleanField::new('isDeleted', 'Masqué');
         yield ArrayField::new('tags')->hideOnIndex();
         yield DateTimeField::new('uploadedAt')->hideOnForm();
         yield DateTimeField::new('lastVerifiedAt')->hideOnForm();
