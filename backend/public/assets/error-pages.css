@@ -1,0 +1,13 @@
+.error-page-shell {
+    padding-top: 6rem;
+}
+
+.error-page-wrap {
+    min-height: 72vh;
+}
+
+@media (min-width: 768px) {
+    .error-page-shell {
+        padding-top: 8rem;
+    }
+}
