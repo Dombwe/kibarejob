@@ -2,6 +2,8 @@
     --kj-primary: #263849;
     --kj-secondary: #5f7f99;
     --kj-accent: #b8c7b4;
+    --kj-success: #22c55e;
+    --kj-success-dark: #16a34a;
     --kj-muted: #f8fafc;
     --kj-border: #e2e8f0;
 }
@@ -689,6 +691,20 @@ body.ea .search-query::placeholder {
     color: #64748b;
 }
 
+body.ea .form-check-input:checked,
+body.ea .form-switch .form-check-input:checked,
+body.ea table.datagrid .form-check-input:checked,
+body.ea table.datagrid .form-switch .form-check-input:checked,
+body.ea table.datagrid td.field-boolean .form-switch input:checked {
+    background-color: var(--kj-success) !important;
+    border-color: var(--kj-success-dark) !important;
+}
+
+body.ea .form-check-input:checked:focus,
+body.ea .form-switch .form-check-input:checked:focus {
+    box-shadow: 0 0 0 .2rem rgba(34, 197, 94, .22) !important;
+}
+
 body.ea .ts-wrapper.multi .ts-control > div,
 body.ea .badge,
 body.ea .field-array .badge,
@@ -989,8 +1005,8 @@ html.dark body.ea table.datagrid td.field-boolean .form-switch input {
 
 html.dark body.ea table.datagrid .form-switch .form-check-input:checked,
 html.dark body.ea table.datagrid td.field-boolean .form-switch input:checked {
-    background-color: #b8c7b4 !important;
-    border-color: #b8c7b4 !important;
+    background-color: var(--kj-success) !important;
+    border-color: var(--kj-success-dark) !important;
 }
 
 body.ea table.datagrid td.actions a.kj-import-action,
@@ -1104,4 +1120,14 @@ body.ea table.datagrid td.field-title,
 body.ea table.datagrid td.field-email,
 body.ea table.datagrid td.field-url {
     line-height: 1.35;
+}
+
+body.ea table.datagrid td.field-runLink a.kj-cron-action,
+body.ea table.datagrid td.field-planLink a.kj-cron-action {
+    align-items: center;
+    display: inline-flex;
+    justify-content: center;
+    min-width: 6.7rem;
+    padding: .42rem .7rem;
+    white-space: nowrap;
 }

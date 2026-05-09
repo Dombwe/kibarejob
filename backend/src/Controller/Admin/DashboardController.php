@@ -7,6 +7,7 @@ use App\Entity\Employer;
 use App\Entity\JobOffer;
 use App\Entity\JobImportSource;
 use App\Entity\Report;
+use App\Entity\ScheduledCommand;
 use App\Entity\User;
 use App\Repository\CandidateDocumentRepository;
 use App\Repository\EmployerRepository;
@@ -79,8 +80,8 @@ class DashboardController extends AbstractDashboardController
     })();
 </script>
 HTML)
-            ->addCssFile('assets/admin.css?v=20260509-admin-tables')
-            ->addJsFile('assets/admin-theme.js?v=20260509-admin-tables');
+            ->addCssFile('assets/admin.css?v=20260509-cron-actions')
+            ->addJsFile('assets/admin-theme.js?v=20260509-cron-actions');
     }
 
     public function configureMenuItems(): iterable
@@ -93,6 +94,9 @@ HTML)
         yield MenuItem::linkToCrud('Offres externes', 'fa fa-earth-africa', JobOffer::class)
             ->setController(ExternalJobOfferCrudController::class);
         yield MenuItem::linkToCrud('Sources d’offres', 'fa fa-cloud-arrow-down', JobImportSource::class);
+        yield MenuItem::section('Automatisation');
+        yield MenuItem::linkToCrud('Commandes / Cron', 'fa fa-clock', ScheduledCommand::class);
+        yield MenuItem::section('Contenu');
         yield MenuItem::linkToCrud('Documents', 'fa fa-file', CandidateDocument::class);
         yield MenuItem::linkToCrud('Signalements', 'fa fa-flag', Report::class);
     }
@@ -120,4 +124,6 @@ HTML)
             ->setMenuItems($menuItems);
     }
 }
+
+
 
