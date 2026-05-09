@@ -5,11 +5,13 @@ namespace App\Service;
 use App\Entity\Enum\JobOfferStatus;
 use App\Entity\Enum\SwipeStatus;
 use App\Entity\JobOffer;
+use App\Entity\Notification;
 use App\Entity\Swipe;
 use App\Entity\User;
 use App\Repository\CandidateProfileRepository;
 use App\Repository\EmployerRepository;
 use App\Repository\JobOfferRepository;
+use App\Repository\NotificationRepository;
 use App\Repository\SwipeRepository;
 use Doctrine\ORM\EntityManagerInterface;
 
@@ -19,6 +21,7 @@ class DashboardStatsService
         private readonly CandidateProfileRepository $candidateProfileRepository,
         private readonly EmployerRepository $employerRepository,
         private readonly JobOfferRepository $jobOfferRepository,
+        private readonly NotificationRepository $notificationRepository,
         private readonly SwipeRepository $swipeRepository,
         private readonly EntityManagerInterface $entityManager,
     ) {
@@ -79,12 +82,92 @@ class DashboardStatsService
             'statusData' => $this->buildStatusData($swipes),
             'recentApplications' => $this->buildRecentApplications($swipes),
             'topJobs' => $this->buildTopJobs($allOffers, $swipes),
+            'recruiterNotifications' => $this->getRecruiterNotifications($employerUser),
             'periodFilter' => [
                 'period' => $periodFilter['period'],
                 'label' => $periodFilter['label'],
                 'start' => $periodFilter['startDate']->format('Y-m-d'),
                 'end' => $periodFilter['endDate']->format('Y-m-d'),
             ],
+        ];
+    }
+
+    /**
+     * @return array{items: array<int, array{title: string, message: string, time: string, isRead: bool, url: string|null}>, unreadCount: int}
+     */
+    public function getRecruiterNotifications(User $employerUser): array
+    {
+        $items = [];
+
+        $storedNotifications = $this->notificationRepository
+            ->createQueryBuilder('notification')
+            ->andWhere('notification.user = :user')
+            ->andWhere('notification.isDeleted = false')
+            ->setParameter('user', $employerUser)
+            ->orderBy('notification.createdAt', 'DESC')
+            ->setMaxResults(8)
+            ->getQuery()
+            ->getResult();
+
+        foreach ($storedNotifications as $notification) {
+            if (!$notification instanceof Notification) {
+                continue;
+            }
+
+            $data = $notification->getData() ?? [];
+            $items[] = [
+                'title' => $notification->getTitle(),
+                'message' => $notification->getMessage(),
+                'time' => $this->relativeTime($notification->getCreatedAt()),
+                'isRead' => $notification->isRead(),
+                'url' => is_string($data['url'] ?? null) ? $data['url'] : null,
+                'createdAt' => $notification->getCreatedAt()->getTimestamp(),
+            ];
+        }
+
+        foreach (array_slice($this->getEmployerSwipes($employerUser), 0, 5) as $swipe) {
+            $profile = $swipe->getCandidate()->getCandidateProfile();
+            $candidate = null === $profile
+                ? $swipe->getCandidate()->getEmail()
+                : trim($profile->getFirstName() . ' ' . $profile->getLastName());
+
+            $items[] = [
+                'title' => $this->notificationTitleForSwipe($swipe),
+                'message' => sprintf('%s - %s', $candidate, $swipe->getOffer()->getTitle()),
+                'time' => $this->relativeTime($swipe->getSentAt()),
+                'isRead' => SwipeStatus::Sent !== $swipe->getStatus(),
+                'url' => '/recruteur/candidatures',
+                'createdAt' => $swipe->getSentAt()->getTimestamp(),
+            ];
+        }
+
+        $soon = (new \DateTimeImmutable('+7 days'))->setTime(23, 59, 59);
+        foreach ($this->getEmployerOffers($employerUser) as $offer) {
+            if (JobOfferStatus::Active !== $offer->getStatus() || $offer->getDeadline() > $soon) {
+                continue;
+            }
+
+            $items[] = [
+                'title' => 'Offre bientôt expirée',
+                'message' => sprintf('%s expire le %s', $offer->getTitle(), $offer->getDeadline()->format('d/m/Y')),
+                'time' => $this->relativeTime($offer->getDeadline()),
+                'isRead' => false,
+                'url' => '/recruteur/offres',
+                'createdAt' => $offer->getDeadline()->getTimestamp(),
+            ];
+        }
+
+        usort($items, static fn (array $a, array $b): int => $b['createdAt'] <=> $a['createdAt']);
+        $items = array_slice($items, 0, 8);
+        $unreadCount = count(array_filter($items, static fn (array $item): bool => false === $item['isRead']));
+
+        return [
+            'items' => array_map(static function (array $item): array {
+                unset($item['createdAt']);
+
+                return $item;
+            }, $items),
+            'unreadCount' => $unreadCount,
         ];
     }
 
@@ -832,6 +915,17 @@ class DashboardStatsService
             SwipeStatus::Sent => 'primary',
             SwipeStatus::Interview, SwipeStatus::Hired => 'secondary',
             default => 'accent',
+        };
+    }
+
+    private function notificationTitleForSwipe(Swipe $swipe): string
+    {
+        return match ($swipe->getStatus()) {
+            SwipeStatus::Sent => 'Nouvelle candidature',
+            SwipeStatus::Viewed => 'Candidature consultée',
+            SwipeStatus::Interview => 'Entretien à suivre',
+            SwipeStatus::Hired => 'Candidat recruté',
+            SwipeStatus::Rejected => 'Candidature refusée',
         };
     }
 

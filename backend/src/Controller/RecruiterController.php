@@ -37,11 +37,15 @@ class RecruiterController extends AbstractController
     {
         $user = $this->requireRecruiterUser();
 
-        return $this->render('recruiter/offers.html.twig', $dashboardStats->getRecruiterOffersPage($user));
+        return $this->render('recruiter/offers.html.twig', $this->withRecruiterNotifications(
+            $dashboardStats->getRecruiterOffersPage($user),
+            $dashboardStats,
+            $user
+        ));
     }
 
     #[Route('/recruteur/offres/nouvelle', name: 'recruiter_offer_new', methods: ['GET', 'POST'])]
-    public function newOffer(Request $request, EntityManagerInterface $entityManager): Response
+    public function newOffer(Request $request, EntityManagerInterface $entityManager, DashboardStatsService $dashboardStats): Response
     {
         $user = $this->requireRecruiterUser();
         $errors = [];
@@ -106,7 +110,11 @@ class RecruiterController extends AbstractController
             }
         }
 
-        return $this->render('recruiter/offer_new.html.twig', ['errors' => $errors]);
+        return $this->render('recruiter/offer_new.html.twig', $this->withRecruiterNotifications(
+            ['errors' => $errors],
+            $dashboardStats,
+            $user
+        ));
     }
 
     #[Route('/recruteur/candidatures', name: 'recruiter_applications', methods: ['GET'])]
@@ -114,7 +122,11 @@ class RecruiterController extends AbstractController
     {
         $user = $this->requireRecruiterUser();
 
-        return $this->render('recruiter/applications.html.twig', $dashboardStats->getRecruiterApplicationsPage($user));
+        return $this->render('recruiter/applications.html.twig', $this->withRecruiterNotifications(
+            $dashboardStats->getRecruiterApplicationsPage($user),
+            $dashboardStats,
+            $user
+        ));
     }
 
     #[Route('/recruteur/statistiques', name: 'recruiter_stats', methods: ['GET'])]
@@ -122,7 +134,11 @@ class RecruiterController extends AbstractController
     {
         $user = $this->requireRecruiterUser();
 
-        return $this->render('recruiter/stats.html.twig', $dashboardStats->getRecruiterStatsPage($user));
+        return $this->render('recruiter/stats.html.twig', $this->withRecruiterNotifications(
+            $dashboardStats->getRecruiterStatsPage($user),
+            $dashboardStats,
+            $user
+        ));
     }
 
     #[Route('/recruteur/parametres', name: 'recruiter_settings', methods: ['GET'])]
@@ -130,7 +146,11 @@ class RecruiterController extends AbstractController
     {
         $user = $this->requireRecruiterUser();
 
-        return $this->render('recruiter/settings.html.twig', $dashboardStats->getRecruiterSettingsPage($user));
+        return $this->render('recruiter/settings.html.twig', $this->withRecruiterNotifications(
+            $dashboardStats->getRecruiterSettingsPage($user),
+            $dashboardStats,
+            $user
+        ));
     }
 
     #[Route('/go/recruteur', name: 'recruiter_entry', methods: ['GET'])]
@@ -158,5 +178,17 @@ class RecruiterController extends AbstractController
         $value = trim((string) $value);
 
         return '' === $value ? null : (int) $value;
+    }
+
+    /**
+     * @param array<string, mixed> $context
+     *
+     * @return array<string, mixed>
+     */
+    private function withRecruiterNotifications(array $context, DashboardStatsService $dashboardStats, User $user): array
+    {
+        $context['recruiterNotifications'] = $dashboardStats->getRecruiterNotifications($user);
+
+        return $context;
     }
 }
