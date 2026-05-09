@@ -40,12 +40,12 @@ class UserCrudController extends AbstractCrudController
         yield TextField::new('lastName', 'Nom');
         yield EmailField::new('email', 'Adresse mail');
         yield TelephoneField::new('phone', 'Téléphone')->hideOnIndex();
-        yield ArrayField::new('roles', 'Rôles');
+        yield ArrayField::new('roles', 'Rôles')->hideOnIndex();
         yield BooleanField::new('isEmailVerified', 'Email confirmé');
         yield BooleanField::new('isActive', 'Actif');
         yield BooleanField::new('isDeleted', 'Banni/Supprimé');
-        yield IntegerField::new('profileCompletedPercent', 'Profil %');
-        yield DateTimeField::new('lastLogin', 'Dernière connexion')->hideOnForm();
+        yield IntegerField::new('profileCompletedPercent', 'Profil %')->hideOnIndex();
+        yield DateTimeField::new('lastLogin', 'Dernière connexion')->hideOnIndex()->hideOnForm();
         yield DateTimeField::new('createdAt', 'Créé le')->hideOnForm();
     }
 
@@ -97,3 +97,4 @@ class UserCrudController extends AbstractCrudController
         return $this->redirect($context->getReferrer() ?? $this->generateUrl('admin'));
     }
 }
+

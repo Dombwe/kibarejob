@@ -97,6 +97,27 @@ class JobOffer
     #[ORM\Column(options: ['default' => false])]
     private bool $isDeleted = false;
 
+    #[ORM\Column(length: 80, nullable: true)]
+    private ?string $sourceType = null;
+
+    #[ORM\Column(length: 120, nullable: true)]
+    private ?string $externalSourceName = null;
+
+    #[ORM\Column(length: 255, nullable: true)]
+    private ?string $externalId = null;
+
+    #[ORM\Column(type: Types::TEXT, nullable: true)]
+    private ?string $externalUrl = null;
+
+    #[ORM\Column(length: 180, nullable: true)]
+    private ?string $applicationEmail = null;
+
+    #[ORM\Column(options: ['default' => 0])]
+    private int $reliabilityScore = 0;
+
+    #[ORM\Column(nullable: true)]
+    private ?\DateTimeImmutable $importedAt = null;
+
     #[ORM\OneToMany(mappedBy: 'offer', targetEntity: Swipe::class)]
     private Collection $swipes;
 
@@ -154,5 +175,19 @@ class JobOffer
     public function setStatus(JobOfferStatus $status): self { $this->status = $status; return $this; }
     public function isDeleted(): bool { return $this->isDeleted; }
     public function setIsDeleted(bool $isDeleted): self { $this->isDeleted = $isDeleted; return $this; }
+    public function getSourceType(): ?string { return $this->sourceType; }
+    public function setSourceType(?string $sourceType): self { $this->sourceType = $sourceType; return $this; }
+    public function getExternalSourceName(): ?string { return $this->externalSourceName; }
+    public function setExternalSourceName(?string $externalSourceName): self { $this->externalSourceName = $externalSourceName; return $this; }
+    public function getExternalId(): ?string { return $this->externalId; }
+    public function setExternalId(?string $externalId): self { $this->externalId = $externalId; return $this; }
+    public function getExternalUrl(): ?string { return $this->externalUrl; }
+    public function setExternalUrl(?string $externalUrl): self { $this->externalUrl = $externalUrl; return $this; }
+    public function getApplicationEmail(): ?string { return $this->applicationEmail; }
+    public function setApplicationEmail(?string $applicationEmail): self { $this->applicationEmail = $applicationEmail ?: null; return $this; }
+    public function getReliabilityScore(): int { return $this->reliabilityScore; }
+    public function setReliabilityScore(int $reliabilityScore): self { $this->reliabilityScore = max(0, min(100, $reliabilityScore)); return $this; }
+    public function getImportedAt(): ?\DateTimeImmutable { return $this->importedAt; }
+    public function setImportedAt(?\DateTimeImmutable $importedAt): self { $this->importedAt = $importedAt; return $this; }
     public function getSwipes(): Collection { return $this->swipes; }
 }

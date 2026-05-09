@@ -992,3 +992,116 @@ html.dark body.ea table.datagrid td.field-boolean .form-switch input:checked {
     background-color: #b8c7b4 !important;
     border-color: #b8c7b4 !important;
 }
+
+body.ea table.datagrid td.actions a.kj-import-action,
+body.ea table.datagrid td.actions .kj-import-action {
+    display: inline-flex !important;
+    align-items: center;
+    justify-content: center;
+    gap: .35rem;
+    margin: .2rem .25rem .2rem 0 !important;
+    min-width: 6.6rem;
+    max-width: 6.6rem;
+    padding: .4rem .6rem !important;
+    white-space: nowrap;
+}
+
+body.ea.crud-controller-JobImportSourceCrudController table.datagrid td.actions a,
+body.ea.crud-controller-JobImportSourceCrudController table.datagrid td.actions button,
+body.ea.crud-controller-JobImportSourceCrudController table.datagrid td.actions .btn,
+body.ea.crud-controller-JobImportSourceCrudController table.datagrid td.actions .action-edit,
+body.ea.crud-controller-JobImportSourceCrudController table.datagrid td.actions .action-delete {
+    display: inline-flex !important;
+    align-items: center;
+    justify-content: center;
+    margin: .2rem .25rem .2rem 0 !important;
+    min-width: 6.6rem;
+    max-width: 6.6rem;
+    padding: .4rem .6rem !important;
+    white-space: nowrap;
+}
+
+body.ea.crud-controller-JobImportSourceCrudController table.datagrid {
+    table-layout: fixed;
+}
+
+body.ea.crud-controller-JobImportSourceCrudController table.datagrid th,
+body.ea.crud-controller-JobImportSourceCrudController table.datagrid td {
+    font-size: .82rem;
+    padding-left: .75rem;
+    padding-right: .75rem;
+}
+
+body.ea.crud-controller-JobImportSourceCrudController table.datagrid th.field-name,
+body.ea.crud-controller-JobImportSourceCrudController table.datagrid td.field-name {
+    width: 26%;
+}
+
+body.ea.crud-controller-JobImportSourceCrudController table.datagrid th.actions,
+body.ea.crud-controller-JobImportSourceCrudController table.datagrid td.actions {
+    width: 22rem;
+}
+
+body.ea.crud-controller-JobImportSourceCrudController table.datagrid th.field-importStatus,
+body.ea.crud-controller-JobImportSourceCrudController table.datagrid td.field-importStatus {
+    width: 28%;
+}
+
+body.ea table.datagrid td.actions a.action-edit,
+body.ea table.datagrid td.actions a.action-importNow,
+body.ea table.datagrid td.actions a.action-delete,
+body.ea table.datagrid td.actions .action-edit,
+body.ea table.datagrid td.actions .action-importNow,
+body.ea table.datagrid td.actions .action-delete,
+body.ea table.datagrid td.field-importLink a.kj-import-direct {
+    align-items: center !important;
+    display: inline-flex !important;
+    justify-content: center !important;
+    margin: .22rem .35rem .22rem 0 !important;
+    min-width: 6.75rem !important;
+    max-width: 6.75rem !important;
+    padding: .42rem .62rem !important;
+    white-space: nowrap !important;
+}
+
+body.ea table.datagrid td.actions {
+    gap: .35rem !important;
+    white-space: normal !important;
+}
+
+body.ea table.datagrid {
+    table-layout: auto;
+    width: 100%;
+}
+
+body.ea table.datagrid th {
+    font-size: .78rem !important;
+    line-height: 1.2 !important;
+    max-width: 8.5rem;
+    min-width: 4.25rem;
+    padding-left: .65rem !important;
+    padding-right: .65rem !important;
+    white-space: normal !important;
+    word-break: normal;
+}
+
+body.ea table.datagrid td {
+    max-width: 16rem;
+    overflow-wrap: anywhere;
+    padding-left: .65rem !important;
+    padding-right: .65rem !important;
+    vertical-align: middle;
+}
+
+body.ea table.datagrid th.field-title,
+body.ea table.datagrid td.field-title,
+body.ea table.datagrid th.field-email,
+body.ea table.datagrid td.field-email {
+    max-width: 18rem;
+}
+
+body.ea table.datagrid td.field-title,
+body.ea table.datagrid td.field-email,
+body.ea table.datagrid td.field-url {
+    line-height: 1.35;
+}

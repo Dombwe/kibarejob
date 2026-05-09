@@ -5,6 +5,7 @@ namespace App\Controller\Admin;
 use App\Entity\CandidateDocument;
 use App\Entity\Employer;
 use App\Entity\JobOffer;
+use App\Entity\JobImportSource;
 use App\Entity\Report;
 use App\Entity\User;
 use App\Repository\CandidateDocumentRepository;
@@ -78,8 +79,8 @@ class DashboardController extends AbstractDashboardController
     })();
 </script>
 HTML)
-            ->addCssFile('assets/admin.css?v=20260509-admin-contrast')
-            ->addJsFile('assets/admin-theme.js?v=20260509-admin-contrast');
+            ->addCssFile('assets/admin.css?v=20260509-admin-tables')
+            ->addJsFile('assets/admin-theme.js?v=20260509-admin-tables');
     }
 
     public function configureMenuItems(): iterable
@@ -88,7 +89,10 @@ HTML)
         yield MenuItem::section('Modération');
         yield MenuItem::linkToCrud('Utilisateurs', 'fa fa-users', User::class);
         yield MenuItem::linkToCrud('Employeurs', 'fa fa-building', Employer::class);
-        yield MenuItem::linkToCrud('Offres', 'fa fa-briefcase', JobOffer::class);
+        yield MenuItem::linkToCrud('Offres internes', 'fa fa-briefcase', JobOffer::class);
+        yield MenuItem::linkToCrud('Offres externes', 'fa fa-earth-africa', JobOffer::class)
+            ->setController(ExternalJobOfferCrudController::class);
+        yield MenuItem::linkToCrud('Sources d’offres', 'fa fa-cloud-arrow-down', JobImportSource::class);
         yield MenuItem::linkToCrud('Documents', 'fa fa-file', CandidateDocument::class);
         yield MenuItem::linkToCrud('Signalements', 'fa fa-flag', Report::class);
     }
@@ -116,3 +120,4 @@ HTML)
             ->setMenuItems($menuItems);
     }
 }
+
