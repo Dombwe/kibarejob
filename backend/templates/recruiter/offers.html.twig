@@ -1,16 +1,11 @@
-﻿{% extends 'recruiter/_layout.html.twig' %}
+{% extends 'recruiter/_layout.html.twig' %}
 
 {% set active = 'offers' %}
 {% block title %}Mes offres - KIBARE-JOB{% endblock %}
 
 {% block recruiter_content %}
-{% set offers = offers|default([
-    { title: 'Développeur Web Full Stack', location: 'Ouagadougou', salary: '350000 - 500000', contract: 'CDI', applications: 24, views: 156, status: 'active', postedAt: 'Il y a 5 jours', deadline: '30 Mai 2026', boosted: true },
-    { title: 'Responsable Marketing Digital', location: 'Ouagadougou', salary: '400000 - 600000', contract: 'CDD', applications: 18, views: 98, status: 'active', postedAt: 'Il y a 1 semaine', deadline: '15 Juin 2026', boosted: false },
-    { title: 'Comptable Senior', location: 'Bobo-Dioulasso', salary: '250000 - 350000', contract: 'CDI', applications: 12, views: 67, status: 'active', postedAt: 'Il y a 2 semaines', deadline: '1 Juin 2026', boosted: false },
-    { title: 'Assistant RH', location: 'Ouagadougou', salary: '150000 - 200000', contract: 'Stage', applications: 0, views: 23, status: 'draft', postedAt: 'Non publiée', deadline: null, boosted: false }
-]) %}
-{% set activeOffersCount = activeOffersCount|default(3) %}
+{% set offers = offers|default([]) %}
+{% set activeOffersCount = activeOffersCount|default(0) %}
 
 <div class="p-4 lg:p-8">
     <div class="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -30,7 +25,7 @@
             <input class="w-full rounded-2xl border border-slate-200 bg-white py-3 pl-11 pr-4 font-semibold outline-none focus:ring-4 focus:ring-secondary/20" placeholder="Rechercher une offre...">
         </label>
         <div class="flex flex-wrap gap-2">
-            {% for filter in ['Toutes', 'Active', 'Clôturée', 'Brouillon'] %}
+            {% for filter in ['Toutes', 'Active', 'Programmée', 'Clôturée', 'Brouillon'] %}
                 <button class="rounded-2xl px-4 py-2 text-sm font-black transition {% if loop.first %}bg-secondary text-white{% else %}border border-slate-200 bg-white text-slate-600 hover:bg-slate-50{% endif %}">{{ filter }}</button>
             {% endfor %}
         </div>
@@ -48,15 +43,15 @@
                                 </div>
                                 <div>
                                     <h2 class="text-lg font-black text-slate-950">{{ offer.title }}</h2>
-                                    <p class="mt-1 text-sm font-semibold text-slate-500">{{ offer.location }} Â· {{ offer.postedAt }}</p>
+                                    <p class="mt-1 text-sm font-semibold text-slate-500">{{ offer.location }} · {{ offer.postedAt }}</p>
                                 </div>
                             </div>
                             <div class="flex flex-wrap items-center justify-end gap-2">
                                 {% if offer.boosted %}
-                                    <span class="rounded-full bg-gradient-to-r from-secondary to-primary px-3 py-1 text-xs font-black text-white">Boostee</span>
+                                    <span class="rounded-full bg-gradient-to-r from-secondary to-primary px-3 py-1 text-xs font-black text-white">Boostée</span>
                                 {% endif %}
-                                <span class="rounded-full px-3 py-1 text-xs font-black {% if offer.status == 'active' %}bg-accent/35 text-primary{% elseif offer.status == 'draft' %}bg-accent/30 text-primary{% else %}bg-slate-100 text-slate-700{% endif %}">
-                                    {{ offer.status == 'active' ? 'Active' : (offer.status == 'draft' ? 'Brouillon' : 'Clôturée') }}
+                                <span class="rounded-full px-3 py-1 text-xs font-black {% if offer.status == 'active' %}bg-accent/35 text-primary{% elseif offer.statusLabel == 'Programmée' %}bg-secondary/10 text-primary{% elseif offer.status == 'draft' %}bg-slate-100 text-slate-700{% else %}bg-slate-100 text-slate-700{% endif %}">
+                                    {{ offer.statusLabel|default(offer.status == 'active' ? 'Active' : (offer.status == 'draft' ? 'Brouillon' : 'Clôturée')) }}
                                 </span>
                             </div>
                         </div>
@@ -64,15 +59,34 @@
                             <span class="rounded-lg bg-secondary/15 px-2 py-1 text-primary">{{ offer.contract }}</span>
                             <span>{{ offer.salary }} FCFA</span>
                             {% if offer.deadline %}<span>Expire le {{ offer.deadline }}</span>{% endif %}
+                            {% if offer.scheduledPublishAt %}<span>Publication planifiée : {{ offer.scheduledPublishAt }}</span>{% endif %}
                         </div>
                     </div>
                     <div class="flex items-center gap-6 border-slate-100 lg:border-l lg:px-6">
                         <div class="text-center"><div class="font-black text-slate-800">{{ offer.applications }}</div><div class="text-xs font-semibold text-slate-400">Candidatures</div></div>
                         <div class="text-center"><div class="font-black text-slate-800">{{ offer.views }}</div><div class="text-xs font-semibold text-slate-400">Vues</div></div>
                     </div>
-                    <div class="flex items-center gap-2">
-                        <a href="{{ path('recruiter_applications') }}" class="rounded-2xl bg-secondary/10 px-4 py-2 text-sm font-black text-secondary transition hover:bg-secondary/15">Voir candidats</a>
-                        <button class="rounded-2xl p-2 text-slate-500 transition hover:bg-slate-100" aria-label="Modifier"><svg class="h-5 w-5" viewBox="0 0 24 24" fill="none"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5Z" stroke="currentColor" stroke-width="2"/></svg></button>
+                    <div class="flex flex-wrap items-center justify-end gap-2">
+                        <a href="{{ path('recruiter_offer_applications', {id: offer.id}) }}" class="rounded-2xl bg-secondary/10 px-4 py-2 text-sm font-black text-secondary transition hover:bg-secondary/15">Voir candidats</a>
+                        {% if offer.status == 'draft' %}
+                            <a href="{{ path('recruiter_offer_edit', {id: offer.id}) }}" class="rounded-2xl border border-slate-200 bg-white px-4 py-2 text-sm font-black text-slate-600 transition hover:text-primary">Modifier</a>
+                        {% endif %}
+                        {% if offer.status != 'active' %}
+                            <form method="post" action="{{ path('recruiter_offer_publish', {id: offer.id}) }}" onsubmit="return confirm('Confirmez-vous la publication de cette offre ? Elle sera visible par les candidats.');">
+                                <input type="hidden" name="_token" value="{{ csrf_token('offer_publish_' ~ offer.id) }}">
+                                <button class="rounded-2xl border border-slate-200 bg-white px-4 py-2 text-sm font-black text-slate-600 transition hover:text-primary">Publier</button>
+                            </form>
+                        {% endif %}
+                        {% if offer.status == 'active' %}
+                            <form method="post" action="{{ path('recruiter_offer_close', {id: offer.id}) }}" onsubmit="return confirm('Confirmez-vous la clôture de cette offre ? Les candidats ne pourront plus postuler.');">
+                                <input type="hidden" name="_token" value="{{ csrf_token('offer_close_' ~ offer.id) }}">
+                                <button class="rounded-2xl border border-slate-200 bg-white px-4 py-2 text-sm font-black text-slate-600 transition hover:text-primary">Clôturer</button>
+                            </form>
+                        {% endif %}
+                        <form method="post" action="{{ path('recruiter_offer_delete', {id: offer.id}) }}" onsubmit="return confirm('Supprimer cette offre ?');">
+                            <input type="hidden" name="_token" value="{{ csrf_token('offer_delete_' ~ offer.id) }}">
+                            <button class="rounded-2xl bg-slate-100 px-4 py-2 text-sm font-black text-slate-600 transition hover:bg-slate-200">Supprimer</button>
+                        </form>
                     </div>
                 </div>
             </article>
@@ -86,5 +100,3 @@
     </div>
 </div>
 {% endblock %}
-
-

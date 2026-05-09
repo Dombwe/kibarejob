@@ -177,55 +177,102 @@ class DashboardStatsService
     public function getRecruiterOffersPage(User $employerUser): array
     {
         $offers = $this->getEmployerOffers($employerUser);
+        $applicationCounts = [];
+        foreach ($this->getEmployerSwipes($employerUser) as $swipe) {
+            $offerId = (string) $swipe->getOffer()->getId();
+            $applicationCounts[$offerId] = ($applicationCounts[$offerId] ?? 0) + 1;
+        }
 
         return [
             'offers' => array_map(fn (JobOffer $offer): array => [
+                'id' => (string) $offer->getId(),
                 'title' => $offer->getTitle(),
                 'location' => $offer->getLocation(),
                 'salary' => $this->salaryRange($offer),
                 'contract' => $offer->getContractType()->value,
-                'applications' => $offer->getApplicationsCount(),
+                'applications' => $applicationCounts[(string) $offer->getId()] ?? $offer->getApplicationsCount(),
                 'views' => $offer->getViewsCount(),
                 'status' => $offer->getStatus()->value,
-                'postedAt' => $this->relativeTime($offer->getCreatedAt()),
+                'statusLabel' => $this->offerStatusLabel($offer),
+                'postedAt' => $offer->getScheduledPublishAt() instanceof \DateTimeImmutable
+                    ? 'Prévue le ' . $offer->getScheduledPublishAt()->format('d/m/Y H:i')
+                    : $this->relativeTime($offer->getCreatedAt()),
                 'deadline' => $offer->getDeadline()->format('d/m/Y'),
                 'boosted' => $offer->isBoosted(),
+                'scheduledPublishAt' => $offer->getScheduledPublishAt()?->format('d/m/Y H:i'),
             ], $offers),
             'activeOffersCount' => count(array_filter($offers, static fn (JobOffer $offer): bool => JobOfferStatus::Active === $offer->getStatus())),
         ];
     }
 
     /**
-     * @return array{applications: array<int, array<string, mixed>>, statusCounts: array<string, int>}
+     * @return array{applications: array<int, array<string, mixed>>, selectedOffer: array<string, string>|null, statusCounts: array<string, int>}
      */
-    public function getRecruiterApplicationsPage(User $employerUser): array
+    public function getRecruiterApplicationsPage(User $employerUser, ?JobOffer $selectedOffer = null): array
     {
         $swipes = $this->getEmployerSwipes($employerUser);
+        if ($selectedOffer instanceof JobOffer) {
+            $swipes = array_values(array_filter($swipes, static fn (Swipe $swipe): bool => $swipe->getOffer() === $selectedOffer));
+        }
 
         $applications = array_map(function (Swipe $swipe): array {
             $profile = $swipe->getCandidate()->getCandidateProfile();
             $candidate = null === $profile
                 ? $swipe->getCandidate()->getEmail()
                 : trim($profile->getFirstName() . ' ' . $profile->getLastName());
+            $documents = [];
+            foreach ($swipe->getCandidate()->getCandidateDocuments() as $document) {
+                if ($document->isDeleted()) {
+                    continue;
+                }
+                $documents[] = [
+                    'title' => $document->getTitle(),
+                    'type' => $document->getType()->value,
+                    'url' => $document->getFileUrl(),
+                    'verified' => $document->isVerified(),
+                ];
+            }
+            $score = $swipe->getMatchScore() ?? 0;
 
             return [
+                'id' => (string) $swipe->getId(),
                 'candidate' => $candidate,
                 'avatar' => $this->initials($candidate),
                 'age' => $this->age($profile?->getBirthDate()),
                 'location' => $profile?->getCity() ?: 'Non renseigné',
                 'job' => $swipe->getOffer()->getTitle(),
+                'offerId' => (string) $swipe->getOffer()->getId(),
                 'status' => $swipe->getStatus()->value,
                 'label' => $this->statusLabel($swipe->getStatus()),
-                'score' => $swipe->getMatchScore() ?? 0,
+                'score' => $score,
+                'scoreBreakdown' => [
+                    ['value' => min(100, max(0, $score + 4)), 'label' => 'Compétences'],
+                    ['value' => min(100, max(0, $score - 6)), 'label' => 'Expérience'],
+                    ['value' => min(100, max(0, $score + 1)), 'label' => 'Études'],
+                ],
                 'skills' => $profile?->getSkills() ?: [],
                 'education' => $profile?->getEducationLevel() ?: 'Non renseigné',
+                'educationField' => $profile?->getEducationField() ?: 'Non renseigné',
                 'experience' => $this->experienceLabel($swipe->getOffer()->getRequiredExperienceYears()),
                 'appliedAt' => 'Il y a ' . $this->relativeTime($swipe->getSentAt()),
+                'email' => $swipe->getCandidate()->getEmail(),
+                'phone' => $swipe->getCandidate()->getPhone(),
+                'availability' => $profile?->getAvailability() ?: 'Non renseignée',
+                'salaryExpectation' => null === $profile?->getSalaryExpectation() ? null : number_format($profile->getSalaryExpectation(), 0, ',', ' ') . ' FCFA',
+                'languages' => $profile?->getLanguages() ?: [],
+                'cvUrl' => $swipe->getCvUsedUrl() ?: $profile?->getCvGeneratedUrl() ?: $profile?->getCvOriginalUrl(),
+                'letter' => $swipe->getMotivationLetterText(),
+                'documents' => $documents,
+                'sentAt' => $swipe->getSentAt()->format('d/m/Y H:i'),
             ];
         }, $swipes);
 
         return [
             'applications' => $applications,
+            'selectedOffer' => $selectedOffer instanceof JobOffer ? [
+                'id' => (string) $selectedOffer->getId(),
+                'title' => $selectedOffer->getTitle(),
+            ] : null,
             'statusCounts' => [
                 'all' => count($applications),
                 'new' => count(array_filter($swipes, static fn (Swipe $swipe): bool => SwipeStatus::Sent === $swipe->getStatus())),
@@ -298,7 +345,7 @@ class DashboardStatsService
      */
     private function getEmployerOffers(User $employerUser): array
     {
-        return $this->jobOfferRepository
+        $offers = $this->jobOfferRepository
             ->createQueryBuilder('offer')
             ->andWhere('offer.employer = :employer')
             ->andWhere('offer.isDeleted = false')
@@ -306,6 +353,24 @@ class DashboardStatsService
             ->orderBy('offer.createdAt', 'DESC')
             ->getQuery()
             ->getResult();
+        $changed = false;
+        $now = new \DateTimeImmutable();
+        foreach ($offers as $offer) {
+            if (
+                $offer instanceof JobOffer
+                && JobOfferStatus::Draft === $offer->getStatus()
+                && $offer->getScheduledPublishAt() instanceof \DateTimeImmutable
+                && $offer->getScheduledPublishAt() <= $now
+            ) {
+                $offer->setStatus(JobOfferStatus::Active)->setScheduledPublishAt(null);
+                $changed = true;
+            }
+        }
+        if ($changed) {
+            $this->entityManager->flush();
+        }
+
+        return $offers;
     }
 
     /**
@@ -906,6 +971,22 @@ class DashboardStatsService
             SwipeStatus::Interview => 'Entretien',
             SwipeStatus::Rejected => 'Refusee',
             SwipeStatus::Hired => 'Recrutee',
+        };
+    }
+
+    private function offerStatusLabel(JobOffer $offer): string
+    {
+        if (
+            JobOfferStatus::Draft === $offer->getStatus()
+            && $offer->getScheduledPublishAt() instanceof \DateTimeImmutable
+        ) {
+            return 'Programmée';
+        }
+
+        return match ($offer->getStatus()) {
+            JobOfferStatus::Active => 'Active',
+            JobOfferStatus::Closed => 'Clôturée',
+            JobOfferStatus::Draft => 'Brouillon',
         };
     }
 

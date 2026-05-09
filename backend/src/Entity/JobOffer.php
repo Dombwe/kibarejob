@@ -88,6 +88,9 @@ class JobOffer
     #[ORM\Column]
     private \DateTimeImmutable $createdAt;
 
+    #[ORM\Column(type: Types::DATETIME_IMMUTABLE, nullable: true)]
+    private ?\DateTimeImmutable $scheduledPublishAt = null;
+
     #[ORM\Column(enumType: JobOfferStatus::class, options: ['default' => 'active'])]
     private JobOfferStatus $status = JobOfferStatus::Active;
 
@@ -145,6 +148,8 @@ class JobOffer
     public function setApplicationsCount(int $applicationsCount): self { $this->applicationsCount = $applicationsCount; return $this; }
     public function getCreatedAt(): \DateTimeImmutable { return $this->createdAt; }
     public function setCreatedAt(\DateTimeImmutable $createdAt): self { $this->createdAt = $createdAt; return $this; }
+    public function getScheduledPublishAt(): ?\DateTimeImmutable { return $this->scheduledPublishAt; }
+    public function setScheduledPublishAt(?\DateTimeImmutable $scheduledPublishAt): self { $this->scheduledPublishAt = $scheduledPublishAt; return $this; }
     public function getStatus(): JobOfferStatus { return $this->status; }
     public function setStatus(JobOfferStatus $status): self { $this->status = $status; return $this; }
     public function isDeleted(): bool { return $this->isDeleted; }

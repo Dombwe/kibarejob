@@ -2,10 +2,10 @@
 
 namespace App\Controller;
 
-use App\Entity\User;
 use App\Entity\Enum\ContractType;
 use App\Entity\Enum\JobOfferStatus;
 use App\Entity\JobOffer;
+use App\Entity\User;
 use App\Service\DashboardStatsService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -51,6 +51,8 @@ class RecruiterController extends AbstractController
         $errors = [];
 
         if ($request->isMethod('POST')) {
+            $publishAction = (string) $request->request->get('publishAction', 'publish');
+            $publishMode = (string) $request->request->get('publishMode', 'now');
             $title = trim((string) $request->request->get('title'));
             $description = trim((string) $request->request->get('description'));
             $contractType = (string) $request->request->get('contractType', ContractType::Cdi->value);
@@ -58,15 +60,20 @@ class RecruiterController extends AbstractController
             $requiredEducation = (string) $request->request->get('requiredEducation', 'Aucun');
             $educationField = trim((string) $request->request->get('educationField'));
             $deadline = (string) $request->request->get('deadline');
+            $scheduledPublishAt = trim((string) $request->request->get('scheduledPublishAt'));
+            $isDraft = 'draft' === $publishAction;
 
-            if ('' === $title) {
+            if (!$isDraft && '' === $title) {
                 $errors['title'][] = 'Le titre du poste est obligatoire.';
             }
-            if ('' === $description) {
+            if (!$isDraft && '' === $description) {
                 $errors['description'][] = 'La description du poste est obligatoire.';
             }
-            if ('' === $location) {
+            if (!$isDraft && '' === $location) {
                 $errors['location'][] = 'Le lieu de travail est obligatoire.';
+            }
+            if (!$isDraft && 'scheduled' === $publishMode && '' === $scheduledPublishAt) {
+                $errors['scheduledPublishAt'][] = 'Indiquez une date de publication.';
             }
 
             $contract = ContractType::tryFrom($contractType) ?? ContractType::Cdi;
@@ -74,19 +81,29 @@ class RecruiterController extends AbstractController
             $missions = array_values(array_filter(array_map('trim', $request->request->all('missions'))));
             $requiredDocuments = array_values(array_unique(array_filter(array_map('trim', $request->request->all('requiredDocuments')))));
             $recommendedDocuments = array_values(array_unique(array_filter(array_map('trim', $request->request->all('recommendedDocuments')))));
-            $fullDescription = $description;
+            $fullDescription = '' === $description ? 'Description à compléter.' : $description;
             if ([] !== $missions) {
                 $fullDescription .= "\n\nMissions principales:\n- " . implode("\n- ", $missions);
             }
 
             if ([] === $errors) {
+                $publicationDate = null;
+                if (!$isDraft && 'scheduled' === $publishMode && '' !== $scheduledPublishAt) {
+                    $publicationDate = new \DateTimeImmutable($scheduledPublishAt);
+                }
+
+                $status = JobOfferStatus::Active;
+                if ($isDraft || ($publicationDate instanceof \DateTimeImmutable && $publicationDate > new \DateTimeImmutable())) {
+                    $status = JobOfferStatus::Draft;
+                }
+
                 $offer = (new JobOffer())
                     ->setEmployer($user)
-                    ->setTitle($title)
+                    ->setTitle('' === $title ? 'Offre sans titre' : $title)
                     ->setPositions(max(1, (int) $request->request->get('positions', 1)))
                     ->setDescription($fullDescription)
                     ->setContractType($contract)
-                    ->setLocation($location)
+                    ->setLocation('' === $location ? 'Lieu à renseigner' : $location)
                     ->setRequiredEducation($requiredEducation)
                     ->setEducationField('' === $educationField ? null : $educationField)
                     ->setRequiredSkills($skills)
@@ -96,7 +113,8 @@ class RecruiterController extends AbstractController
                     ->setSalaryMin($this->nullableInt($request->request->get('salaryMin')))
                     ->setSalaryMax($this->nullableInt($request->request->get('salaryMax')))
                     ->setIsRemoteAllowed((bool) $request->request->get('isRemoteAllowed'))
-                    ->setStatus(JobOfferStatus::Active);
+                    ->setScheduledPublishAt($status === JobOfferStatus::Draft ? $publicationDate : null)
+                    ->setStatus($status);
 
                 if ('' !== $deadline) {
                     $offer->setDeadline(new \DateTimeImmutable($deadline));
@@ -104,17 +122,189 @@ class RecruiterController extends AbstractController
 
                 $entityManager->persist($offer);
                 $entityManager->flush();
-                $this->addFlash('success', 'Votre offre a été publiée avec succès.');
+                $this->addFlash('success', match (true) {
+                    $isDraft => 'Votre offre a été enregistrée en brouillon.',
+                    $offer->getScheduledPublishAt() instanceof \DateTimeImmutable => 'Votre offre a été planifiée avec succès.',
+                    default => 'Votre offre a été publiée avec succès.',
+                });
 
                 return $this->redirectToRoute('recruiter_offers');
             }
         }
 
         return $this->render('recruiter/offer_new.html.twig', $this->withRecruiterNotifications(
-            ['errors' => $errors],
+            [
+                'errors' => $errors,
+                'offerMode' => 'create',
+                'offerForm' => $this->offerFormContext(),
+            ],
             $dashboardStats,
             $user
         ));
+    }
+
+    #[Route('/recruteur/offres/{id}/modifier', name: 'recruiter_offer_edit', methods: ['GET', 'POST'])]
+    public function editOffer(string $id, Request $request, EntityManagerInterface $entityManager, DashboardStatsService $dashboardStats): Response
+    {
+        $user = $this->requireRecruiterUser();
+        $offer = $this->requireOwnedOffer($user, $id, $entityManager);
+        if (JobOfferStatus::Active === $offer->getStatus()) {
+            $this->addFlash('error', 'Une offre publiée ne peut plus être modifiée. Vous pouvez la clôturer puis créer une nouvelle version.');
+
+            return $this->redirectToRoute('recruiter_offers');
+        }
+
+        $errors = [];
+        if ($request->isMethod('POST')) {
+            $publishAction = (string) $request->request->get('publishAction', 'draft');
+            $publishMode = (string) $request->request->get('publishMode', 'now');
+            $title = trim((string) $request->request->get('title'));
+            $description = trim((string) $request->request->get('description'));
+            $contractType = (string) $request->request->get('contractType', ContractType::Cdi->value);
+            $location = trim((string) $request->request->get('location'));
+            $requiredEducation = (string) $request->request->get('requiredEducation', 'Aucun');
+            $educationField = trim((string) $request->request->get('educationField'));
+            $deadline = (string) $request->request->get('deadline');
+            $scheduledPublishAt = trim((string) $request->request->get('scheduledPublishAt'));
+            $isDraft = 'draft' === $publishAction;
+
+            if (!$isDraft && '' === $title) {
+                $errors['title'][] = 'Le titre du poste est obligatoire.';
+            }
+            if (!$isDraft && '' === $description) {
+                $errors['description'][] = 'La description du poste est obligatoire.';
+            }
+            if (!$isDraft && '' === $location) {
+                $errors['location'][] = 'Le lieu de travail est obligatoire.';
+            }
+            if (!$isDraft && 'scheduled' === $publishMode && '' === $scheduledPublishAt) {
+                $errors['scheduledPublishAt'][] = 'Indiquez une date de publication.';
+            }
+
+            if ([] === $errors) {
+                $contract = ContractType::tryFrom($contractType) ?? ContractType::Cdi;
+                $skills = array_values(array_filter(array_map('trim', explode(',', (string) $request->request->get('requiredSkills')))));
+                $missions = array_values(array_filter(array_map('trim', $request->request->all('missions'))));
+                $requiredDocuments = array_values(array_unique(array_filter(array_map('trim', $request->request->all('requiredDocuments')))));
+                $recommendedDocuments = array_values(array_unique(array_filter(array_map('trim', $request->request->all('recommendedDocuments')))));
+                $fullDescription = '' === $description ? 'Description à compléter.' : $description;
+                if ([] !== $missions) {
+                    $fullDescription .= "\n\nMissions principales:\n- " . implode("\n- ", $missions);
+                }
+
+                $publicationDate = null;
+                if (!$isDraft && 'scheduled' === $publishMode && '' !== $scheduledPublishAt) {
+                    $publicationDate = new \DateTimeImmutable($scheduledPublishAt);
+                }
+
+                $status = JobOfferStatus::Active;
+                if ($isDraft || ($publicationDate instanceof \DateTimeImmutable && $publicationDate > new \DateTimeImmutable())) {
+                    $status = JobOfferStatus::Draft;
+                }
+
+                $offer
+                    ->setTitle('' === $title ? 'Offre sans titre' : $title)
+                    ->setPositions(max(1, (int) $request->request->get('positions', 1)))
+                    ->setDescription($fullDescription)
+                    ->setContractType($contract)
+                    ->setLocation('' === $location ? 'Lieu à renseigner' : $location)
+                    ->setRequiredEducation($requiredEducation)
+                    ->setEducationField('' === $educationField ? null : $educationField)
+                    ->setRequiredSkills($skills)
+                    ->setRequiredExperienceYears((int) $request->request->get('requiredExperienceYears', 0))
+                    ->setRequiredDocuments($requiredDocuments ?: null)
+                    ->setRecommendedDocuments($recommendedDocuments ?: null)
+                    ->setSalaryMin($this->nullableInt($request->request->get('salaryMin')))
+                    ->setSalaryMax($this->nullableInt($request->request->get('salaryMax')))
+                    ->setIsRemoteAllowed((bool) $request->request->get('isRemoteAllowed'))
+                    ->setScheduledPublishAt($status === JobOfferStatus::Draft ? $publicationDate : null)
+                    ->setStatus($status);
+
+                if ('' !== $deadline) {
+                    $offer->setDeadline(new \DateTimeImmutable($deadline));
+                }
+
+                $entityManager->flush();
+                $this->addFlash('success', match (true) {
+                    $isDraft => 'Les modifications ont été enregistrées en brouillon.',
+                    $offer->getScheduledPublishAt() instanceof \DateTimeImmutable => 'Les modifications ont été enregistrées et la publication est planifiée.',
+                    default => 'L’offre a été publiée avec les dernières modifications.',
+                });
+
+                return $this->redirectToRoute('recruiter_offers');
+            }
+        }
+
+        return $this->render('recruiter/offer_new.html.twig', $this->withRecruiterNotifications(
+            [
+                'errors' => $errors,
+                'offerMode' => 'edit',
+                'offerForm' => $this->offerFormContext($offer),
+            ],
+            $dashboardStats,
+            $user
+        ));
+    }
+
+    #[Route('/recruteur/offres/{id}/candidatures', name: 'recruiter_offer_applications', methods: ['GET'])]
+    public function offerApplications(string $id, EntityManagerInterface $entityManager, DashboardStatsService $dashboardStats): Response
+    {
+        $user = $this->requireRecruiterUser();
+        $offer = $this->requireOwnedOffer($user, $id, $entityManager);
+
+        return $this->render('recruiter/applications.html.twig', $this->withRecruiterNotifications(
+            $dashboardStats->getRecruiterApplicationsPage($user, $offer),
+            $dashboardStats,
+            $user
+        ));
+    }
+
+    #[Route('/recruteur/offres/{id}/publier', name: 'recruiter_offer_publish', methods: ['POST'])]
+    public function publishOffer(string $id, Request $request, EntityManagerInterface $entityManager): RedirectResponse
+    {
+        $user = $this->requireRecruiterUser();
+        $offer = $this->requireOwnedOffer($user, $id, $entityManager);
+        if (!$this->isCsrfTokenValid('offer_publish_' . $id, (string) $request->request->get('_token'))) {
+            throw $this->createAccessDeniedException();
+        }
+
+        $offer->setStatus(JobOfferStatus::Active)->setScheduledPublishAt(null);
+        $entityManager->flush();
+        $this->addFlash('success', 'L’offre est maintenant publiée.');
+
+        return $this->redirectToRoute('recruiter_offers');
+    }
+
+    #[Route('/recruteur/offres/{id}/cloturer', name: 'recruiter_offer_close', methods: ['POST'])]
+    public function closeOffer(string $id, Request $request, EntityManagerInterface $entityManager): RedirectResponse
+    {
+        $user = $this->requireRecruiterUser();
+        $offer = $this->requireOwnedOffer($user, $id, $entityManager);
+        if (!$this->isCsrfTokenValid('offer_close_' . $id, (string) $request->request->get('_token'))) {
+            throw $this->createAccessDeniedException();
+        }
+
+        $offer->setStatus(JobOfferStatus::Closed)->setScheduledPublishAt(null);
+        $entityManager->flush();
+        $this->addFlash('success', 'L’offre a été clôturée.');
+
+        return $this->redirectToRoute('recruiter_offers');
+    }
+
+    #[Route('/recruteur/offres/{id}/supprimer', name: 'recruiter_offer_delete', methods: ['POST'])]
+    public function deleteOffer(string $id, Request $request, EntityManagerInterface $entityManager): RedirectResponse
+    {
+        $user = $this->requireRecruiterUser();
+        $offer = $this->requireOwnedOffer($user, $id, $entityManager);
+        if (!$this->isCsrfTokenValid('offer_delete_' . $id, (string) $request->request->get('_token'))) {
+            throw $this->createAccessDeniedException();
+        }
+
+        $offer->setIsDeleted(true)->setStatus(JobOfferStatus::Closed)->setScheduledPublishAt(null);
+        $entityManager->flush();
+        $this->addFlash('success', 'L’offre a été supprimée.');
+
+        return $this->redirectToRoute('recruiter_offers');
     }
 
     #[Route('/recruteur/candidatures', name: 'recruiter_applications', methods: ['GET'])]
@@ -173,11 +363,69 @@ class RecruiterController extends AbstractController
         return $user;
     }
 
+    private function requireOwnedOffer(User $user, string $id, EntityManagerInterface $entityManager): JobOffer
+    {
+        $offer = $entityManager->getRepository(JobOffer::class)->find($id);
+        if (!$offer instanceof JobOffer || $offer->isDeleted() || $offer->getEmployer() !== $user) {
+            throw $this->createNotFoundException('Offre introuvable.');
+        }
+
+        return $offer;
+    }
+
     private function nullableInt(mixed $value): ?int
     {
         $value = trim((string) $value);
 
         return '' === $value ? null : (int) $value;
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function offerFormContext(?JobOffer $offer = null): array
+    {
+        if (!$offer instanceof JobOffer) {
+            return [
+                'title' => '',
+                'positions' => 1,
+                'description' => '',
+                'contractType' => ContractType::Cdi->value,
+                'location' => '',
+                'isRemoteAllowed' => false,
+                'deadline' => '',
+                'salaryMin' => '',
+                'salaryMax' => '',
+                'requiredEducation' => 'Licence',
+                'educationField' => '',
+                'requiredExperienceYears' => 0,
+                'requiredSkills' => 'JavaScript, React, Node.js',
+                'requiredDocuments' => ['CV', 'Lettre de motivation'],
+                'recommendedDocuments' => [],
+                'publishMode' => 'now',
+                'scheduledPublishAt' => '',
+            ];
+        }
+
+        return [
+            'title' => $offer->getTitle(),
+            'positions' => $offer->getPositions(),
+            'description' => $offer->getDescription(),
+            'contractType' => $offer->getContractType()->value,
+            'location' => $offer->getLocation(),
+            'isRemoteAllowed' => $offer->isRemoteAllowed(),
+            'deadline' => $offer->getDeadline()->format('Y-m-d'),
+            'salaryMin' => $offer->getSalaryMin(),
+            'salaryMax' => $offer->getSalaryMax(),
+            'requiredEducation' => $offer->getRequiredEducation(),
+            'educationField' => $offer->getEducationField() ?? '',
+            'requiredExperienceYears' => $offer->getRequiredExperienceYears(),
+            'requiredSkills' => implode(', ', $offer->getRequiredSkills()),
+            'requiredDocuments' => $offer->getRequiredDocuments() ?: ['CV', 'Lettre de motivation'],
+            'recommendedDocuments' => $offer->getRecommendedDocuments() ?: [],
+            'publishMode' => $offer->getScheduledPublishAt() instanceof \DateTimeImmutable ? 'scheduled' : 'now',
+            'scheduledPublishAt' => $offer->getScheduledPublishAt()?->format('Y-m-d\TH:i') ?? '',
+        ];
     }
 
     /**

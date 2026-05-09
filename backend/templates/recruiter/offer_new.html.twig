@@ -7,6 +7,26 @@
 {% set contracts = ['CDI', 'CDD', 'Stage', 'Freelance', 'Prestation'] %}
 {% set educations = ['Aucun', 'CEP', 'BEPC', 'Bac', 'Bac +1', 'Bac +2', 'Licence', 'Master', 'Doctorat'] %}
 {% set skills = ['Communication', 'Travail en équipe', 'Organisation', 'Gestion de projet', 'Excel', 'Leadership', 'Analyse', 'Reporting'] %}
+{% set offerMode = offerMode|default('create') %}
+{% set offerForm = offerForm|default({
+    title: '',
+    positions: 1,
+    description: '',
+    contractType: 'CDI',
+    location: '',
+    isRemoteAllowed: false,
+    deadline: '',
+    salaryMin: '',
+    salaryMax: '',
+    requiredEducation: 'Licence',
+    educationField: '',
+    requiredExperienceYears: 0,
+    requiredSkills: 'JavaScript, React, Node.js',
+    requiredDocuments: ['CV', 'Lettre de motivation'],
+    recommendedDocuments: [],
+    publishMode: 'now',
+    scheduledPublishAt: ''
+}) %}
 
 <div class="min-h-[calc(100vh-73px)] bg-slate-50">
     <div class="border-b border-slate-200 bg-white">
@@ -17,8 +37,8 @@
                         <svg class="h-6 w-6" viewBox="0 0 24 24" fill="none"><path d="M10 6h4a2 2 0 0 1 2 2v1h3a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3V8a2 2 0 0 1 2-2Z" stroke="currentColor" stroke-width="2"/></svg>
                     </div>
                     <div>
-                        <h1 class="font-black text-slate-950">Publier une offre</h1>
-                        <p class="text-sm font-semibold text-slate-500">Formulaire en 2 sections</p>
+                        <h1 class="font-black text-slate-950">{{ offerMode == 'edit' ? 'Modifier une offre' : 'Publier une offre' }}</h1>
+                        <p class="text-sm font-semibold text-slate-500">Formulaire en 4 étapes</p>
                     </div>
                 </div>
                 <a href="{{ path('recruiter_offers') }}" class="rounded-xl p-2 text-slate-500 transition hover:bg-slate-100" aria-label="Fermer"><svg class="h-6 w-6" viewBox="0 0 24 24" fill="none"><path d="M18 6 6 18M6 6l12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></a>
@@ -32,20 +52,20 @@
             <div class="fade-in rounded-3xl bg-white p-4 shadow-sm ring-1 ring-slate-100">
                 <div class="grid gap-2 md:grid-cols-4" data-offer-steps>
                     <button type="button" class="rounded-2xl px-4 py-3 text-left text-sm font-black transition" data-offer-step-trigger="0">
-                        <span class="block text-xs uppercase tracking-wide opacity-70">Etape 1</span>
+                        <span class="block text-xs uppercase tracking-wide opacity-70">Étape 1</span>
                         Informations
                     </button>
                     <button type="button" class="rounded-2xl px-4 py-3 text-left text-sm font-black transition" data-offer-step-trigger="1">
-                        <span class="block text-xs uppercase tracking-wide opacity-70">Etape 2</span>
+                        <span class="block text-xs uppercase tracking-wide opacity-70">Étape 2</span>
                         Profil
                     </button>
                     <button type="button" class="rounded-2xl px-4 py-3 text-left text-sm font-black transition" data-offer-step-trigger="2">
-                        <span class="block text-xs uppercase tracking-wide opacity-70">Etape 3</span>
+                        <span class="block text-xs uppercase tracking-wide opacity-70">Étape 3</span>
                         Documents
                     </button>
                     <button type="button" class="rounded-2xl px-4 py-3 text-left text-sm font-black transition" data-offer-step-trigger="3">
-                        <span class="block text-xs uppercase tracking-wide opacity-70">Etape 4</span>
-                        Apercu
+                        <span class="block text-xs uppercase tracking-wide opacity-70">Étape 4</span>
+                        Aperçu
                     </button>
                 </div>
                 <div class="mt-4 h-2 overflow-hidden rounded-full bg-slate-100">
@@ -61,16 +81,16 @@
                 <div class="space-y-6">
                     <label class="block">
                         <span class="mb-2 block text-sm font-black text-slate-700">Titre du poste *</span>
-                        <input name="title" class="w-full rounded-2xl border border-slate-200 px-4 py-3 font-semibold outline-none focus:ring-4 focus:ring-secondary/20" placeholder="Ex: Développeur Web Full Stack" required data-job-title-input>
+                        <input name="title" value="{{ offerForm.title }}" class="w-full rounded-2xl border border-slate-200 px-4 py-3 font-semibold outline-none focus:ring-4 focus:ring-secondary/20" placeholder="Ex: Développeur Web Full Stack" required data-job-title-input>
                     </label>
                     <label class="block">
                         <span class="mb-2 block text-sm font-black text-slate-700">Nombre de postes *</span>
-                        <input type="number" min="1" name="positions" value="1" class="w-full rounded-2xl border border-slate-200 px-4 py-3 font-semibold outline-none focus:ring-4 focus:ring-secondary/20" placeholder="Ex: 2" required>
-                        <span class="mt-2 block text-sm font-semibold text-slate-500">Indiquez le nombre de personnes souhaitees pour cette offre.</span>
+                        <input type="number" min="1" name="positions" value="{{ offerForm.positions }}" class="w-full rounded-2xl border border-slate-200 px-4 py-3 font-semibold outline-none focus:ring-4 focus:ring-secondary/20" placeholder="Ex: 2" required>
+                        <span class="mt-2 block text-sm font-semibold text-slate-500">Indiquez le nombre de personnes souhaitées pour cette offre.</span>
                     </label>
                     <label class="block">
                         <span class="mb-2 block text-sm font-black text-slate-700">Description du poste *</span>
-                        <textarea name="description" rows="6" class="w-full rounded-2xl border border-slate-200 px-4 py-3 font-semibold outline-none focus:ring-4 focus:ring-secondary/20" placeholder="Decrivez le poste, l'entreprise, les attentes..." required data-description-input></textarea>
+                        <textarea name="description" rows="6" class="w-full rounded-2xl border border-slate-200 px-4 py-3 font-semibold outline-none focus:ring-4 focus:ring-secondary/20" placeholder="Décrivez le poste, l'entreprise, les attentes..." required data-description-input>{{ offerForm.description }}</textarea>
                     </label>
                     <div data-missions-builder>
                         <span class="mb-2 block text-sm font-black text-slate-700">Missions principales</span>
@@ -89,31 +109,31 @@
                             <label class="block">
                                 <span class="mb-2 block text-sm font-black text-slate-700">Type de contrat *</span>
                                 <select name="contractType" class="w-full rounded-2xl border border-slate-200 px-4 py-3 font-semibold outline-none focus:ring-4 focus:ring-secondary/20" data-contract-input>
-                                    {% for contract in contracts %}<option value="{{ contract }}">{{ contract }}</option>{% endfor %}
+                                    {% for contract in contracts %}<option value="{{ contract }}" {% if offerForm.contractType == contract %}selected{% endif %}>{{ contract }}</option>{% endfor %}
                                 </select>
                             </label>
                         </div>
                         <label class="block">
                             <span class="mb-2 block text-sm font-black text-slate-700">Lieu de travail *</span>
-                            <input name="location" class="w-full rounded-2xl border border-slate-200 px-4 py-3 font-semibold outline-none focus:ring-4 focus:ring-secondary/20" placeholder="Ex: Ouagadougou" required data-location-input>
+                            <input name="location" value="{{ offerForm.location }}" class="w-full rounded-2xl border border-slate-200 px-4 py-3 font-semibold outline-none focus:ring-4 focus:ring-secondary/20" placeholder="Ex: Ouagadougou" required data-location-input>
                         </label>
                     </div>
                     <div class="grid gap-6 md:grid-cols-2">
                         <label class="flex items-center justify-between rounded-2xl bg-slate-50 p-4">
                             <span><span class="block font-black">Télétravail autorisé</span><span class="text-sm font-semibold text-slate-500">Optionnel</span></span>
-                            <input type="checkbox" name="isRemoteAllowed" value="1" class="h-5 w-5 rounded text-secondary">
+                            <input type="checkbox" name="isRemoteAllowed" value="1" class="h-5 w-5 rounded text-secondary" {% if offerForm.isRemoteAllowed %}checked{% endif %}>
                         </label>
                         <label class="block">
                             <span class="mb-2 block text-sm font-black text-slate-700">Date limite</span>
-                            <input type="date" name="deadline" class="w-full rounded-2xl border border-slate-200 px-4 py-3 font-semibold outline-none focus:ring-4 focus:ring-secondary/20">
+                            <input type="date" name="deadline" value="{{ offerForm.deadline }}" class="w-full rounded-2xl border border-slate-200 px-4 py-3 font-semibold outline-none focus:ring-4 focus:ring-secondary/20">
                         </label>
                     </div>
                     <div>
                         <span class="mb-2 block text-sm font-black text-slate-700">Salaire (FCFA/mois)</span>
                         <div class="flex items-center gap-4">
-                            <input type="number" name="salaryMin" class="min-w-0 flex-1 rounded-2xl border border-slate-200 px-4 py-3 font-semibold outline-none focus:ring-4 focus:ring-secondary/20" placeholder="Min">
+                            <input type="number" name="salaryMin" value="{{ offerForm.salaryMin }}" class="min-w-0 flex-1 rounded-2xl border border-slate-200 px-4 py-3 font-semibold outline-none focus:ring-4 focus:ring-secondary/20" placeholder="Min">
                             <span class="font-black text-slate-400">a</span>
-                            <input type="number" name="salaryMax" class="min-w-0 flex-1 rounded-2xl border border-slate-200 px-4 py-3 font-semibold outline-none focus:ring-4 focus:ring-secondary/20" placeholder="Max">
+                            <input type="number" name="salaryMax" value="{{ offerForm.salaryMax }}" class="min-w-0 flex-1 rounded-2xl border border-slate-200 px-4 py-3 font-semibold outline-none focus:ring-4 focus:ring-secondary/20" placeholder="Max">
                         </div>
                     </div>
                 </div>
@@ -126,14 +146,14 @@
                         <label class="block">
                             <span class="mb-2 block text-sm font-black text-slate-700">Niveau d'etudes minimum *</span>
                             <select name="requiredEducation" class="w-full rounded-2xl border border-slate-200 px-4 py-3 font-semibold outline-none focus:ring-4 focus:ring-secondary/20" data-education-level-input>
-                                {% for level in educations %}<option value="{{ level }}" {% if level == 'Licence' %}selected{% endif %}>{{ level }}</option>{% endfor %}
+                                {% for level in educations %}<option value="{{ level }}" {% if offerForm.requiredEducation == level %}selected{% endif %}>{{ level }}</option>{% endfor %}
                             </select>
                         </label>
                     </div>
                     <div data-education-field-builder>
                         <label class="block">
                             <span class="mb-2 block text-sm font-black text-slate-700">Domaine d'etude</span>
-                            <input name="educationField" class="w-full rounded-2xl border border-slate-200 px-4 py-3 font-semibold outline-none focus:ring-4 focus:ring-secondary/20" placeholder="Ex: Informatique, Finance, Marketing..." data-education-field-input>
+                            <input name="educationField" value="{{ offerForm.educationField }}" class="w-full rounded-2xl border border-slate-200 px-4 py-3 font-semibold outline-none focus:ring-4 focus:ring-secondary/20" placeholder="Ex: Informatique, Finance, Marketing..." data-education-field-input>
                         </label>
                         <div class="mt-3 flex flex-wrap gap-2" data-education-field-list></div>
                         <p class="mt-3 text-xs font-black uppercase tracking-wide text-slate-400" data-education-field-label>Suggestions generales</p>
@@ -146,7 +166,7 @@
                     <div>
                         <label class="block">
                             <span class="mb-2 block text-sm font-black text-slate-700">Annees d'expérience minimum</span>
-                            <input type="number" min="0" name="requiredExpérienceYears" value="0" class="w-full rounded-2xl border border-slate-200 px-4 py-3 font-semibold outline-none focus:ring-4 focus:ring-secondary/20">
+                            <input type="number" min="0" name="requiredExperienceYears" value="{{ offerForm.requiredExperienceYears }}" class="w-full rounded-2xl border border-slate-200 px-4 py-3 font-semibold outline-none focus:ring-4 focus:ring-secondary/20">
                         </label>
                     </div>
                 </div>
@@ -157,26 +177,30 @@
                 <div class="space-y-6">
                     <div data-documents-builder>
                         <span class="mb-2 block text-sm font-black text-slate-700">Documents requis</span>
-                        <p class="mb-3 text-sm font-semibold text-slate-500">Définissez les pièces a fournir par les candidats pour postuler a cette offre.</p>
+                        <p class="mb-3 text-sm font-semibold text-slate-500">Définissez les pièces à fournir par les candidats pour postuler à cette offre.</p>
                         <div class="space-y-2" data-documents-list>
-                            <div class="flex items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3" data-document-row>
-                                <input type="hidden" name="requiredDocuments[]" value="CV">
-                                <span class="font-black text-slate-700">CV</span>
-                                <button type="button" class="rounded-full bg-primary/10 px-3 py-1 text-xs font-black text-primary transition hover:bg-primary/15" data-document-toggle>Obligatoire</button>
-                            </div>
-                            <div class="flex items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3" data-document-row>
-                                <input type="hidden" name="requiredDocuments[]" value="Lettre de motivation">
-                                <span class="font-black text-slate-700">Lettre de motivation</span>
-                                <button type="button" class="rounded-full bg-primary/10 px-3 py-1 text-xs font-black text-primary transition hover:bg-primary/15" data-document-toggle>Obligatoire</button>
-                            </div>
+                            {% for document in offerForm.requiredDocuments %}
+                                <div class="flex items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3" data-document-row>
+                                    <input type="hidden" name="requiredDocuments[]" value="{{ document }}">
+                                    <span class="font-black text-slate-700">{{ document }}</span>
+                                    <button type="button" class="rounded-full bg-primary/10 px-3 py-1 text-xs font-black text-primary transition hover:bg-primary/15" data-document-toggle>Obligatoire</button>
+                                </div>
+                            {% endfor %}
+                            {% for document in offerForm.recommendedDocuments %}
+                                <div class="flex items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-3" data-document-row>
+                                    <input type="hidden" name="recommendedDocuments[]" value="{{ document }}">
+                                    <span class="font-black text-slate-700">{{ document }}</span>
+                                    <button type="button" class="rounded-full bg-secondary/10 px-3 py-1 text-xs font-black text-primary transition hover:bg-secondary/15" data-document-toggle>Optionnel</button>
+                                </div>
+                            {% endfor %}
                         </div>
                         <div class="mt-3 flex flex-col gap-2 sm:flex-row">
                             <select class="min-w-0 flex-1 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-black text-slate-700 outline-none focus:ring-4 focus:ring-secondary/20" data-document-select>
-                                <option value="Diplome">Diplome</option>
+                                <option value="Diplôme">Diplôme</option>
                                 <option value="Certificat">Certificat</option>
                                 <option value="Attestation">Attestation</option>
                                 <option value="Permis de conduire">Permis de conduire</option>
-                                <option value="Piece d'identite">Piece d'identite</option>
+                                <option value="Pièce d'identité">Pièce d'identité</option>
                                 <option value="Portfolio">Portfolio</option>
                             </select>
                             <button type="button" class="inline-flex items-center justify-center gap-2 rounded-2xl bg-secondary/10 px-4 py-3 text-sm font-black text-primary transition hover:bg-secondary/15" data-add-document>+ Ajouter un document</button>
@@ -185,7 +209,7 @@
                     <div data-skills-builder>
                         <span class="mb-2 block text-sm font-black text-slate-700">Compétences requises *</span>
                         <div class="mb-3 flex flex-wrap gap-2" data-skills-list>
-                            {% for skill in ['JavaScript','React','Node.js'] %}
+                            {% for skill in offerForm.requiredSkills|split(',')|map(skill => skill|trim)|filter(skill => skill is not empty) %}
                                 <span class="inline-flex items-center gap-2 rounded-full bg-secondary/15 px-3 py-1.5 text-sm font-black text-primary" data-skill-chip="{{ skill }}">
                                     {{ skill }}
                                     <button type="button" class="text-primary/70 transition hover:text-primary" aria-label="Retirer {{ skill }}" data-remove-skill>x</button>
@@ -193,7 +217,7 @@
                             {% endfor %}
                         </div>
                         <div class="flex gap-2">
-                            <input name="requiredSkills" value="JavaScript, React, Node.js" class="min-w-0 flex-1 rounded-2xl border border-slate-200 px-4 py-3 font-semibold outline-none focus:ring-4 focus:ring-secondary/20" placeholder="Ex: JavaScript, React, Symfony" data-skills-input>
+                            <input name="requiredSkills" value="{{ offerForm.requiredSkills }}" class="min-w-0 flex-1 rounded-2xl border border-slate-200 px-4 py-3 font-semibold outline-none focus:ring-4 focus:ring-secondary/20" placeholder="Ex: JavaScript, React, Symfony" data-skills-input>
                         </div>
                         <p class="mt-3 text-xs font-black uppercase tracking-wide text-slate-400" data-skills-suggestion-label>Suggestions generales</p>
                         <div class="mt-2 flex flex-wrap gap-2" data-skills-suggestions>
@@ -204,15 +228,37 @@
             </section>
 
             <section class="fade-in rounded-3xl bg-gradient-to-r from-secondary/10 to-accent/20 p-6" data-offer-preview data-offer-step-panel="3">
-                <h3 class="mb-4 font-black text-slate-950">Apercu de votre offre</h3>
+                <h3 class="mb-4 font-black text-slate-950">Aperçu de votre offre</h3>
+                <div class="mb-5 rounded-2xl bg-white/80 p-4 ring-1 ring-secondary/10">
+                    <p class="mb-3 text-sm font-black text-slate-700">Publication</p>
+                    <div class="grid gap-3 md:grid-cols-2">
+                        <label class="flex cursor-pointer items-start gap-3 rounded-2xl border border-slate-200 bg-white p-4">
+                            <input type="radio" name="publishMode" value="now" class="mt-1 text-secondary" {% if offerForm.publishMode != 'scheduled' %}checked{% endif %}>
+                            <span>
+                                <span class="block font-black text-slate-800">Publier immédiatement</span>
+                                <span class="text-sm font-semibold text-slate-500">L'offre devient visible dès l'enregistrement.</span>
+                            </span>
+                        </label>
+                        <label class="cursor-pointer rounded-2xl border border-slate-200 bg-white p-4">
+                            <span class="flex items-start gap-3">
+                                <input type="radio" name="publishMode" value="scheduled" class="mt-1 text-secondary" {% if offerForm.publishMode == 'scheduled' %}checked{% endif %}>
+                                <span>
+                                    <span class="block font-black text-slate-800">Planifier la publication</span>
+                                    <span class="text-sm font-semibold text-slate-500">Choisissez une date et une heure de mise en ligne.</span>
+                                </span>
+                            </span>
+                            <input type="datetime-local" name="scheduledPublishAt" value="{{ offerForm.scheduledPublishAt }}" class="mt-3 w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm font-semibold outline-none focus:ring-4 focus:ring-secondary/20">
+                        </label>
+                    </div>
+                </div>
                 <div class="rounded-2xl bg-white p-4">
-                    <p class="text-lg font-black" data-preview-title>Développeur Web Full Stack</p>
-                    <p class="mt-1 text-sm font-semibold text-slate-500" data-preview-meta>CDI Â· Ouagadougou Â· 1 poste</p>
-                    <p class="mt-2 text-sm leading-6 text-slate-500" data-preview-description>Votre offre apparaîtra dans le feed candidat avec le score de matching et les documents requis.</p>
+                    <p class="text-lg font-black" data-preview-title>{{ offerForm.title|default('Titre du poste') }}</p>
+                    <p class="mt-1 text-sm font-semibold text-slate-500" data-preview-meta>CDI · Ouagadougou · 1 poste</p>
+                    <p class="mt-2 text-sm leading-6 text-slate-500" data-preview-description>{{ offerForm.description|default('Votre offre apparaîtra dans le feed candidat avec le score de matching et les documents requis.') }}</p>
                     <div class="mt-4 grid gap-3 md:grid-cols-2">
                         <div class="rounded-2xl bg-slate-50 p-3">
                             <p class="text-xs font-black uppercase tracking-wide text-slate-400">Profil</p>
-                            <p class="mt-1 text-sm font-semibold text-slate-700" data-preview-profile>Licence Â· Domaine non renseigné</p>
+                            <p class="mt-1 text-sm font-semibold text-slate-700" data-preview-profile>Licence · Domaine non renseigné</p>
                         </div>
                         <div class="rounded-2xl bg-slate-50 p-3">
                             <p class="text-xs font-black uppercase tracking-wide text-slate-400">Documents</p>
@@ -232,7 +278,8 @@
                 <div class="flex flex-col gap-3 sm:flex-row">
                     <a href="{{ path('recruiter_offers') }}" class="inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white px-6 py-3 font-black text-slate-600 transition hover:border-primary/20 hover:text-primary">Annuler</a>
                     <button type="button" class="rounded-2xl bg-gradient-to-r from-secondary to-primary px-8 py-3 font-black text-white shadow-lg shadow-secondary/20" data-offer-next>Continuer</button>
-                    <button type="submit" class="hidden rounded-2xl bg-gradient-to-r from-secondary to-primary px-8 py-3 font-black text-white shadow-lg shadow-secondary/20" data-offer-submit>Publier l'offre</button>
+                    <button type="submit" name="publishAction" value="draft" formnovalidate class="rounded-2xl border border-slate-200 bg-white px-6 py-3 font-black text-slate-600 transition hover:border-primary/20 hover:text-primary">Enregistrer en brouillon</button>
+                    <button type="submit" name="publishAction" value="publish" class="hidden rounded-2xl bg-gradient-to-r from-secondary to-primary px-8 py-3 font-black text-white shadow-lg shadow-secondary/20" data-offer-submit>Publier l'offre</button>
                 </div>
             </div>
         </form>
