@@ -37,25 +37,25 @@ class JobOfferCrudController extends AbstractCrudController
 
     public function configureFields(string $pageName): iterable
     {
-        yield IdField::new('id')->hideOnForm();
+        yield IdField::new('id')->hideOnIndex()->hideOnForm();
         yield TextField::new('title', 'Titre');
         yield TextareaField::new('description')->hideOnIndex();
-        yield ArrayField::new('requiredSkills', 'Competences');
+        yield ArrayField::new('requiredSkills', 'Compétences')->hideOnIndex();
         yield TextField::new('requiredEducation', 'Niveau');
-        yield IntegerField::new('requiredExperienceYears', 'Experience');
+        yield IntegerField::new('requiredExperienceYears', 'Expérience');
         yield TextField::new('location', 'Lieu');
         yield IntegerField::new('salaryMin', 'Salaire min')->hideOnIndex();
         yield IntegerField::new('salaryMax', 'Salaire max')->hideOnIndex();
-        yield BooleanField::new('isRemoteAllowed', 'Remote');
-        yield DateField::new('deadline', 'Deadline');
-        yield ChoiceField::new('status')->setChoices([
+        yield BooleanField::new('isRemoteAllowed', 'Télétravail');
+        yield DateField::new('deadline', 'Date limite');
+        yield ChoiceField::new('status', 'Statut')->setChoices([
             'Active' => JobOfferStatus::Active,
-            'Closed' => JobOfferStatus::Closed,
-            'Draft' => JobOfferStatus::Draft,
+            'Clôturée' => JobOfferStatus::Closed,
+            'Brouillon' => JobOfferStatus::Draft,
         ]);
         yield BooleanField::new('isBoosted', 'Boost');
-        yield BooleanField::new('isDeleted', 'Masquee');
-        yield DateTimeField::new('createdAt')->hideOnForm();
+        yield BooleanField::new('isDeleted', 'Masquée');
+        yield DateTimeField::new('createdAt', 'Créée le')->hideOnForm();
     }
 
     public function configureActions(Actions $actions): Actions

@@ -39,27 +39,27 @@ class ReportCrudController extends AbstractCrudController
 
     public function configureFields(string $pageName): iterable
     {
-        yield IdField::new('id')->hideOnForm();
-        yield AssociationField::new('reporter')->hideOnIndex();
+        yield IdField::new('id')->hideOnIndex()->hideOnForm();
+        yield AssociationField::new('reporter', 'Auteur')->hideOnIndex();
         yield TextField::new('targetType', 'Type');
         yield TextField::new('targetId', 'Cible');
         yield TextField::new('reason', 'Raison');
-        yield TextareaField::new('description')->hideOnIndex();
-        yield ChoiceField::new('status')->setChoices([
-            'Pending' => 'pending',
-            'Reviewing' => 'reviewing',
-            'Resolved' => 'resolved',
-            'Rejected' => 'rejected',
+        yield TextareaField::new('description', 'Description')->hideOnIndex();
+        yield ChoiceField::new('status', 'Statut')->setChoices([
+            'En attente' => 'pending',
+            'En revue' => 'reviewing',
+            'Résolu' => 'resolved',
+            'Rejeté' => 'rejected',
         ]);
-        yield DateTimeField::new('createdAt')->hideOnForm();
-        yield DateTimeField::new('resolvedAt')->hideOnForm();
-        yield AssociationField::new('resolvedBy')->hideOnForm();
+        yield DateTimeField::new('createdAt', 'Créé le')->hideOnForm();
+        yield DateTimeField::new('resolvedAt', 'Résolu le')->hideOnForm();
+        yield AssociationField::new('resolvedBy', 'Traité par')->hideOnForm();
     }
 
     public function configureActions(Actions $actions): Actions
     {
         $review = Action::new('markReviewing', 'En revue')->linkToCrudAction('markReviewing');
-        $resolve = Action::new('resolveReport', 'Resoudre')->linkToCrudAction('resolveReport');
+        $resolve = Action::new('resolveReport', 'Résoudre')->linkToCrudAction('resolveReport');
         $reject = Action::new('rejectReport', 'Rejeter')->linkToCrudAction('rejectReport');
 
         return $actions

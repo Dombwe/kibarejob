@@ -1,120 +1,144 @@
-﻿{% extends '@EasyAdmin/page/content.html.twig' %}
+{% extends '@EasyAdmin/page/content.html.twig' %}
 
-{% block content_title %}KIBARE-JOB Admin{% endblock %}
+{% block content_title %}{% endblock %}
 
 {% block main %}
-    <section class="content-panel">
-        <div class="content-panel-body">
-            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:16px;">
-                <article class="card">
-                    <div class="card-body">
-                        <strong>{{ stats.users }}</strong>
-                        <div>Utilisateurs</div>
-                    </div>
-                </article>
-                <article class="card">
-                    <div class="card-body">
-                        <strong>{{ stats.employersToValidate }}</strong>
-                        <div>Employeurs a valider</div>
-                    </div>
-                </article>
-                <article class="card">
-                    <div class="card-body">
-                        <strong>{{ stats.activeOffers }}</strong>
-                        <div>Offres actives</div>
-                    </div>
-                </article>
-                <article class="card">
-                    <div class="card-body">
-                        <strong>{{ stats.documentsToModerate }}</strong>
-                        <div>Documents a moderer</div>
-                    </div>
-                </article>
-                <article class="card">
-                    <div class="card-body">
-                        <strong>{{ stats.pendingReports }}</strong>
-                        <div>Signalements</div>
-                    </div>
-                </article>
+    <div class="kj-admin-dashboard">
+        <section class="kj-admin-hero">
+            <div>
+                <span class="kj-admin-eyebrow">Backoffice KIBARE-JOB</span>
+                <h1>Tableau de bord administrateur</h1>
+                <p>Supervisez les inscriptions, les recruteurs, les offres et les documents à modérer depuis un espace clair et cohérent avec le thème de l’application.</p>
             </div>
-        </div>
-    </section>
+            <div class="kj-admin-hero-card">
+                <span>Signalements en attente</span>
+                <strong>{{ stats.pendingReports }}</strong>
+                <small>À traiter en priorité</small>
+            </div>
+        </section>
 
-    <section class="content-panel">
-        <div class="content-panel-header">
-            <h2 class="title">Dernieres inscriptions</h2>
-        </div>
-        <div class="content-panel-body">
-            <table class="table datagrid">
-                <thead>
-                    <tr><th>Email</th><th>Téléphone</th><th>Roles</th><th>Date</th></tr>
-                </thead>
-                <tbody>
-                    {% for user in latestUsers %}
-                        <tr>
-                            <td>{{ user.email }}</td>
-                            <td>{{ user.phone }}</td>
-                            <td>{{ user.roles|join(', ') }}</td>
-                            <td>{{ user.createdAt|date('d/m/Y H:i') }}</td>
-                        </tr>
-                    {% else %}
-                        <tr><td colspan="4">Aucune inscription.</td></tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-    </section>
+        <section class="kj-admin-stats">
+            {% set cards = [
+                { value: stats.users, label: 'Utilisateurs', help: 'Comptes actifs', icon: 'users', tone: 'primary' },
+                { value: stats.employersToValidate, label: 'Employeurs à valider', help: 'Comptes recruteurs', icon: 'building', tone: 'secondary' },
+                { value: stats.activeOffers, label: 'Offres actives', help: 'Visibles aux candidats', icon: 'briefcase', tone: 'accent' },
+                { value: stats.documentsToModerate, label: 'Documents à modérer', help: 'En attente de validation', icon: 'document', tone: 'neutral' },
+                { value: stats.pendingReports, label: 'Signalements', help: 'À analyser', icon: 'flag', tone: 'warning' }
+            ] %}
 
-    <section class="content-panel">
-        <div class="content-panel-header">
-            <h2 class="title">Offres actives recentes</h2>
-        </div>
-        <div class="content-panel-body">
-            <table class="table datagrid">
-                <thead>
-                    <tr><th>Titre</th><th>Lieu</th><th>Candidatures</th><th>Deadline</th></tr>
-                </thead>
-                <tbody>
-                    {% for offer in activeOffers %}
-                        <tr>
-                            <td>{{ offer.title }}</td>
-                            <td>{{ offer.location }}</td>
-                            <td>{{ offer.applicationsCount }}</td>
-                            <td>{{ offer.deadline|date('d/m/Y') }}</td>
-                        </tr>
-                    {% else %}
-                        <tr><td colspan="4">Aucune offre active.</td></tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-    </section>
+            {% for card in cards %}
+                <article class="kj-admin-stat kj-admin-stat--{{ card.tone }}">
+                    <div class="kj-admin-stat__icon">
+                        {% if card.icon == 'users' %}
+                            <svg viewBox="0 0 24 24" fill="none"><path d="M16 11a4 4 0 1 0-8 0M4 20a8 8 0 0 1 16 0M19 8a3 3 0 0 1 2 2.8M5 8a3 3 0 0 0-2 2.8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+                        {% elseif card.icon == 'building' %}
+                            <svg viewBox="0 0 24 24" fill="none"><path d="M4 21V5a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v16M3 21h18M8 7h1M12 7h1M8 11h1M12 11h1M8 15h1M12 15h1" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+                        {% elseif card.icon == 'briefcase' %}
+                            <svg viewBox="0 0 24 24" fill="none"><path d="M10 6h4a2 2 0 0 1 2 2v1h3a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3V8a2 2 0 0 1 2-2Z" stroke="currentColor" stroke-width="2"/></svg>
+                        {% elseif card.icon == 'document' %}
+                            <svg viewBox="0 0 24 24" fill="none"><path d="M7 3h7l5 5v13H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Z" stroke="currentColor" stroke-width="2"/><path d="M14 3v5h5M8 13h8M8 17h5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+                        {% else %}
+                            <svg viewBox="0 0 24 24" fill="none"><path d="M5 21V4M5 5h11l-1.5 4L16 13H5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                        {% endif %}
+                    </div>
+                    <div>
+                        <strong>{{ card.value }}</strong>
+                        <span>{{ card.label }}</span>
+                        <small>{{ card.help }}</small>
+                    </div>
+                </article>
+            {% endfor %}
+        </section>
 
-    <section class="content-panel">
-        <div class="content-panel-header">
-            <h2 class="title">Documents a moderer</h2>
-        </div>
-        <div class="content-panel-body">
-            <table class="table datagrid">
-                <thead>
-                    <tr><th>Titre</th><th>Type</th><th>Score</th><th>Upload</th></tr>
-                </thead>
-                <tbody>
-                    {% for document in flaggedDocuments %}
-                        <tr>
-                            <td>{{ document.title }}</td>
-                            <td>{{ document.type.value }}</td>
-                            <td>{{ document.confidenceScore }}</td>
-                            <td>{{ document.uploadedAt|date('d/m/Y H:i') }}</td>
-                        </tr>
-                    {% else %}
-                        <tr><td colspan="4">Aucun document a moderer.</td></tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-    </section>
+        <section class="kj-admin-grid">
+            <article class="kj-admin-panel">
+                <div class="kj-admin-panel__header">
+                    <div>
+                        <h2>Dernières inscriptions</h2>
+                        <p>Les comptes récemment créés sur la plateforme.</p>
+                    </div>
+                </div>
+                <div class="kj-admin-table-wrap">
+                    <table class="kj-admin-table">
+                        <thead>
+                            <tr><th>Email</th><th>Téléphone</th><th>Rôles</th><th>Date</th></tr>
+                        </thead>
+                        <tbody>
+                            {% for user in latestUsers %}
+                                <tr>
+                                    <td><strong>{{ user.email }}</strong></td>
+                                    <td>{{ user.phone|default('Non renseigné') }}</td>
+                                    <td><span class="kj-admin-badge">{{ user.roles|join(', ') }}</span></td>
+                                    <td>{{ user.createdAt|date('d/m/Y H:i') }}</td>
+                                </tr>
+                            {% else %}
+                                <tr><td colspan="4">Aucune inscription.</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </article>
+
+            <article class="kj-admin-panel">
+                <div class="kj-admin-panel__header">
+                    <div>
+                        <h2>Offres actives récentes</h2>
+                        <p>Les dernières offres actuellement visibles.</p>
+                    </div>
+                </div>
+                <div class="kj-admin-table-wrap">
+                    <table class="kj-admin-table">
+                        <thead>
+                            <tr><th>Titre</th><th>Lieu</th><th>Candidatures</th><th>Deadline</th></tr>
+                        </thead>
+                        <tbody>
+                            {% for offer in activeOffers %}
+                                <tr>
+                                    <td><strong>{{ offer.title }}</strong></td>
+                                    <td>{{ offer.location }}</td>
+                                    <td><span class="kj-admin-badge kj-admin-badge--soft">{{ offer.applicationsCount }}</span></td>
+                                    <td>{{ offer.deadline|date('d/m/Y') }}</td>
+                                </tr>
+                            {% else %}
+                                <tr><td colspan="4">Aucune offre active.</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </article>
+        </section>
+
+        <section class="kj-admin-panel">
+            <div class="kj-admin-panel__header">
+                <div>
+                    <h2>Documents à modérer</h2>
+                    <p>Contrôlez les documents non encore vérifiés.</p>
+                </div>
+            </div>
+            <div class="kj-admin-table-wrap">
+                <table class="kj-admin-table">
+                    <thead>
+                        <tr><th>Titre</th><th>Type</th><th>Score</th><th>Upload</th></tr>
+                    </thead>
+                    <tbody>
+                        {% for document in flaggedDocuments %}
+                            <tr>
+                                <td><strong>{{ document.title }}</strong></td>
+                                <td>{{ document.type.value }}</td>
+                                <td>
+                                    <span class="kj-admin-score">
+                                        <span style="width: {{ document.confidenceScore }}%;"></span>
+                                    </span>
+                                    <small>{{ document.confidenceScore }}%</small>
+                                </td>
+                                <td>{{ document.uploadedAt|date('d/m/Y H:i') }}</td>
+                            </tr>
+                        {% else %}
+                            <tr><td colspan="4">Aucun document à modérer.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </div>
 {% endblock %}
-
-
-

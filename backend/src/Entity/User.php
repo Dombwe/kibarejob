@@ -34,6 +34,14 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column(length: 255)]
     private string $email = '';
 
+    #[Assert\Length(max: 100)]
+    #[ORM\Column(length: 100, nullable: true)]
+    private ?string $firstName = null;
+
+    #[Assert\Length(max: 100)]
+    #[ORM\Column(length: 100, nullable: true)]
+    private ?string $lastName = null;
+
     #[ORM\Column(options: ['default' => false])]
     private bool $isEmailVerified = false;
 
@@ -119,12 +127,22 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
 
     public function __toString(): string
     {
-        return null !== $this->id ? (string) $this->id : $this->email;
+        return $this->getDisplayName();
     }
 
     public function getId(): ?UuidInterface { return $this->id; }
     public function getEmail(): string { return $this->email; }
     public function setEmail(string $email): self { $this->email = $email; return $this; }
+    public function getFirstName(): ?string { return $this->firstName; }
+    public function setFirstName(?string $firstName): self { $this->firstName = $firstName; return $this; }
+    public function getLastName(): ?string { return $this->lastName; }
+    public function setLastName(?string $lastName): self { $this->lastName = $lastName; return $this; }
+    public function getDisplayName(): string
+    {
+        $fullName = trim((string) $this->firstName . ' ' . (string) $this->lastName);
+
+        return '' !== $fullName ? $fullName : $this->email;
+    }
     public function isEmailVerified(): bool { return $this->isEmailVerified; }
     public function setIsEmailVerified(bool $isEmailVerified): self { $this->isEmailVerified = $isEmailVerified; return $this; }
     public function getEmailVerificationTokenHash(): ?string { return $this->emailVerificationTokenHash; }

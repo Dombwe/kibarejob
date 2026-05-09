@@ -3,14 +3,17 @@
 namespace App\Controller\Admin;
 
 use App\Entity\CandidateDocument;
+use App\Entity\Enum\DocumentType;
 use Doctrine\ORM\EntityManagerInterface;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Action;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Actions;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Crud;
 use EasyCorp\Bundle\EasyAdminBundle\Controller\AbstractCrudController;
 use EasyCorp\Bundle\EasyAdminBundle\Context\AdminContext;
+use EasyCorp\Bundle\EasyAdminBundle\Field\AssociationField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\ArrayField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\BooleanField;
+use EasyCorp\Bundle\EasyAdminBundle\Field\ChoiceField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\DateField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\DateTimeField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\IdField;
@@ -36,23 +39,30 @@ class DocumentCrudController extends AbstractCrudController
 
     public function configureFields(string $pageName): iterable
     {
-        yield IdField::new('id')->hideOnForm();
-        yield TextField::new('type');
+        yield IdField::new('id')->hideOnIndex()->hideOnForm();
+        yield AssociationField::new('candidate', 'Candidat');
+        yield ChoiceField::new('type', 'Type')->setChoices([
+            'Diplôme' => DocumentType::Diploma,
+            'Certificat' => DocumentType::Certificate,
+            'Attestation' => DocumentType::Attestation,
+            'Autre' => DocumentType::Other,
+        ]);
         yield TextField::new('title', 'Titre');
         yield TextareaField::new('description')->hideOnIndex();
         yield TextField::new('issuingOrganization', 'Organisme')->hideOnIndex();
-        yield DateField::new('issueDate', 'Date obtention')->hideOnIndex();
+        yield DateField::new('issueDate', "Date d'obtention")->hideOnIndex();
         yield DateField::new('expiryDate', 'Expiration')->hideOnIndex();
-        yield TextField::new('documentNumber', 'Reference')->hideOnIndex();
+        yield TextField::new('documentNumber', 'Référence')->hideOnIndex();
         yield UrlField::new('fileUrl', 'Fichier');
-        yield BooleanField::new('isVerified', 'Verifié');
+        yield TextField::new('fileHash', 'Empreinte fichier')->hideOnIndex();
+        yield BooleanField::new('isVerified', 'Vérifié');
         yield IntegerField::new('confidenceScore', 'Score');
         yield BooleanField::new('isPublic', 'Public');
-        yield BooleanField::new('isPinned', 'Epinglé');
+        yield BooleanField::new('isPinned', 'Épinglé');
         yield BooleanField::new('isDeleted', 'Masqué');
         yield ArrayField::new('tags')->hideOnIndex();
-        yield DateTimeField::new('uploadedAt')->hideOnForm();
-        yield DateTimeField::new('lastVerifiedAt')->hideOnForm();
+        yield DateTimeField::new('uploadedAt', 'Ajouté le')->hideOnForm();
+        yield DateTimeField::new('lastVerifiedAt', 'Dernière vérification')->hideOnForm();
     }
 
     public function configureActions(Actions $actions): Actions

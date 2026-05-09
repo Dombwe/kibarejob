@@ -16,6 +16,7 @@ use EasyCorp\Bundle\EasyAdminBundle\Field\EmailField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\IdField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\IntegerField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\TelephoneField;
+use EasyCorp\Bundle\EasyAdminBundle\Field\TextField;
 
 class UserCrudController extends AbstractCrudController
 {
@@ -34,22 +35,24 @@ class UserCrudController extends AbstractCrudController
 
     public function configureFields(string $pageName): iterable
     {
-        yield IdField::new('id')->hideOnForm();
-        yield EmailField::new('email');
-        yield TelephoneField::new('phone')->hideOnIndex();
-        yield ArrayField::new('roles');
-        yield BooleanField::new('isEmailVerified', 'Email confirme');
+        yield IdField::new('id')->hideOnIndex()->hideOnForm();
+        yield TextField::new('firstName', 'Prénom');
+        yield TextField::new('lastName', 'Nom');
+        yield EmailField::new('email', 'Adresse mail');
+        yield TelephoneField::new('phone', 'Téléphone')->hideOnIndex();
+        yield ArrayField::new('roles', 'Rôles');
+        yield BooleanField::new('isEmailVerified', 'Email confirmé');
         yield BooleanField::new('isActive', 'Actif');
-        yield BooleanField::new('isDeleted', 'Banni/Supprime');
+        yield BooleanField::new('isDeleted', 'Banni/Supprimé');
         yield IntegerField::new('profileCompletedPercent', 'Profil %');
-        yield DateTimeField::new('lastLogin')->hideOnForm();
-        yield DateTimeField::new('createdAt')->hideOnForm();
+        yield DateTimeField::new('lastLogin', 'Dernière connexion')->hideOnForm();
+        yield DateTimeField::new('createdAt', 'Créé le')->hideOnForm();
     }
 
     public function configureActions(Actions $actions): Actions
     {
         $activate = Action::new('activate', 'Activer')->linkToCrudAction('activate');
-        $deactivate = Action::new('deactivate', 'Desactiver')->linkToCrudAction('deactivate');
+        $deactivate = Action::new('deactivate', 'Désactiver')->linkToCrudAction('deactivate');
         $ban = Action::new('ban', 'Bannir')->linkToCrudAction('ban')->addCssClass('btn btn-danger');
 
         return $actions

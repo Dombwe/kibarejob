@@ -1,0 +1,994 @@
+:root {
+    --kj-primary: #263849;
+    --kj-secondary: #5f7f99;
+    --kj-accent: #b8c7b4;
+    --kj-muted: #f8fafc;
+    --kj-border: #e2e8f0;
+}
+
+html,
+body.ea {
+    min-height: 100%;
+}
+
+body.ea {
+    background: linear-gradient(135deg, #f8fafc 0%, #ffffff 48%, #fafaf9 100%);
+}
+
+body.ea .wrapper,
+body.ea .content-wrapper,
+body.ea .content,
+body.ea .content-body {
+    background: transparent;
+}
+
+.ea-sidebar,
+.sidebar-wrapper,
+.sidebar {
+    background: #ffffff;
+    border-right: 1px solid rgba(226, 232, 240, .9);
+}
+
+.main-header,
+.responsive-header {
+    background: #ffffff;
+    border-color: rgba(226, 232, 240, .9);
+}
+
+.ea-sidebar .main-header #header-logo a,
+.sidebar .main-header #header-logo a,
+.responsive-logo,
+.sidebar .menu .menu-item-label,
+.sidebar .menu .menu-icon,
+.sidebar .menu a {
+    color: var(--kj-primary);
+    font-weight: 800;
+}
+
+.ea-sidebar .menu .menu-item.active,
+.ea-sidebar .menu .menu-item.active a,
+.sidebar .menu .menu-item.active,
+.sidebar .menu .menu-item.active a {
+    background: linear-gradient(135deg, var(--kj-secondary), var(--kj-primary));
+    border-radius: 16px;
+    color: #ffffff;
+}
+
+.sidebar .menu .menu-header {
+    color: #64748b;
+    font-size: .72rem;
+    font-weight: 950;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+}
+
+.sidebar .menu .menu-item:not(.active) a:hover {
+    background: rgba(95, 127, 153, .08);
+    border-radius: 16px;
+}
+
+.datagrid,
+.content-panel,
+.form-panel,
+.form-widget,
+.field-form_panel,
+.modal-content,
+.dropdown-menu {
+    background-color: #ffffff;
+    border-color: rgba(226, 232, 240, .9);
+}
+
+.content-header {
+    border-bottom: 0;
+}
+
+.kj-admin-dashboard {
+    color: #0f172a;
+    display: grid;
+    gap: 1.5rem;
+}
+
+.kj-admin-hero {
+    align-items: stretch;
+    background: linear-gradient(135deg, rgba(95, 127, 153, .12), rgba(184, 199, 180, .18));
+    border: 1px solid rgba(226, 232, 240, .9);
+    border-radius: 28px;
+    display: grid;
+    gap: 1.5rem;
+    grid-template-columns: minmax(0, 1fr);
+    overflow: hidden;
+    padding: 1.75rem;
+}
+
+.kj-admin-eyebrow {
+    background: #ffffff;
+    border: 1px solid rgba(95, 127, 153, .16);
+    border-radius: 999px;
+    color: var(--kj-secondary);
+    display: inline-flex;
+    font-size: .78rem;
+    font-weight: 900;
+    padding: .5rem .85rem;
+}
+
+.kj-admin-hero h1 {
+    color: #020617;
+    font-size: clamp(2rem, 4vw, 3.25rem);
+    font-weight: 950;
+    letter-spacing: -.02em;
+    line-height: 1.02;
+    margin: 1rem 0 .75rem;
+}
+
+.kj-admin-hero p {
+    color: #475569;
+    font-size: 1rem;
+    font-weight: 650;
+    line-height: 1.7;
+    margin: 0;
+    max-width: 48rem;
+}
+
+.kj-admin-hero-card {
+    background: linear-gradient(135deg, var(--kj-primary), var(--kj-secondary));
+    border-radius: 24px;
+    color: #ffffff;
+    display: grid;
+    min-height: 12rem;
+    padding: 1.5rem;
+}
+
+.kj-admin-hero-card span,
+.kj-admin-hero-card small {
+    color: rgba(255, 255, 255, .78);
+    font-weight: 800;
+}
+
+.kj-admin-hero-card strong {
+    align-self: center;
+    font-size: 4rem;
+    font-weight: 950;
+    line-height: 1;
+}
+
+.kj-admin-stats {
+    display: grid;
+    gap: 1rem;
+    grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+}
+
+.kj-admin-stat {
+    align-items: center;
+    background: #ffffff;
+    border: 1px solid rgba(226, 232, 240, .92);
+    border-radius: 24px;
+    box-shadow: 0 18px 45px rgba(38, 56, 73, .08);
+    display: flex;
+    gap: 1rem;
+    padding: 1.25rem;
+}
+
+.kj-admin-stat__icon {
+    align-items: center;
+    background: rgba(95, 127, 153, .12);
+    border-radius: 18px;
+    color: var(--kj-primary);
+    display: inline-flex;
+    height: 3rem;
+    justify-content: center;
+    width: 3rem;
+}
+
+.kj-admin-stat__icon svg {
+    height: 1.35rem;
+    width: 1.35rem;
+}
+
+.kj-admin-stat strong {
+    color: #020617;
+    display: block;
+    font-size: 2rem;
+    font-weight: 950;
+    line-height: 1;
+}
+
+.kj-admin-stat span {
+    color: #334155;
+    display: block;
+    font-weight: 900;
+    margin-top: .35rem;
+}
+
+.kj-admin-stat small {
+    color: #64748b;
+    display: block;
+    font-weight: 700;
+}
+
+.kj-admin-stat--accent .kj-admin-stat__icon {
+    background: rgba(184, 199, 180, .28);
+}
+
+.kj-admin-stat--warning .kj-admin-stat__icon {
+    background: rgba(148, 163, 184, .18);
+}
+
+.kj-admin-grid {
+    display: grid;
+    gap: 1.5rem;
+    grid-template-columns: minmax(0, 1fr);
+}
+
+.kj-admin-panel {
+    background: #ffffff;
+    border: 1px solid rgba(226, 232, 240, .92);
+    border-radius: 28px;
+    box-shadow: 0 18px 45px rgba(38, 56, 73, .07);
+    overflow: hidden;
+}
+
+.kj-admin-panel__header {
+    align-items: flex-start;
+    border-bottom: 1px solid rgba(226, 232, 240, .85);
+    display: flex;
+    justify-content: space-between;
+    padding: 1.25rem 1.5rem;
+}
+
+.kj-admin-panel h2 {
+    color: #020617;
+    font-size: 1.05rem;
+    font-weight: 950;
+    margin: 0;
+}
+
+.kj-admin-panel p {
+    color: #64748b;
+    font-weight: 700;
+    margin: .25rem 0 0;
+}
+
+.kj-admin-table-wrap {
+    overflow-x: auto;
+}
+
+.kj-admin-table {
+    border-collapse: collapse;
+    min-width: 680px;
+    width: 100%;
+}
+
+.kj-admin-table th {
+    background: #f8fafc;
+    color: #64748b;
+    font-size: .75rem;
+    font-weight: 950;
+    padding: .9rem 1.5rem;
+    text-align: left;
+    text-transform: uppercase;
+}
+
+.kj-admin-table td {
+    border-top: 1px solid rgba(226, 232, 240, .85);
+    color: #475569;
+    font-weight: 700;
+    padding: 1rem 1.5rem;
+    vertical-align: middle;
+}
+
+.kj-admin-table td strong {
+    color: #0f172a;
+    font-weight: 900;
+}
+
+.kj-admin-badge {
+    background: rgba(95, 127, 153, .12);
+    border-radius: 999px;
+    color: var(--kj-primary);
+    display: inline-flex;
+    font-size: .75rem;
+    font-weight: 900;
+    padding: .35rem .65rem;
+}
+
+.kj-admin-badge--soft {
+    background: rgba(184, 199, 180, .28);
+}
+
+.kj-admin-score {
+    background: #e2e8f0;
+    border-radius: 999px;
+    display: inline-flex;
+    height: .5rem;
+    margin-right: .5rem;
+    overflow: hidden;
+    vertical-align: middle;
+    width: 6rem;
+}
+
+.kj-admin-score span {
+    background: linear-gradient(90deg, var(--kj-secondary), var(--kj-primary));
+    border-radius: inherit;
+    display: block;
+}
+
+@media (min-width: 1024px) {
+    .kj-admin-hero {
+        grid-template-columns: minmax(0, 1fr) 18rem;
+        padding: 2rem;
+    }
+
+    .kj-admin-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+.kj-admin-theme-toggle {
+    align-items: center;
+    background: rgba(255, 255, 255, .9);
+    border: 1px solid rgba(148, 163, 184, .32);
+    border-radius: 999px;
+    bottom: 1.25rem;
+    box-shadow: 0 18px 45px rgba(38, 56, 73, .16);
+    color: var(--kj-primary);
+    display: inline-flex;
+    gap: .625rem;
+    padding: .5rem .75rem .5rem .5rem;
+    position: fixed;
+    right: 1.25rem;
+    transition: background-color .2s ease, border-color .2s ease, color .2s ease, transform .2s ease;
+    z-index: 1100;
+}
+
+.kj-admin-theme-toggle:hover {
+    transform: translateY(-1px);
+}
+
+.kj-admin-theme-toggle__track {
+    background: #e2e8f0;
+    border-radius: 999px;
+    display: inline-flex;
+    height: 1.75rem;
+    padding: .1875rem;
+    width: 3rem;
+}
+
+.kj-admin-theme-toggle__thumb {
+    background: linear-gradient(135deg, var(--kj-secondary), var(--kj-primary));
+    border-radius: 999px;
+    box-shadow: 0 8px 18px rgba(38, 56, 73, .2);
+    height: 1.375rem;
+    transition: transform .2s ease, background .2s ease;
+    width: 1.375rem;
+}
+
+.kj-admin-theme-toggle__label {
+    font-size: .75rem;
+    font-weight: 900;
+    min-width: 2.2rem;
+}
+
+html.dark,
+html.dark body.ea {
+    background: #111827;
+}
+
+.dark body.ea {
+    background: linear-gradient(135deg, #111827 0%, #172033 54%, #1e293b 100%);
+    color: #e5e7eb;
+}
+
+.dark body.ea .wrapper,
+.dark body.ea .content-wrapper,
+.dark body.ea .content,
+.dark body.ea .content-body,
+.dark body.ea .main-content,
+.dark body.ea .content-header,
+.dark body.ea .page-content {
+    background: transparent;
+    color: #e5e7eb;
+}
+
+.dark .ea-sidebar,
+.dark .sidebar-wrapper,
+.dark .sidebar,
+.dark .main-header,
+.dark .responsive-header,
+.dark .content-wrapper,
+.dark .content-header,
+.dark .main-content,
+.dark .datagrid,
+.dark .content-panel,
+.dark .form-panel,
+.dark .form-widget,
+.dark .field-form_panel,
+.dark .modal-content,
+.dark .dropdown-menu,
+.dark .dropdown-settings .dropdown-menu,
+.dark .dropdown-user .dropdown-menu {
+    background-color: #1e293b;
+    color: #e5e7eb;
+}
+
+.dark .ea-sidebar,
+.dark .sidebar-wrapper,
+.dark .sidebar,
+.dark .main-header,
+.dark .responsive-header {
+    border-right-color: rgba(148, 163, 184, .18);
+    border-color: rgba(148, 163, 184, .18);
+}
+
+.dark .ea-sidebar .main-header #header-logo a,
+.dark .sidebar .main-header #header-logo a,
+.dark .responsive-logo,
+.dark .ea-sidebar .menu .menu-item-label,
+.dark .sidebar .menu .menu-item-label,
+.dark .ea-sidebar .menu .menu-icon,
+.dark .sidebar .menu .menu-icon,
+.dark .sidebar .menu a,
+.dark .menu-item-contents,
+.dark .menu-item-label,
+.dark .menu-icon,
+.dark .content-header-title,
+.dark .page-title,
+.dark .title,
+.dark .form-group label,
+.dark .field-label,
+.dark .datagrid thead th,
+.dark .datagrid td,
+.dark .datagrid td a,
+.dark .dropdown-menu a,
+.dark .dropdown-menu button {
+    color: #f8fafc;
+}
+
+.dark .sidebar .menu .menu-header {
+    color: #94a3b8;
+}
+
+.dark .ea-sidebar .menu .menu-item:not(.active) a:hover,
+.dark .sidebar .menu .menu-item:not(.active) a:hover,
+.dark .menu-item:not(.active) .menu-item-contents:hover {
+    background: rgba(51, 65, 85, .78);
+    border-radius: 16px;
+}
+
+.dark .sidebar .menu .menu-item.active,
+.dark .sidebar .menu .menu-item.active a,
+.dark .menu-item.active .menu-item-contents {
+    background: linear-gradient(135deg, var(--kj-secondary), var(--kj-primary));
+    color: #ffffff;
+}
+
+.dark .datagrid thead,
+.dark .datagrid thead th,
+.dark table.table thead th {
+    background: rgba(15, 23, 42, .72);
+    border-color: rgba(148, 163, 184, .18);
+}
+
+.dark .datagrid tbody tr,
+.dark .datagrid tbody td,
+.dark table.table tbody td {
+    background: rgba(30, 41, 59, .94);
+    border-color: rgba(148, 163, 184, .18);
+}
+
+.dark .datagrid tbody tr:hover td,
+.dark table.table tbody tr:hover td {
+    background: rgba(51, 65, 85, .72);
+}
+
+.dark .form-control,
+.dark .form-select,
+.dark input,
+.dark select,
+.dark textarea {
+    background-color: rgba(15, 23, 42, .58);
+    border-color: rgba(148, 163, 184, .22);
+    color: #f8fafc;
+}
+
+.dark .btn,
+.dark .btn-secondary,
+.dark .global-actions .btn {
+    border-color: rgba(148, 163, 184, .22);
+}
+
+.dark .btn-secondary {
+    background: rgba(51, 65, 85, .78);
+    color: #e5e7eb;
+}
+
+.dark .kj-admin-dashboard {
+    color: #e5e7eb;
+}
+
+.dark .kj-admin-hero {
+    background: linear-gradient(135deg, rgba(95, 127, 153, .16), rgba(184, 199, 180, .08));
+    border-color: rgba(148, 163, 184, .18);
+}
+
+.dark .kj-admin-eyebrow,
+.dark .kj-admin-stat,
+.dark .kj-admin-panel {
+    background: rgba(30, 41, 59, .94);
+    border-color: rgba(148, 163, 184, .18);
+    box-shadow: 0 18px 45px rgba(0, 0, 0, .28);
+}
+
+.dark .kj-admin-hero h1,
+.dark .kj-admin-stat strong,
+.dark .kj-admin-panel h2,
+.dark .kj-admin-table td strong {
+    color: #f8fafc;
+}
+
+.dark .kj-admin-hero p,
+.dark .kj-admin-stat span,
+.dark .kj-admin-table td {
+    color: #cbd5e1;
+}
+
+.dark .kj-admin-stat small,
+.dark .kj-admin-panel p,
+.dark .kj-admin-table th {
+    color: #94a3b8;
+}
+
+.dark .kj-admin-table th {
+    background: rgba(15, 23, 42, .58);
+}
+
+.dark .kj-admin-table td,
+.dark .kj-admin-panel__header {
+    border-color: rgba(148, 163, 184, .18);
+}
+
+.dark .kj-admin-badge,
+.dark .kj-admin-stat__icon {
+    background: rgba(184, 199, 180, .12);
+    color: #b8c7b4;
+}
+
+.dark .kj-admin-score {
+    background: rgba(71, 85, 105, .72);
+}
+
+.dark .kj-admin-theme-toggle {
+    background: rgba(30, 41, 59, .9);
+    border-color: rgba(184, 199, 180, .25);
+    color: #e5e7eb;
+}
+
+.dark .kj-admin-theme-toggle__track {
+    background: rgba(15, 23, 42, .92);
+}
+
+.dark .kj-admin-theme-toggle__thumb {
+    background: linear-gradient(135deg, var(--kj-accent), var(--kj-secondary));
+    transform: translateX(1.25rem);
+}
+
+/* EasyAdmin polish: lisibility, compact tables and premium navigation */
+body.ea {
+    --ea-primary: var(--kj-primary);
+    --ea-primary-rgb: 38, 56, 73;
+    --ea-light-bg-subtle: #f8fafc;
+    --ea-border-color: rgba(226, 232, 240, .9);
+    color: #172033;
+}
+
+body.ea .content-wrapper,
+body.ea .main-content,
+body.ea .content {
+    max-width: 100%;
+    overflow-x: hidden;
+}
+
+body.ea .content-header-title .title,
+body.ea .content-header-title h1,
+body.ea .page-title,
+body.ea h1,
+body.ea h2,
+body.ea h3,
+body.ea label,
+body.ea .form-label,
+body.ea .field-label,
+body.ea .form-group label {
+    color: #172033;
+}
+
+body.ea .datagrid {
+    border: 1px solid rgba(226, 232, 240, .92);
+    border-radius: 22px;
+    box-shadow: 0 18px 45px rgba(38, 56, 73, .07);
+    overflow: hidden;
+}
+
+body.ea .datagrid table,
+body.ea table.table {
+    table-layout: fixed;
+    width: 100%;
+}
+
+body.ea .datagrid thead th,
+body.ea table.table thead th {
+    background: #eef3f7;
+    border-color: rgba(203, 213, 225, .9);
+    color: #263849;
+    font-size: .72rem;
+    font-weight: 950;
+    letter-spacing: .035em;
+    text-transform: uppercase;
+    white-space: normal;
+}
+
+body.ea .datagrid tbody td,
+body.ea table.table tbody td {
+    color: #334155;
+    overflow-wrap: anywhere;
+    vertical-align: middle;
+    white-space: normal;
+}
+
+body.ea .datagrid .actions,
+body.ea .datagrid th.actions,
+body.ea .datagrid td.actions {
+    min-width: 8.5rem;
+    width: 10rem;
+}
+
+body.ea .datagrid .field-id {
+    max-width: 7rem;
+}
+
+body.ea .sidebar .menu .menu-item,
+body.ea .sidebar .menu .menu-item .menu-item-contents,
+body.ea .sidebar .menu .menu-item a {
+    border-radius: 14px;
+}
+
+body.ea .ea-sidebar .menu .menu-item.active,
+body.ea .ea-sidebar .menu .menu-item.active a,
+body.ea .sidebar .menu .menu-item.active,
+body.ea .sidebar .menu .menu-item.active a,
+body.ea .menu-item.active .menu-item-contents {
+    background: linear-gradient(135deg, #dbe6ef, #eef3f7);
+    box-shadow: inset 0 0 0 1px rgba(95, 127, 153, .22);
+    color: #263849;
+}
+
+body.ea .sidebar .menu .menu-item.active .menu-icon,
+body.ea .sidebar .menu .menu-item.active .menu-item-label,
+body.ea .menu-item.active .menu-icon,
+body.ea .menu-item.active .menu-item-label {
+    color: #263849;
+}
+
+body.ea .form-control,
+body.ea .form-select,
+body.ea input.form-control,
+body.ea select.form-select,
+body.ea textarea.form-control,
+body.ea .ts-control,
+body.ea .ts-wrapper.multi .ts-control,
+body.ea .field-collection-item,
+body.ea .form-widget-compound,
+body.ea .form-check-input,
+body.ea .form-switch .form-check-input {
+    background-color: #f8fafc;
+    border-color: rgba(203, 213, 225, .95);
+    color: #172033;
+}
+
+body.ea .form-control::placeholder,
+body.ea .ts-control input::placeholder,
+body.ea .search-query::placeholder {
+    color: #64748b;
+}
+
+body.ea .ts-wrapper.multi .ts-control > div,
+body.ea .badge,
+body.ea .field-array .badge,
+body.ea .field-collection-item .badge {
+    background: #e6edf3;
+    border: 1px solid rgba(95, 127, 153, .18);
+    color: #263849;
+}
+
+body.ea .field-collection-add-button,
+body.ea .field-collection-add-button a,
+body.ea .ea-vich-file-actions a,
+body.ea .btn-secondary,
+body.ea .btn-light {
+    background: #eef3f7;
+    border-color: rgba(95, 127, 153, .22);
+    color: #263849;
+    font-weight: 800;
+}
+
+body.ea .no-results {
+    background: #ffffff;
+    border: 1px solid rgba(226, 232, 240, .92);
+    border-radius: 22px;
+    color: #475569;
+    font-weight: 850;
+    padding: 2rem;
+    text-align: center;
+}
+
+body.ea .search-wrapper,
+body.ea .global-actions,
+body.ea .filter-content,
+body.ea .filters-panel {
+    color: #172033;
+}
+
+body.ea .search-wrapper input,
+body.ea input[type="search"],
+body.ea .search-query {
+    background: #f8fafc;
+    border-color: rgba(203, 213, 225, .95);
+    color: #172033;
+}
+
+.dark body.ea {
+    --ea-primary: #b8c7b4;
+    --ea-primary-rgb: 184, 199, 180;
+    --ea-border-color: rgba(148, 163, 184, .2);
+}
+
+.dark body.ea .content-header-title .title,
+.dark body.ea .content-header-title h1,
+.dark body.ea .page-title,
+.dark body.ea h1,
+.dark body.ea h2,
+.dark body.ea h3,
+.dark body.ea label,
+.dark body.ea .form-label,
+.dark body.ea .field-label,
+.dark body.ea .form-group label,
+.dark body.ea .search-wrapper,
+.dark body.ea .global-actions,
+.dark body.ea .filter-content,
+.dark body.ea .filters-panel {
+    color: #f8fafc;
+}
+
+.dark body.ea .datagrid {
+    border-color: rgba(148, 163, 184, .18);
+    box-shadow: 0 18px 45px rgba(0, 0, 0, .28);
+}
+
+.dark body.ea .datagrid thead th,
+.dark body.ea table.table thead th {
+    background: #263849;
+    border-color: rgba(184, 199, 180, .16);
+    color: #f8fafc;
+}
+
+.dark body.ea .datagrid tbody td,
+.dark body.ea table.table tbody td {
+    color: #dbe5ee;
+}
+
+.dark body.ea .ea-sidebar .menu .menu-item.active,
+.dark body.ea .ea-sidebar .menu .menu-item.active a,
+.dark body.ea .sidebar .menu .menu-item.active,
+.dark body.ea .sidebar .menu .menu-item.active a,
+.dark body.ea .menu-item.active .menu-item-contents {
+    background: linear-gradient(135deg, rgba(184, 199, 180, .18), rgba(95, 127, 153, .18));
+    box-shadow: inset 0 0 0 1px rgba(184, 199, 180, .22);
+    color: #f8fafc;
+}
+
+.dark body.ea .sidebar .menu .menu-item.active .menu-icon,
+.dark body.ea .sidebar .menu .menu-item.active .menu-item-label,
+.dark body.ea .menu-item.active .menu-icon,
+.dark body.ea .menu-item.active .menu-item-label {
+    color: #f8fafc;
+}
+
+.dark body.ea .form-control,
+.dark body.ea .form-select,
+.dark body.ea input.form-control,
+.dark body.ea select.form-select,
+.dark body.ea textarea.form-control,
+.dark body.ea .ts-control,
+.dark body.ea .ts-dropdown,
+.dark body.ea .ts-wrapper.multi .ts-control,
+.dark body.ea .field-collection-item,
+.dark body.ea .form-widget-compound,
+.dark body.ea .form-check-input,
+.dark body.ea .form-switch .form-check-input,
+.dark body.ea .search-wrapper input,
+.dark body.ea input[type="search"],
+.dark body.ea .search-query {
+    background-color: rgba(15, 23, 42, .7);
+    border-color: rgba(148, 163, 184, .24);
+    color: #f8fafc;
+}
+
+.dark body.ea .form-control::placeholder,
+.dark body.ea .ts-control input::placeholder,
+.dark body.ea .search-query::placeholder {
+    color: #cbd5e1;
+}
+
+.dark body.ea .ts-wrapper.multi .ts-control > div,
+.dark body.ea .badge,
+.dark body.ea .field-array .badge,
+.dark body.ea .field-collection-item .badge {
+    background: rgba(184, 199, 180, .14);
+    border-color: rgba(184, 199, 180, .2);
+    color: #e8efe5;
+}
+
+.dark body.ea .field-collection-add-button,
+.dark body.ea .field-collection-add-button a,
+.dark body.ea .ea-vich-file-actions a,
+.dark body.ea .btn-secondary,
+.dark body.ea .btn-light {
+    background: rgba(51, 65, 85, .84);
+    border-color: rgba(184, 199, 180, .2);
+    color: #f8fafc;
+}
+
+.dark body.ea .no-results {
+    background: rgba(30, 41, 59, .94);
+    border-color: rgba(148, 163, 184, .18);
+    color: #e5e7eb;
+    box-shadow: 0 18px 45px rgba(0, 0, 0, .24);
+}
+
+.dark body.ea .dropdown-menu,
+.dark body.ea .dropdown-menu .dropdown-item,
+.dark body.ea .popover,
+.dark body.ea .modal-content {
+    background-color: #1e293b;
+    border-color: rgba(148, 163, 184, .18);
+    color: #f8fafc;
+}
+
+.dark body.ea .dropdown-menu .dropdown-item:hover {
+    background-color: rgba(51, 65, 85, .84);
+    color: #f8fafc;
+}
+
+/* Final EasyAdmin overrides: force dark-mode contrast where vendor CSS is stronger. */
+html.dark body.ea table.datagrid thead,
+html.dark body.ea table.datagrid thead tr,
+html.dark body.ea table.datagrid thead th,
+html.dark body.ea table.table.datagrid thead th {
+    background: #dbe6ef !important;
+    border-color: rgba(95, 127, 153, .28) !important;
+    color: #111827 !important;
+}
+
+html.dark body.ea table.datagrid thead th a,
+html.dark body.ea table.datagrid thead th span,
+html.dark body.ea table.datagrid thead th i,
+html.dark body.ea table.datagrid thead th .icon,
+html.dark body.ea table.datagrid thead .sorted a,
+html.dark body.ea table.datagrid thead .sorted span {
+    color: #111827 !important;
+    fill: #111827 !important;
+    opacity: 1 !important;
+}
+
+html.dark body.ea #main-menu .menu .menu-item.active,
+html.dark body.ea #main-menu .menu .menu-item.active:not(.expanded),
+html.dark body.ea #main-menu .menu .menu-item.active .menu-item-contents,
+html.dark body.ea #main-menu .menu .menu-item.active:not(.expanded) a {
+    background: linear-gradient(135deg, #dbe6ef, #f8fafc) !important;
+    box-shadow: inset 0 0 0 1px rgba(184, 199, 180, .55), 0 10px 26px rgba(0, 0, 0, .22) !important;
+    color: #111827 !important;
+}
+
+html.dark body.ea #main-menu .menu .menu-item.active .menu-icon,
+html.dark body.ea #main-menu .menu .menu-item.active .menu-item-label,
+html.dark body.ea #main-menu .menu .menu-item.active:not(.expanded) .menu-icon,
+html.dark body.ea #main-menu .menu .menu-item.active:not(.expanded) a,
+html.dark body.ea #main-menu .menu .menu-item.active:not(.expanded) span {
+    color: #111827 !important;
+}
+
+html.dark body.ea .content-top .content-search,
+html.dark body.ea .content-top .content-search .form-widget,
+html.dark body.ea .content-top .content-search input[type="search"][name="query"],
+html.dark body.ea .datagrid-header-tools .datagrid-search input[type="search"].form-control,
+html.dark body.ea input[type="search"],
+html.dark body.ea .form-control,
+html.dark body.ea .form-select,
+html.dark body.ea textarea.form-control,
+html.dark body.ea .ts-control,
+html.dark body.ea .ts-wrapper.multi .ts-control,
+html.dark body.ea .field-array .field-collection-item,
+html.dark body.ea .field-collection .field-collection-item,
+html.dark body.ea .form-widget-compound,
+html.dark body.ea .form-check-input,
+html.dark body.ea .form-switch .form-check-input {
+    background-color: rgba(30, 41, 59, .94) !important;
+    border-color: rgba(184, 199, 180, .26) !important;
+    color: #f8fafc !important;
+}
+
+html.dark body.ea .content-top .content-search .content-search-icon,
+html.dark body.ea .content-top .content-search .content-search-label,
+html.dark body.ea .content-top .content-search .content-search-label::after,
+html.dark body.ea .content-top .content-search input[type="search"][name="query"]::placeholder,
+html.dark body.ea .datagrid-header-tools .datagrid-search input[type="search"].form-control::placeholder {
+    color: #dbe5ee !important;
+}
+
+html.dark body.ea .form-group.field-array label,
+html.dark body.ea .form-group.field-collection label,
+html.dark body.ea .field-array > label,
+html.dark body.ea .field-collection > label,
+html.dark body.ea .form-group label[for*="roles"],
+html.dark body.ea .form-group label[for*="tags"],
+html.dark body.ea .form-group label[for*="cities"],
+html.dark body.ea .form-group label[for*="requiredSkills"] {
+    color: #f8fafc !important;
+}
+
+html.dark body.ea .field-array .field-collection-item,
+html.dark body.ea .field-array .field-collection-item input,
+html.dark body.ea .field-collection .field-collection-item,
+html.dark body.ea .field-collection .accordion-item,
+html.dark body.ea .field-collection .accordion-header,
+html.dark body.ea .field-collection .accordion-button,
+html.dark body.ea .field-collection .accordion-button:hover {
+    background: rgba(30, 41, 59, .94) !important;
+    border-color: rgba(184, 199, 180, .24) !important;
+    color: #f8fafc !important;
+}
+
+html.dark body.ea .form-group.field-collection .field-collection-add-button,
+html.dark body.ea .form-group.field-collection .field-collection-add-button.btn,
+html.dark body.ea .field-collection-add-button,
+html.dark body.ea .field-collection-add-button span,
+html.dark body.ea .field-collection-add-button i,
+html.dark body.ea .btn.btn-link.field-collection-add-button {
+    background: #dbe6ef !important;
+    border: 1px solid rgba(95, 127, 153, .35) !important;
+    border-radius: 12px !important;
+    color: #111827 !important;
+    font-weight: 900 !important;
+    text-decoration: none !important;
+}
+
+html.dark body.ea table.datagrid td.field-array,
+html.dark body.ea table.datagrid td.field-collection,
+html.dark body.ea table.datagrid td.field-boolean,
+html.dark body.ea table.datagrid td.field-text,
+html.dark body.ea table.datagrid td.field-email,
+html.dark body.ea table.datagrid td.field-choice,
+html.dark body.ea table.datagrid td.field-country,
+html.dark body.ea table.datagrid td.field-association {
+    background: rgba(30, 41, 59, .94) !important;
+    color: #f8fafc !important;
+}
+
+html.dark body.ea table.datagrid td.field-array .badge,
+html.dark body.ea table.datagrid td .badge,
+html.dark body.ea .ts-wrapper.multi .ts-control > div,
+html.dark body.ea .form-widget .badge {
+    background: #dbe6ef !important;
+    border-color: rgba(95, 127, 153, .3) !important;
+    color: #111827 !important;
+}
+
+html.dark body.ea table.datagrid .form-switch .form-check-input,
+html.dark body.ea table.datagrid td.field-boolean .form-switch input {
+    background-color: rgba(30, 41, 59, .94) !important;
+    border-color: rgba(184, 199, 180, .34) !important;
+}
+
+html.dark body.ea table.datagrid .form-switch .form-check-input:checked,
+html.dark body.ea table.datagrid td.field-boolean .form-switch input:checked {
+    background-color: #b8c7b4 !important;
+    border-color: #b8c7b4 !important;
+}
