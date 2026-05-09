@@ -37,6 +37,8 @@ security:
 
     access_control:
         - { path: ^/$, roles: PUBLIC_ACCESS }
+        - { path: ^/contact, roles: PUBLIC_ACCESS }
+        - { path: ^/faq, roles: PUBLIC_ACCESS }
         - { path: ^/candidats, roles: PUBLIC_ACCESS }
         - { path: ^/login, roles: PUBLIC_ACCESS }
         - { path: ^/register, roles: PUBLIC_ACCESS }

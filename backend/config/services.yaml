@@ -7,11 +7,13 @@ parameters:
     app.payment_method_default: 'none'
     app.public_url_default: 'http://localhost:8000'
     app.mail_from_default: 'no-reply@kibarejob.local'
+    app.contact_to_default: '%app.mail_from%'
     app.subscription_mode: '%env(default:app.subscription_mode_default:SUBSCRIPTION_MODE)%'
     app.payment_method: '%env(default:app.payment_method_default:PAYMENT_METHOD)%'
     app.redis_cache_ttl: '%env(int:default:app.redis_cache_ttl_default:REDIS_CACHE_TTL)%'
     app.public_url: '%env(default:app.public_url_default:APP_PUBLIC_URL)%'
     app.mail_from: '%env(default:app.mail_from_default:MAIL_FROM)%'
+    app.contact_to: '%env(default:app.contact_to_default:CONTACT_TO)%'
 
 services:
     _defaults:
@@ -59,6 +61,11 @@ services:
         arguments:
             $publicUrl: '%app.public_url%'
             $mailFrom: '%app.mail_from%'
+
+    App\Service\ContactEmailService:
+        arguments:
+            $mailFrom: '%app.mail_from%'
+            $contactTo: '%app.contact_to%'
 
     App\Middleware\QuotaMiddleware:
         tags:
