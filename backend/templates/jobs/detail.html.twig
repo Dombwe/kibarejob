@@ -1,0 +1,269 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}{{ offer.title }} - KIBARE-JOB{% endblock %}
+
+{% block body %}
+{% set company = offer.externalSourceName ?: (offer.employer.employer ? offer.employer.employer.companyName : offer.employer.displayName) %}
+{% set salary = offer.salaryMin or offer.salaryMax %}
+
+<main class="min-h-screen bg-gradient-to-br from-slate-50 via-white to-stone-50 text-slate-900 dark:from-slate-950 dark:via-slate-950 dark:to-slate-900 dark:text-slate-100">
+    <header class="border-b border-slate-200/80 bg-white/85 px-4 py-5 backdrop-blur dark:border-slate-800 dark:bg-slate-950/85 md:px-8">
+        <div class="mx-auto flex max-w-7xl items-center justify-between gap-4">
+            <a href="{{ path('home') }}" class="flex items-center gap-3">
+                <span class="grid h-10 w-10 place-items-center rounded-2xl bg-gradient-to-br from-secondary to-primary text-white shadow-lg shadow-secondary/20">
+                    <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M10 6h4a2 2 0 0 1 2 2v1h3a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3V8a2 2 0 0 1 2-2Z" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+                </span>
+                <span class="text-xl font-black text-primary dark:text-white">KIBARE-JOB</span>
+            </a>
+            <nav class="hidden items-center gap-6 text-sm font-bold text-slate-600 dark:text-slate-300 md:flex">
+                <a href="{{ path('home') }}" class="transition hover:text-secondary">Accueil</a>
+                <a href="{{ path('public_jobs') }}" class="text-secondary">Offres d'emploi</a>
+                <a href="{{ path('candidate_landing') }}" class="transition hover:text-secondary">Candidats</a>
+                <a href="{{ path('faq') }}" class="transition hover:text-secondary">FAQ</a>
+                <a href="{{ path('contact') }}" class="transition hover:text-secondary">Contact</a>
+            </nav>
+            <a href="{{ path('public_jobs') }}" class="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-black text-slate-700 shadow-sm transition hover:border-secondary/30 hover:text-secondary dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100">Retour</a>
+        </div>
+    </header>
+
+    <section class="px-4 py-10 md:px-8 md:py-14">
+        <div class="mx-auto grid max-w-7xl gap-8 lg:grid-cols-[1fr_360px]" data-like-scope>
+            <article class="rounded-3xl border border-slate-200 bg-white p-6 shadow-soft dark:border-slate-800 dark:bg-slate-900 md:p-8">
+                {% for label, messages in app.flashes %}
+                    {% for message in messages %}
+                        <div class="mb-4 rounded-2xl border px-4 py-3 text-sm font-bold {{ label == 'success' ? 'border-secondary/25 bg-secondary/10 text-secondary' : 'border-rose-200 bg-rose-50 text-rose-700 dark:border-rose-900 dark:bg-rose-950/40 dark:text-rose-200' }}">
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                {% endfor %}
+
+                <p class="mb-4 inline-flex rounded-full border border-secondary/20 bg-secondary/10 px-4 py-2 text-sm font-black text-secondary">{{ company }}</p>
+                <h1 class="text-3xl font-black leading-tight text-slate-950 dark:text-white md:text-5xl">{{ offer.title }}</h1>
+
+                <div class="mt-6 flex flex-wrap gap-2">
+                    <span class="rounded-full bg-slate-100 px-3 py-1.5 text-sm font-bold text-slate-600 dark:bg-slate-800 dark:text-slate-200">{{ offer.location }}</span>
+                    <span class="rounded-full bg-slate-100 px-3 py-1.5 text-sm font-bold text-slate-600 dark:bg-slate-800 dark:text-slate-200">{{ offer.contractType.value }}</span>
+                    <span class="rounded-full bg-slate-100 px-3 py-1.5 text-sm font-bold text-slate-600 dark:bg-slate-800 dark:text-slate-200">{{ offer.positions }} poste{{ offer.positions > 1 ? 's' : '' }}</span>
+                    {% if offer.isRemoteAllowed %}
+                        <span class="rounded-full bg-secondary/10 px-3 py-1.5 text-sm font-bold text-secondary">Télétravail possible</span>
+                    {% endif %}
+                    {% if offer.externalSourceName %}
+                        <span class="rounded-full bg-primary/10 px-3 py-1.5 text-sm font-bold text-primary dark:text-slate-100">Source externe vérifiée</span>
+                    {% endif %}
+                </div>
+
+                <div class="mt-8 grid gap-3 border-y border-slate-100 py-5 text-center dark:border-slate-800 sm:grid-cols-3">
+                    <div class="rounded-2xl bg-slate-50 p-4 dark:bg-slate-950">
+                        <strong class="block text-2xl text-slate-950 dark:text-white">{{ offer.viewsCount }}</strong>
+                        <span class="text-sm font-bold text-slate-500 dark:text-slate-400">consultations</span>
+                    </div>
+                    <div class="rounded-2xl bg-slate-50 p-4 dark:bg-slate-950">
+                        <strong class="block text-2xl text-slate-950 dark:text-white">{{ offer.applicationsCount }}</strong>
+                        <span class="text-sm font-bold text-slate-500 dark:text-slate-400">postulations</span>
+                    </div>
+                    <div class="rounded-2xl bg-slate-50 p-4 dark:bg-slate-950">
+                        <strong class="block text-2xl text-slate-950 dark:text-white" data-like-count>{{ offer.likesCount }}</strong>
+                        <span class="text-sm font-bold text-slate-500 dark:text-slate-400">likes</span>
+                    </div>
+                </div>
+
+                <div class="mt-8 max-w-none leading-8 text-slate-700 dark:text-slate-200">
+                    <h2 class="mb-4 text-2xl font-black text-slate-950 dark:text-white">Description du poste</h2>
+                    <p>{{ offer.description|job_description_text|nl2br }}</p>
+                </div>
+
+                <div class="mt-8 grid gap-5 md:grid-cols-2">
+                    <section class="rounded-3xl bg-slate-50 p-5 dark:bg-slate-950">
+                        <h2 class="mb-4 text-lg font-black text-slate-950 dark:text-white">Profil recherché</h2>
+                        <div class="space-y-3 text-sm font-semibold text-slate-600 dark:text-slate-300">
+                            <p><span class="font-black text-slate-950 dark:text-white">Niveau minimum :</span> {{ offer.requiredEducation }}</p>
+                            {% if offer.educationField %}
+                                <p><span class="font-black text-slate-950 dark:text-white">Domaine :</span> {{ offer.educationField }}</p>
+                            {% endif %}
+                            <p><span class="font-black text-slate-950 dark:text-white">Expérience :</span> {{ offer.requiredExperienceYears }} an{{ offer.requiredExperienceYears > 1 ? 's' : '' }} minimum</p>
+                            {% if salary %}
+                                <p><span class="font-black text-slate-950 dark:text-white">Salaire :</span>
+                                    {% if offer.salaryMin and offer.salaryMax %}
+                                        {{ offer.salaryMin|number_format(0, ',', ' ') }} - {{ offer.salaryMax|number_format(0, ',', ' ') }} FCFA
+                                    {% elseif offer.salaryMin %}
+                                        À partir de {{ offer.salaryMin|number_format(0, ',', ' ') }} FCFA
+                                    {% else %}
+                                        Jusqu'à {{ offer.salaryMax|number_format(0, ',', ' ') }} FCFA
+                                    {% endif %}
+                                </p>
+                            {% endif %}
+                        </div>
+                    </section>
+
+                    <section class="rounded-3xl bg-slate-50 p-5 dark:bg-slate-950">
+                        <h2 class="mb-4 text-lg font-black text-slate-950 dark:text-white">Documents à fournir</h2>
+                        <div class="space-y-3 text-sm font-semibold text-slate-600 dark:text-slate-300">
+                            {% for document in offer.requiredDocuments|default([]) %}
+                                {% set documentLabel = document is iterable ? document.label|default(document.name|default('Document')) : document %}
+                                <p class="flex items-center justify-between gap-3 rounded-2xl bg-white px-3 py-2 dark:bg-slate-900">
+                                    <span>{{ documentLabel }}</span>
+                                    <span class="rounded-full bg-secondary/10 px-2 py-1 text-xs font-black text-secondary">Obligatoire</span>
+                                </p>
+                            {% else %}
+                                <p>CV et lettre de motivation selon les indications du recruteur.</p>
+                            {% endfor %}
+
+                            {% for document in offer.recommendedDocuments|default([]) %}
+                                {% set documentLabel = document is iterable ? document.label|default(document.name|default('Document')) : document %}
+                                <p class="flex items-center justify-between gap-3 rounded-2xl bg-white px-3 py-2 dark:bg-slate-900">
+                                    <span>{{ documentLabel }}</span>
+                                    <span class="rounded-full bg-slate-100 px-2 py-1 text-xs font-black text-slate-500 dark:bg-slate-800 dark:text-slate-300">Optionnel</span>
+                                </p>
+                            {% endfor %}
+                        </div>
+                    </section>
+                </div>
+
+                {% if offer.requiredSkills is not empty %}
+                    <section class="mt-8">
+                        <h2 class="mb-4 text-lg font-black text-slate-950 dark:text-white">Compétences demandées</h2>
+                        <div class="flex flex-wrap gap-2">
+                            {% for skill in offer.requiredSkills %}
+                                <span class="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-sm font-bold text-slate-600 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200">{{ skill }}</span>
+                            {% endfor %}
+                        </div>
+                    </section>
+                {% endif %}
+            </article>
+
+            <aside class="space-y-5">
+                <section class="sticky top-6 rounded-3xl border border-slate-200 bg-white p-6 shadow-soft dark:border-slate-800 dark:bg-slate-900">
+                    <h2 class="text-xl font-black text-slate-950 dark:text-white">Cette offre vous intéresse ?</h2>
+                    <p class="mt-2 text-sm leading-6 text-slate-600 dark:text-slate-300">Vous pouvez l'aimer pour la retrouver plus facilement, puis postuler depuis la source indiquée ou via l'application candidat.</p>
+
+                    <form method="post" action="{{ path('public_job_like', {id: offer.id}) }}" class="mt-5" data-like-form>
+                        <input type="hidden" name="_csrf_token" value="{{ csrf_token('like_offer_' ~ offer.id) }}">
+                        <button type="submit" title="{{ isLiked ? 'Retirer le like' : 'Aimer cette offre' }}" aria-label="{{ isLiked ? 'Retirer le like' : 'Aimer cette offre' }}" data-like-button data-liked="{{ isLiked ? 'true' : 'false' }}" class="flex w-full items-center justify-center gap-3 rounded-2xl border px-5 py-3 font-black transition {{ isLiked ? 'border-secondary/30 bg-secondary/10 text-secondary' : 'border-slate-200 bg-slate-50 text-slate-700 hover:border-secondary/30 hover:text-secondary dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100' }}">
+                            <svg class="h-5 w-5" viewBox="0 0 24 24" fill="{{ isLiked ? 'currentColor' : 'none' }}" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" data-like-icon>
+                                <path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8Z"/>
+                            </svg>
+                            <span data-like-label>{{ isLiked ? 'Offre aimée' : 'Aimer cette offre' }}</span>
+                        </button>
+                        <p class="mt-3 min-h-5 text-center text-sm font-bold text-slate-500 dark:text-slate-400" data-like-feedback aria-live="polite"></p>
+                    </form>
+
+                    <div class="mt-4 grid gap-3">
+                        {% if offer.externalUrl %}
+                            <a href="{{ offer.externalUrl }}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center justify-center rounded-2xl bg-primary px-5 py-3 font-black text-white shadow-sm transition hover:bg-secondary">Postuler sur le site source</a>
+                        {% endif %}
+                        {% if offer.applicationEmail %}
+                            <a href="mailto:{{ offer.applicationEmail }}?subject=Candidature - {{ offer.title|url_encode }}" class="inline-flex items-center justify-center rounded-2xl bg-secondary px-5 py-3 font-black text-white shadow-sm transition hover:bg-primary">Postuler par email</a>
+                        {% endif %}
+                        <a href="{{ path('candidate_landing') }}" class="inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white px-5 py-3 font-black text-slate-700 shadow-sm transition hover:border-secondary/30 hover:text-secondary dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100">Télécharger l'application</a>
+                    </div>
+
+                    <dl class="mt-6 space-y-3 border-t border-slate-100 pt-5 text-sm dark:border-slate-800">
+                        <div class="flex justify-between gap-3"><dt class="font-bold text-slate-500">Publiée le</dt><dd class="font-black text-slate-900 dark:text-white">{{ offer.createdAt|date('d/m/Y') }}</dd></div>
+                        <div class="flex justify-between gap-3"><dt class="font-bold text-slate-500">Expire le</dt><dd class="font-black text-slate-900 dark:text-white">{{ offer.deadline|date('d/m/Y') }}</dd></div>
+                        {% if offer.reliabilityScore > 0 %}
+                            <div class="flex justify-between gap-3"><dt class="font-bold text-slate-500">Fiabilité</dt><dd class="font-black text-slate-900 dark:text-white">{{ offer.reliabilityScore }}%</dd></div>
+                        {% endif %}
+                    </dl>
+                </section>
+
+                {% if similarOffers is not empty %}
+                    <section class="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+                        <h2 class="mb-4 text-lg font-black text-slate-950 dark:text-white">Offres similaires</h2>
+                        <div class="space-y-3">
+                            {% for similar in similarOffers %}
+                                <a href="{{ path('public_job_detail', {id: similar.id}) }}" class="block rounded-2xl bg-slate-50 p-4 transition hover:bg-secondary/10 dark:bg-slate-950">
+                                    <strong class="block text-slate-950 dark:text-white">{{ similar.title }}</strong>
+                                    <span class="mt-1 block text-sm font-bold text-slate-500">{{ similar.location }}</span>
+                                </a>
+                            {% endfor %}
+                        </div>
+                    </section>
+                {% endif %}
+            </aside>
+        </div>
+    </section>
+</main>
+{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            var form = document.querySelector('[data-like-form]');
+            if (!form) {
+                return;
+            }
+
+            var scope = form.closest('[data-like-scope]') || document;
+            var button = form.querySelector('[data-like-button]');
+            var label = form.querySelector('[data-like-label]');
+            var icon = form.querySelector('[data-like-icon]');
+            var count = scope.querySelector('[data-like-count]');
+            var feedback = scope.querySelector('[data-like-feedback]');
+            var likedClasses = ['border-secondary/30', 'bg-secondary/10', 'text-secondary'];
+            var unlikedClasses = ['border-slate-200', 'bg-slate-50', 'text-slate-700', 'hover:border-secondary/30', 'hover:text-secondary', 'dark:border-slate-700', 'dark:bg-slate-950', 'dark:text-slate-100'];
+
+            function setButtonState(isLiked) {
+                button.dataset.liked = isLiked ? 'true' : 'false';
+                label.textContent = isLiked ? 'Offre aimée' : 'Aimer cette offre';
+                button.setAttribute('title', isLiked ? 'Retirer le like' : 'Aimer cette offre');
+                button.setAttribute('aria-label', isLiked ? 'Retirer le like' : 'Aimer cette offre');
+                if (icon) {
+                    icon.setAttribute('fill', isLiked ? 'currentColor' : 'none');
+                }
+                button.classList.remove.apply(button.classList, isLiked ? unlikedClasses : likedClasses);
+                button.classList.add.apply(button.classList, isLiked ? likedClasses : unlikedClasses);
+            }
+
+            form.addEventListener('submit', function (event) {
+                event.preventDefault();
+                event.stopPropagation();
+                if (button.disabled) {
+                    return;
+                }
+
+                button.disabled = true;
+                button.classList.add('opacity-70', 'cursor-wait');
+                if (feedback) {
+                    feedback.textContent = '';
+                }
+
+                fetch(form.action, {
+                    method: 'POST',
+                    body: new FormData(form),
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                })
+                    .then(function (response) {
+                        return response.json().then(function (payload) {
+                            if (!response.ok || !payload.success) {
+                                throw new Error(payload.message || 'Action impossible pour le moment.');
+                            }
+
+                            return payload;
+                        });
+                    })
+                    .then(function (payload) {
+                        setButtonState(Boolean(payload.liked));
+                        if (count) {
+                            count.textContent = payload.likesCount;
+                        }
+                        if (feedback) {
+                            feedback.textContent = payload.message;
+                        }
+                    })
+                    .catch(function (error) {
+                        if (feedback) {
+                            feedback.textContent = error.message;
+                        }
+                    })
+                    .finally(function () {
+                        button.disabled = false;
+                        button.classList.remove('opacity-70', 'cursor-wait');
+                    });
+            });
+        });
+    </script>
+{% endblock %}

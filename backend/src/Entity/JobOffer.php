@@ -85,6 +85,9 @@ class JobOffer
     #[ORM\Column(options: ['default' => 0])]
     private int $applicationsCount = 0;
 
+    #[ORM\Column(options: ['default' => 0])]
+    private int $likesCount = 0;
+
     #[ORM\Column]
     private \DateTimeImmutable $createdAt;
 
@@ -167,6 +170,8 @@ class JobOffer
     public function setViewsCount(int $viewsCount): self { $this->viewsCount = $viewsCount; return $this; }
     public function getApplicationsCount(): int { return $this->applicationsCount; }
     public function setApplicationsCount(int $applicationsCount): self { $this->applicationsCount = $applicationsCount; return $this; }
+    public function getLikesCount(): int { return $this->likesCount; }
+    public function setLikesCount(int $likesCount): self { $this->likesCount = max(0, $likesCount); return $this; }
     public function getCreatedAt(): \DateTimeImmutable { return $this->createdAt; }
     public function setCreatedAt(\DateTimeImmutable $createdAt): self { $this->createdAt = $createdAt; return $this; }
     public function getScheduledPublishAt(): ?\DateTimeImmutable { return $this->scheduledPublishAt; }
