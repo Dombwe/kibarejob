@@ -2,6 +2,8 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 
 import '../models/job_model.dart';
+import '../theme/app_theme.dart';
+import 'kibare_logo.dart';
 
 class JobCard extends StatelessWidget {
   const JobCard({super.key, required this.job});
@@ -12,7 +14,7 @@ class JobCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Card(
       clipBehavior: Clip.antiAlias,
-      elevation: 6,
+      elevation: 0,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -21,8 +23,17 @@ class JobCard extends StatelessWidget {
             width: double.infinity,
             child: job.companyLogoUrl == null || job.companyLogoUrl!.isEmpty
                 ? Container(
-                    color: Theme.of(context).colorScheme.primaryContainer,
-                    child: const Icon(Icons.business, size: 72),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [
+                          AppColors.secondary.withValues(alpha: 0.24),
+                          AppColors.accent.withValues(alpha: 0.34),
+                        ],
+                      ),
+                    ),
+                    child: const Center(child: KibareLogo(size: 84)),
                   )
                 : CachedNetworkImage(
                     imageUrl: job.companyLogoUrl!,
@@ -30,7 +41,8 @@ class JobCard extends StatelessWidget {
                     placeholder: (context, url) => const Center(
                       child: CircularProgressIndicator(),
                     ),
-                    errorWidget: (context, url, error) => const Icon(Icons.business),
+                    errorWidget: (context, url, error) =>
+                        const Icon(Icons.business),
                   ),
           ),
           Expanded(
@@ -51,6 +63,9 @@ class JobCard extends StatelessWidget {
                       ),
                       if (job.matchScore != null)
                         CircleAvatar(
+                          backgroundColor:
+                              AppColors.accent.withValues(alpha: 0.45),
+                          foregroundColor: AppColors.primary,
                           child: Text('${job.matchScore}%'),
                         ),
                     ],

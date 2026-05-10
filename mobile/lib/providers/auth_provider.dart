@@ -39,6 +39,14 @@ class AuthController extends StateNotifier<AsyncValue<UserModel?>> {
     });
   }
 
+  Future<void> loginWithGoogle() async {
+    state = const AsyncValue.loading();
+    state = await AsyncValue.guard(() async {
+      final result = await _authService.loginWithGoogle();
+      return result.user;
+    });
+  }
+
   Future<void> register({
     required String email,
     required String password,
@@ -48,7 +56,7 @@ class AuthController extends StateNotifier<AsyncValue<UserModel?>> {
     String? phone,
   }) async {
     state = const AsyncValue.loading();
-    state = await AsyncValue.guard(() async {
+    final result = await AsyncValue.guard(() async {
       final result = await _authService.register(
         email: email,
         password: password,
@@ -59,6 +67,17 @@ class AuthController extends StateNotifier<AsyncValue<UserModel?>> {
       );
       return result.user;
     });
+
+    if (result.hasError) {
+      state = result;
+      return;
+    }
+
+    state = const AsyncValue.data(null);
+  }
+
+  Future<String> resendVerification(String email) {
+    return _authService.resendVerification(email);
   }
 
   Future<void> logout() async {

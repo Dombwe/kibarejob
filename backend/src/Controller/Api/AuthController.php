@@ -67,6 +67,82 @@ class AuthController extends AbstractController
         ]);
     }
 
+    #[Route('/google/mobile', name: 'api_auth_google_mobile', methods: ['POST'])]
+    public function googleMobile(Request $request): JsonResponse
+    {
+        $payload = $this->jsonPayload($request);
+        $idToken = trim((string) ($payload['idToken'] ?? $payload['id_token'] ?? ''));
+
+        if ('' === $idToken) {
+            return $this->json(['message' => 'Jeton Google manquant.'], JsonResponse::HTTP_BAD_REQUEST);
+        }
+
+        try {
+            $googleProfile = $this->fetchGoogleTokenInfo($idToken);
+        } catch (\RuntimeException $exception) {
+            return $this->json(['message' => $exception->getMessage()], JsonResponse::HTTP_UNAUTHORIZED);
+        }
+
+        $allowedAudiences = array_filter(array_map('trim', [
+            (string) ($_ENV['GOOGLE_CLIENT_ID'] ?? getenv('GOOGLE_CLIENT_ID') ?: ''),
+            (string) ($_ENV['GOOGLE_WEB_CLIENT_ID'] ?? getenv('GOOGLE_WEB_CLIENT_ID') ?: ''),
+            (string) ($_ENV['GOOGLE_ANDROID_CLIENT_ID'] ?? getenv('GOOGLE_ANDROID_CLIENT_ID') ?: ''),
+        ]));
+
+        if ([] !== $allowedAudiences && !in_array((string) ($googleProfile['aud'] ?? ''), $allowedAudiences, true)) {
+            return $this->json(['message' => 'Jeton Google refuse pour cette application.'], JsonResponse::HTTP_UNAUTHORIZED);
+        }
+
+        if (!in_array($googleProfile['email_verified'] ?? false, [true, 'true', '1', 1], true)) {
+            return $this->json(['message' => 'Adresse email Google non verifiee.'], JsonResponse::HTTP_FORBIDDEN);
+        }
+
+        $email = $this->validationService->normalizeEmail($googleProfile['email'] ?? null);
+        if ('' === $email || false === filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            return $this->json(['message' => 'Impossible de recuperer l email Google.'], JsonResponse::HTTP_BAD_REQUEST);
+        }
+
+        $user = $this->userRepository->findOneBy(['email' => $email]);
+
+        if (!$user instanceof User) {
+            $user = (new User())
+                ->setEmail($email)
+                ->setRoles(['ROLE_CANDIDATE'])
+                ->setProfileCompletedPercent(20)
+                ->setIsEmailVerified(true);
+            $user->setPasswordHash($this->passwordHasher->hashPassword($user, bin2hex(random_bytes(24))));
+
+            $profile = (new CandidateProfile())
+                ->setUser($user)
+                ->setFirstName((string) ($googleProfile['given_name'] ?? 'Candidat'))
+                ->setLastName((string) ($googleProfile['family_name'] ?? 'KIBARE-JOB'))
+                ->setPhotoUrl($googleProfile['picture'] ?? null)
+                ->setCity('Ouagadougou')
+                ->setEducationLevel('Aucun')
+                ->setSkills([])
+                ->setLanguages([['name' => 'Francais', 'level' => 'Debutant']])
+                ->setAvailability('Immediate');
+
+            $this->entityManager->persist($user);
+            $this->entityManager->persist($profile);
+        }
+
+        if (!$user->isActive() || $user->isDeleted()) {
+            return $this->json(['message' => 'Compte inactif ou supprime.'], JsonResponse::HTTP_FORBIDDEN);
+        }
+
+        $user
+            ->setIsEmailVerified(true)
+            ->setLastLogin(new \DateTimeImmutable());
+        $this->entityManager->flush();
+
+        return $this->json([
+            'token' => $this->jwtManager->create($user),
+            ...$this->issueRefreshToken($user),
+            'user' => $this->serializeUser($user),
+        ]);
+    }
+
     #[Route('/register', name: 'api_auth_register', methods: ['POST'])]
     public function register(Request $request): JsonResponse
     {
@@ -295,6 +371,48 @@ class AuthController extends AbstractController
     private function arrayValue(mixed $value): array
     {
         return is_array($value) ? $value : [];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function fetchGoogleTokenInfo(string $idToken): array
+    {
+        $url = 'https://oauth2.googleapis.com/tokeninfo?id_token=' . rawurlencode($idToken);
+        $body = false;
+
+        if (function_exists('curl_init')) {
+            $curl = curl_init($url);
+            if (false !== $curl) {
+                curl_setopt_array($curl, [
+                    CURLOPT_RETURNTRANSFER => true,
+                    CURLOPT_TIMEOUT => 15,
+                    CURLOPT_HTTPHEADER => ['Accept: application/json'],
+                ]);
+                $body = curl_exec($curl);
+                $statusCode = (int) curl_getinfo($curl, CURLINFO_RESPONSE_CODE);
+                curl_close($curl);
+
+                if ($statusCode >= 400) {
+                    $body = false;
+                }
+            }
+        }
+
+        if (false === $body) {
+            $body = @file_get_contents($url);
+        }
+
+        if (false === $body || '' === $body) {
+            throw new \RuntimeException('Verification Google impossible pour le moment.');
+        }
+
+        $data = json_decode($body, true);
+        if (!is_array($data) || isset($data['error'])) {
+            throw new \RuntimeException('Jeton Google invalide ou expire.');
+        }
+
+        return $data;
     }
 
     /**

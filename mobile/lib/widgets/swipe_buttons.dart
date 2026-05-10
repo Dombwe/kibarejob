@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../theme/app_theme.dart';
+
 class SwipeButtons extends StatelessWidget {
   const SwipeButtons({
     super.key,
@@ -20,21 +22,21 @@ class SwipeButtons extends StatelessWidget {
         _RoundButton(
           tooltip: 'Passer',
           icon: Icons.close,
-          color: Colors.red,
+          color: const Color(0xFF7A8694),
           onPressed: onDislike,
         ),
         const SizedBox(width: 18),
         _RoundButton(
           tooltip: 'Super like',
           icon: Icons.star,
-          color: Colors.blue,
+          color: AppColors.secondary,
           onPressed: onSuperlike,
         ),
         const SizedBox(width: 18),
         _RoundButton(
           tooltip: 'Postuler',
           icon: Icons.favorite,
-          color: Colors.green,
+          color: AppColors.primary,
           onPressed: onLike,
         ),
       ],
@@ -60,7 +62,7 @@ class _RoundButton extends StatelessWidget {
     return Tooltip(
       message: tooltip,
       child: Material(
-        color: Color.lerp(Colors.transparent, color, 0.12),
+        color: color.withValues(alpha: 0.12),
         shape: const CircleBorder(),
         child: IconButton(
           iconSize: 32,

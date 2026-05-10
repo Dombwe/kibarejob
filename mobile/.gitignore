@@ -2,6 +2,7 @@
 .flutter-plugins
 .flutter-plugins-dependencies
 .packages
+.idea/
 build/
 coverage/
 ios/Flutter/ephemeral/

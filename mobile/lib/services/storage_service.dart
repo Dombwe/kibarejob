@@ -27,7 +27,8 @@ class StorageService {
     return data is Map ? Map<String, dynamic>.from(data) : null;
   }
 
-  Future<void> saveUser(Map<String, dynamic> user) => _authBox.put('user', user);
+  Future<void> saveUser(Map<String, dynamic> user) =>
+      _authBox.put('user', user);
 
   Map<String, dynamic>? get cachedProfile {
     final data = _profileBox.get('candidate_profile');
@@ -36,6 +37,12 @@ class StorageService {
 
   Future<void> saveProfile(Map<String, dynamic> profile) {
     return _profileBox.put('candidate_profile', profile);
+  }
+
+  String? get themeMode => _profileBox.get('theme_mode') as String?;
+
+  Future<void> saveThemeMode(String themeMode) {
+    return _profileBox.put('theme_mode', themeMode);
   }
 
   List<Map<String, dynamic>> get queuedSwipes {

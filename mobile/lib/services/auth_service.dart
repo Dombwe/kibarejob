@@ -1,16 +1,27 @@
+import 'package:google_sign_in/google_sign_in.dart';
+
 import '../models/user_model.dart';
 import 'api_service.dart';
 import 'storage_service.dart';
 
 class AuthResult {
-  const AuthResult({required this.token, required this.user});
+  const AuthResult({
+    required this.user,
+    this.token,
+    this.message,
+    this.emailVerificationRequired = false,
+  });
 
-  final String token;
+  final String? token;
   final UserModel user;
+  final String? message;
+  final bool emailVerificationRequired;
 }
 
 class AuthService {
   const AuthService(this._api, this._storage);
+
+  static bool _googleInitialized = false;
 
   final ApiService _api;
   final StorageService _storage;
@@ -27,6 +38,32 @@ class AuthService {
       '/api/auth/login',
       data: {'email': email, 'password': password},
     );
+    return _persistAuth(data);
+  }
+
+  Future<AuthResult> loginWithGoogle() async {
+    await _initializeGoogleSignIn();
+
+    if (!GoogleSignIn.instance.supportsAuthenticate()) {
+      throw Exception(
+        'La connexion Google n\'est pas disponible sur cette plateforme.',
+      );
+    }
+
+    final account = await GoogleSignIn.instance.authenticate();
+    final idToken = account.authentication.idToken;
+
+    if (idToken == null || idToken.isEmpty) {
+      throw Exception(
+        'Google n\'a pas fourni de jeton de connexion. Verifiez la configuration OAuth.',
+      );
+    }
+
+    final data = await _api.postJson(
+      '/api/auth/google/mobile',
+      data: {'idToken': idToken},
+    );
+
     return _persistAuth(data);
   }
 
@@ -50,10 +87,40 @@ class AuthService {
         'city': city,
       },
     );
-    return _persistAuth(data);
+    final userJson = Map<String, dynamic>.from(data['user'] as Map);
+    return AuthResult(
+      user: UserModel.fromJson(userJson),
+      message: data['message']?.toString(),
+      emailVerificationRequired: data['emailVerificationRequired'] == true,
+    );
+  }
+
+  Future<String> resendVerification(String email) async {
+    final data = await _api.postJson(
+      '/api/auth/resend-verification',
+      data: {'email': email},
+    );
+
+    return data['message']?.toString() ??
+        'Si ce compte existe, un lien de confirmation a ete envoye.';
   }
 
   Future<void> logout() => _storage.clearAuth();
+
+  Future<void> _initializeGoogleSignIn() async {
+    if (_googleInitialized) {
+      return;
+    }
+
+    const webClientId = String.fromEnvironment('GOOGLE_WEB_CLIENT_ID');
+    const androidClientId = String.fromEnvironment('GOOGLE_ANDROID_CLIENT_ID');
+
+    await GoogleSignIn.instance.initialize(
+      clientId: androidClientId.isEmpty ? null : androidClientId,
+      serverClientId: webClientId.isEmpty ? null : webClientId,
+    );
+    _googleInitialized = true;
+  }
 
   Future<AuthResult> _persistAuth(Map<String, dynamic> data) async {
     final token = data['token']?.toString() ?? '';
