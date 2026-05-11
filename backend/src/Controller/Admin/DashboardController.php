@@ -2,6 +2,7 @@
 
 namespace App\Controller\Admin;
 
+use App\Entity\ApplicationSetting;
 use App\Entity\CandidateDocument;
 use App\Entity\Employer;
 use App\Entity\JobOffer;
@@ -96,6 +97,8 @@ HTML)
         yield MenuItem::linkToCrud('Sources d’offres', 'fa fa-cloud-arrow-down', JobImportSource::class);
         yield MenuItem::section('Automatisation');
         yield MenuItem::linkToCrud('Commandes / Cron', 'fa fa-clock', ScheduledCommand::class);
+        yield MenuItem::section('Configuration');
+        yield MenuItem::linkToCrud('Serveur API mobile', 'fa fa-network-wired', ApplicationSetting::class);
         yield MenuItem::section('Contenu');
         yield MenuItem::linkToCrud('Documents', 'fa fa-file', CandidateDocument::class);
         yield MenuItem::linkToCrud('Signalements', 'fa fa-flag', Report::class);

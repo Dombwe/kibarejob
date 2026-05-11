@@ -21,7 +21,20 @@ try {
 }
 
 Write-Host "Activation du tunnel Android: adb reverse tcp:$Port tcp:$Port"
-& $adb reverse "tcp:$Port" "tcp:$Port"
+$devices = & $adb devices | Select-Object -Skip 1 | Where-Object { $_ -match '\sdevice$' } | ForEach-Object {
+    ($_ -split '\s+')[0]
+}
+
+if (-not $devices -or $devices.Count -eq 0) {
+    throw "Aucun appareil Android actif trouve. Verifiez que le telephone est connecte et autorise le debogage USB."
+}
+
+foreach ($device in $devices) {
+    Write-Host "Tunnel pour $device ..."
+    & $adb -s $device reverse "tcp:$Port" "tcp:$Port"
+}
 
 Write-Host "Tunnels actifs:"
-& $adb reverse --list
+foreach ($device in $devices) {
+    & $adb -s $device reverse --list
+}

@@ -22,7 +22,12 @@ class ApiService {
     (dio.httpClientAdapter as IOHttpClientAdapter).createHttpClient = () {
       final client = HttpClient();
       client.badCertificateCallback = (certificate, host, port) {
-        return host == '10.0.2.2' || host == '127.0.0.1' || host == 'localhost';
+        return host == '10.0.2.2' ||
+            host == '127.0.0.1' ||
+            host == 'localhost' ||
+            host.startsWith('192.168.') ||
+            host.startsWith('10.') ||
+            RegExp(r'^172\.(1[6-9]|2\d|3[0-1])\.').hasMatch(host);
       };
       return client;
     };
@@ -43,8 +48,10 @@ class ApiService {
   final StorageService _storage;
   final String _primaryBaseUrl;
   final Dio dio;
+  bool _configurationLoaded = false;
 
   Future<Map<String, dynamic>> getJson(String path) async {
+    await _loadRemoteConfigurationIfNeeded(path);
     final response = await _requestWithFallback(
       path,
       (requestPath) => dio.get<Map<String, dynamic>>(requestPath),
@@ -56,6 +63,7 @@ class ApiService {
     String path, {
     Map<String, dynamic>? data,
   }) async {
+    await _loadRemoteConfigurationIfNeeded(path);
     final response = await _requestWithFallback(
       path,
       (requestPath) => dio.post<Map<String, dynamic>>(
@@ -70,6 +78,7 @@ class ApiService {
     String path, {
     Map<String, dynamic>? data,
   }) async {
+    await _loadRemoteConfigurationIfNeeded(path);
     final response = await _requestWithFallback(
       path,
       (requestPath) => dio.put<Map<String, dynamic>>(
@@ -103,9 +112,13 @@ class ApiService {
 
   List<String> get _baseUrlCandidates {
     return {
+      if (_storage.apiBaseUrl != null && _storage.apiBaseUrl!.isNotEmpty)
+        _storage.apiBaseUrl!,
       _primaryBaseUrl,
       'https://127.0.0.1:8000',
       'http://127.0.0.1:8000',
+      'https://192.168.11.105:8000',
+      'http://192.168.11.105:8000',
       'https://10.0.2.2:8000',
       'http://10.0.2.2:8000',
     }.toList(growable: false);
@@ -115,6 +128,28 @@ class ApiService {
     return error.type == DioExceptionType.connectionError ||
         error.type == DioExceptionType.connectionTimeout ||
         error.type == DioExceptionType.receiveTimeout;
+  }
+
+  Future<void> _loadRemoteConfigurationIfNeeded(String path) async {
+    if (_configurationLoaded || path.startsWith('/api/app-config')) {
+      return;
+    }
+
+    _configurationLoaded = true;
+
+    try {
+      final response = await _requestWithFallback(
+        '/api/app-config',
+        (requestPath) => dio.get<Map<String, dynamic>>(requestPath),
+      );
+      final apiBaseUrl = response.data?['apiBaseUrl']?.toString().trim();
+      if (apiBaseUrl != null && apiBaseUrl.isNotEmpty) {
+        await _storage
+            .saveApiBaseUrl(apiBaseUrl.replaceAll(RegExp(r'/+$'), ''));
+      }
+    } catch (_) {
+      // La configuration distante est une optimisation. Les appels API gardent les fallbacks locaux.
+    }
   }
 
   String _messageFromDioError(DioException? error) {
@@ -132,7 +167,7 @@ class ApiService {
     }
 
     if (error?.type == DioExceptionType.connectionError) {
-      return 'Connexion au backend impossible. Verifiez que Symfony tourne sur https://127.0.0.1:8000 et que adb reverse tcp:8000 tcp:8000 est actif si vous utilisez un telephone physique.';
+      return 'Connexion au backend impossible. Le backend repond sur le PC, mais le telephone ne le voit pas encore. Essayez de relancer l app apres mobile/scripts/connect_backend.ps1, ou configurez dans l admin l adresse https://192.168.11.105:8000 si le telephone est sur le meme Wi-Fi.';
     }
 
     if (error?.type == DioExceptionType.connectionTimeout ||

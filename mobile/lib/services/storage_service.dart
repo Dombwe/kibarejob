@@ -45,6 +45,12 @@ class StorageService {
     return _profileBox.put('theme_mode', themeMode);
   }
 
+  String? get apiBaseUrl => _profileBox.get('api_base_url') as String?;
+
+  Future<void> saveApiBaseUrl(String apiBaseUrl) {
+    return _profileBox.put('api_base_url', apiBaseUrl);
+  }
+
   bool get hasSeenOnboarding =>
       _profileBox.get('has_seen_onboarding', defaultValue: false) == true;
 
