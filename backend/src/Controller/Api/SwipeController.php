@@ -15,6 +15,7 @@ use App\Service\CacheService;
 use App\Service\ScoreCacheService;
 use App\Service\SubscriptionService;
 use Doctrine\ORM\EntityManagerInterface;
+use Psr\Log\LoggerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -32,6 +33,7 @@ class SwipeController extends AbstractController
         private readonly SubscriptionService $subscriptionService,
         private readonly ScoreCacheService $scoreCacheService,
         private readonly CacheService $cacheService,
+        private readonly LoggerInterface $logger,
     ) {
     }
 
@@ -81,8 +83,19 @@ class SwipeController extends AbstractController
         $this->cacheService->incrementDailyQuota((string) $user->getId());
         $this->cacheService->invalidateFeed((string) $user->getId());
 
+        $applicationQueued = false;
         if ($direction !== SwipeDirection::Dislike) {
-            $this->messageBus->dispatch(new GenerateApplicationJob((string) $swipe->getId()));
+            try {
+                $this->messageBus->dispatch(new GenerateApplicationJob((string) $swipe->getId()));
+                $applicationQueued = true;
+            } catch (\Throwable $exception) {
+                $this->logger->warning('La génération automatique de candidature n’a pas pu être planifiée après un swipe.', [
+                    'swipeId' => (string) $swipe->getId(),
+                    'offerId' => (string) $offer->getId(),
+                    'candidateId' => (string) $user->getId(),
+                    'exception' => $exception,
+                ]);
+            }
         }
 
         return $this->json([
@@ -90,7 +103,7 @@ class SwipeController extends AbstractController
             'swipeId' => (string) $swipe->getId(),
             'direction' => $direction->value,
             'matchScore' => $swipe->getMatchScore(),
-            'queued' => $direction !== SwipeDirection::Dislike,
+            'queued' => $applicationQueued,
         ], JsonResponse::HTTP_ACCEPTED);
     }
 

@@ -69,4 +69,16 @@ class StorageService {
   Future<void> saveQueuedSwipes(List<Map<String, dynamic>> swipes) {
     return _offlineBox.put('swipe_queue', swipes);
   }
+
+  List<Map<String, dynamic>> get cachedJobs {
+    final items = _offlineBox.get('cached_jobs', defaultValue: <dynamic>[]);
+    return (items as List<dynamic>)
+        .whereType<Map>()
+        .map((item) => Map<String, dynamic>.from(item))
+        .toList();
+  }
+
+  Future<void> saveCachedJobs(List<Map<String, dynamic>> jobs) {
+    return _offlineBox.put('cached_jobs', jobs);
+  }
 }

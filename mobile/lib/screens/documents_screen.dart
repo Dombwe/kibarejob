@@ -16,7 +16,7 @@ class DocumentsScreen extends ConsumerWidget {
     return Scaffold(
       appBar: AppBar(title: const Text('Mes documents')),
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => context.go('/documents/upload'),
+        onPressed: () => context.push('/documents/upload'),
         icon: const Icon(Icons.upload_file),
         label: const Text('Ajouter'),
       ),
@@ -28,7 +28,8 @@ class DocumentsScreen extends ConsumerWidget {
             return const Center(child: Text('Aucun document ajoute'));
           }
           return RefreshIndicator(
-            onRefresh: () => ref.read(documentProvider.notifier).fetchDocuments(),
+            onRefresh: () =>
+                ref.read(documentProvider.notifier).fetchDocuments(),
             child: ListView.builder(
               padding: const EdgeInsets.all(12),
               itemCount: documents.length,

@@ -38,7 +38,7 @@ class FeedController extends AbstractController
         $cacheKeyUser = (string) $candidate->getUser()->getId();
 
         $cached = $this->cacheService->getFeed($cacheKeyUser, $page);
-        if (null !== $cached && ($cached['cursor'] ?? null) === $cursor && ($cached['limit'] ?? null) === $limit) {
+        if (null !== $cached && ($cached['schemaVersion'] ?? null) === 2 && ($cached['cursor'] ?? null) === $cursor && ($cached['limit'] ?? null) === $limit) {
             return $this->json($cached);
         }
 
@@ -77,6 +77,7 @@ class FeedController extends AbstractController
         $this->entityManager->flush();
 
         $payload = [
+            'schemaVersion' => 2,
             'cursor' => $cursor,
             'limit' => $limit,
             'nextCursor' => $hasMore ? $cursor + $limit : null,
@@ -155,14 +156,25 @@ class FeedController extends AbstractController
             'description' => $offer->getDescription(),
             'requiredSkills' => $offer->getRequiredSkills(),
             'requiredEducation' => $offer->getRequiredEducation(),
+            'educationField' => $offer->getEducationField(),
             'requiredExperienceYears' => $offer->getRequiredExperienceYears(),
             'contractType' => $offer->getContractType()->value,
             'location' => $offer->getLocation(),
             'salaryMin' => $offer->getSalaryMin(),
             'salaryMax' => $offer->getSalaryMax(),
             'isRemoteAllowed' => $offer->isRemoteAllowed(),
+            'positions' => $offer->getPositions(),
+            'requiredDocuments' => $offer->getRequiredDocuments() ?? [],
+            'recommendedDocuments' => $offer->getRecommendedDocuments() ?? [],
             'deadline' => $offer->getDeadline()->format('Y-m-d'),
             'isBoosted' => $offer->isBoosted(),
+            'externalUrl' => $offer->getExternalUrl(),
+            'applicationEmail' => $offer->getApplicationEmail(),
+            'sourceType' => $offer->getSourceType(),
+            'externalSourceName' => $offer->getExternalSourceName(),
+            'viewsCount' => $offer->getViewsCount(),
+            'applicationsCount' => $offer->getApplicationsCount(),
+            'likesCount' => $offer->getLikesCount(),
             'createdAt' => $offer->getCreatedAt()->format(DATE_ATOM),
             'company' => null === $employer ? null : [
                 'name' => $employer->getCompanyName(),

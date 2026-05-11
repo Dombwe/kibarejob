@@ -4,7 +4,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/theme_provider.dart';
 
 class ThemeModeToggle extends ConsumerWidget {
-  const ThemeModeToggle({super.key});
+  const ThemeModeToggle({
+    super.key,
+    this.compact = false,
+  });
+
+  final bool compact;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -22,7 +27,10 @@ class ThemeModeToggle extends ConsumerWidget {
         borderRadius: BorderRadius.circular(999),
         onTap: () => ref.read(themeControllerProvider.notifier).toggle(),
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          padding: EdgeInsets.symmetric(
+            horizontal: compact ? 10 : 12,
+            vertical: compact ? 10 : 8,
+          ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -31,11 +39,13 @@ class ThemeModeToggle extends ConsumerWidget {
                 size: 18,
                 color: Theme.of(context).colorScheme.primary,
               ),
-              const SizedBox(width: 8),
-              Text(
-                isDark ? 'Dark' : 'Light',
-                style: Theme.of(context).textTheme.labelLarge,
-              ),
+              if (!compact) ...[
+                const SizedBox(width: 8),
+                Text(
+                  isDark ? 'Dark' : 'Light',
+                  style: Theme.of(context).textTheme.labelLarge,
+                ),
+              ],
             ],
           ),
         ),

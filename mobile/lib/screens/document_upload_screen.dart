@@ -13,7 +13,8 @@ class DocumentUploadScreen extends ConsumerStatefulWidget {
   const DocumentUploadScreen({super.key});
 
   @override
-  ConsumerState<DocumentUploadScreen> createState() => _DocumentUploadScreenState();
+  ConsumerState<DocumentUploadScreen> createState() =>
+      _DocumentUploadScreenState();
 }
 
 class _DocumentUploadScreenState extends ConsumerState<DocumentUploadScreen> {
@@ -44,11 +45,14 @@ class _DocumentUploadScreenState extends ConsumerState<DocumentUploadScreen> {
                   decoration: const InputDecoration(labelText: 'Type'),
                   items: const [
                     DropdownMenuItem(value: 'diploma', child: Text('Diplome')),
-                    DropdownMenuItem(value: 'certificate', child: Text('Certificat')),
-                    DropdownMenuItem(value: 'attestation', child: Text('Attestation')),
+                    DropdownMenuItem(
+                        value: 'certificate', child: Text('Certificat')),
+                    DropdownMenuItem(
+                        value: 'attestation', child: Text('Attestation')),
                     DropdownMenuItem(value: 'other', child: Text('Autre')),
                   ],
-                  onChanged: (value) => setState(() => _type = value ?? 'other'),
+                  onChanged: (value) =>
+                      setState(() => _type = value ?? 'other'),
                 ),
                 const SizedBox(height: 12),
                 TextField(
@@ -66,7 +70,9 @@ class _DocumentUploadScreenState extends ConsumerState<DocumentUploadScreen> {
                 OutlinedButton.icon(
                   onPressed: _pickFile,
                   icon: const Icon(Icons.attach_file),
-                  label: Text(_file == null ? 'Choisir un fichier' : _file!.path.split(Platform.pathSeparator).last),
+                  label: Text(_file == null
+                      ? 'Choisir un fichier'
+                      : _file!.path.split(Platform.pathSeparator).last),
                 ),
                 const SizedBox(height: 20),
                 FilledButton.icon(
@@ -112,7 +118,7 @@ class _DocumentUploadScreenState extends ConsumerState<DocumentUploadScreen> {
             description: _descriptionController.text.trim(),
           );
       if (mounted) {
-        context.go('/documents');
+        context.pop();
       }
     } finally {
       if (mounted) {

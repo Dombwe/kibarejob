@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import '../providers/auth_provider.dart';
 import '../theme/app_theme.dart';
 import '../widgets/kibare_logo.dart';
+import '../widgets/theme_mode_toggle.dart';
 
 class RegisterScreen extends ConsumerStatefulWidget {
   const RegisterScreen({super.key});
@@ -133,6 +134,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                           icon: const Icon(Icons.arrow_back_rounded),
                         ),
                         const Spacer(),
+                        const ThemeModeToggle(compact: true),
+                        const SizedBox(width: 8),
                         TextButton(
                           onPressed: () => context.go('/login'),
                           child: const Text('Connexion'),

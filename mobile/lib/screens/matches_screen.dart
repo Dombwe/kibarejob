@@ -3,6 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../providers/matches_provider.dart';
+import '../theme/responsive.dart';
+import '../widgets/app_bottom_navigation.dart';
+import '../widgets/kibare_tab_app_bar.dart';
 import '../widgets/loading_widget.dart';
 
 class MatchesScreen extends ConsumerWidget {
@@ -13,7 +16,9 @@ class MatchesScreen extends ConsumerWidget {
     final matchesState = ref.watch(matchesProvider);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Mes candidatures')),
+      appBar: const KibareTabAppBar(),
+      bottomNavigationBar:
+          const AppBottomNavigation(currentTab: AppTab.applications),
       body: matchesState.when(
         loading: () => const LoadingWidget(),
         error: (error, _) => Center(child: Text(error.toString())),
@@ -23,18 +28,29 @@ class MatchesScreen extends ConsumerWidget {
           }
           return RefreshIndicator(
             onRefresh: () => ref.refresh(matchesProvider.future),
-            child: ListView.builder(
-              itemCount: matches.length,
-              itemBuilder: (context, index) {
-                final match = matches[index];
-                return ListTile(
-                  leading: CircleAvatar(child: Text('${match.matchScore ?? 0}%')),
-                  title: Text(match.offerTitle ?? 'Offre'),
-                  subtitle: Text(match.status),
-                  trailing: const Icon(Icons.chevron_right),
-                  onTap: () => context.go('/matches/${match.id}', extra: match),
-                );
-              },
+            child: Responsive.centeredContent(
+              context: context,
+              child: ListView.builder(
+                padding: EdgeInsets.symmetric(
+                  horizontal: Responsive.horizontalPadding(context),
+                  vertical: 10,
+                ),
+                itemCount: matches.length,
+                itemBuilder: (context, index) {
+                  final match = matches[index];
+                  return Card(
+                    child: ListTile(
+                      leading: CircleAvatar(
+                          child: Text('${match.matchScore ?? 0}%')),
+                      title: Text(match.offerTitle ?? 'Offre'),
+                      subtitle: Text(match.status),
+                      trailing: const Icon(Icons.chevron_right),
+                      onTap: () =>
+                          context.push('/matches/${match.id}', extra: match),
+                    ),
+                  );
+                },
+              ),
             ),
           );
         },

@@ -1,4 +1,5 @@
 import 'api_service.dart';
+import '../models/job_model.dart';
 import 'storage_service.dart';
 
 class OfflineService {
@@ -45,5 +46,13 @@ class OfflineService {
 
     await _storage.saveQueuedSwipes(remaining);
     return sent;
+  }
+
+  List<JobModel> get cachedJobs {
+    return _storage.cachedJobs.map(JobModel.fromJson).toList();
+  }
+
+  Future<void> cacheJobs(List<JobModel> jobs) {
+    return _storage.saveCachedJobs(jobs.map((job) => job.toJson()).toList());
   }
 }

@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import '../providers/auth_provider.dart';
 import '../theme/app_theme.dart';
 import '../widgets/kibare_logo.dart';
+import '../widgets/theme_mode_toggle.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
@@ -274,7 +275,13 @@ class _AuthBrandHeader extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const KibareLogo(size: 58),
+        const Row(
+          children: [
+            KibareLogo(size: 58),
+            Spacer(),
+            ThemeModeToggle(compact: true),
+          ],
+        ),
         const SizedBox(height: 22),
         Text(title, style: theme.textTheme.headlineLarge),
         const SizedBox(height: 10),

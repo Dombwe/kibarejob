@@ -1,16 +1,19 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../models/job_model.dart';
 import '../providers/auth_provider.dart';
 import '../models/swipe_model.dart';
 import '../screens/application_detail_screen.dart';
 import '../screens/document_upload_screen.dart';
 import '../screens/documents_screen.dart';
+import '../screens/job_detail_screen.dart';
 import '../screens/login_screen.dart';
 import '../screens/matches_screen.dart';
 import '../screens/notifications_screen.dart';
 import '../screens/profile_screen.dart';
 import '../screens/register_screen.dart';
+import '../screens/search_screen.dart';
 import '../screens/splash_screen.dart';
 import '../screens/subscription_screen.dart';
 import '../screens/swipe_screen.dart';
@@ -29,6 +32,24 @@ final appRouter = GoRouter(
       builder: (context, state) => const SwipeScreen(),
     ),
     GoRoute(
+      path: '/jobs/:id',
+      builder: (context, state) {
+        final job = state.extra is JobModel
+            ? state.extra! as JobModel
+            : JobModel(
+                id: state.pathParameters['id'] ?? '',
+                title: 'Offre indisponible',
+                description:
+                    'Les details de cette offre ne sont pas disponibles.',
+                location: '',
+                contractType: '',
+                requiredSkills: const [],
+                deadline: null,
+              );
+        return JobDetailScreen(job: job);
+      },
+    ),
+    GoRoute(
       path: '/profile',
       builder: (context, state) => const ProfileScreen(),
     ),
@@ -43,6 +64,10 @@ final appRouter = GoRouter(
     GoRoute(
       path: '/matches',
       builder: (context, state) => const MatchesScreen(),
+    ),
+    GoRoute(
+      path: '/search',
+      builder: (context, state) => const SearchScreen(),
     ),
     GoRoute(
       path: '/matches/:id',

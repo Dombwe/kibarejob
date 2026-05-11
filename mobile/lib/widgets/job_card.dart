@@ -19,17 +19,19 @@ class JobCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
-    final borderColor = isDark
-        ? Colors.white.withValues(alpha: 0.14)
-        : AppColors.primary.withValues(alpha: 0.08);
+    final surface = isDark ? AppColors.darkSurface : Colors.white;
+    final borderColor =
+        isDark ? Colors.white.withValues(alpha: 0.12) : const Color(0xFFE2E8F0);
 
     return DecoratedBox(
       decoration: BoxDecoration(
+        color: surface,
         borderRadius: BorderRadius.circular(30),
+        border: Border.all(color: borderColor),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: isDark ? 0.36 : 0.13),
-            blurRadius: 30,
+            color: Colors.black.withValues(alpha: isDark ? 0.30 : 0.10),
+            blurRadius: 34,
             offset: const Offset(0, 18),
           ),
         ],
@@ -37,44 +39,93 @@ class JobCard extends StatelessWidget {
       child: ClipRRect(
         borderRadius: BorderRadius.circular(30),
         child: Stack(
-          fit: StackFit.expand,
           children: [
-            _HeroVisual(job: job),
-            _ReadabilityOverlay(isDark: isDark),
             Positioned.fill(
               child: DecoratedBox(
                 decoration: BoxDecoration(
-                  border: Border.all(color: borderColor),
-                  borderRadius: BorderRadius.circular(30),
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: isDark
+                        ? const [Color(0xFF1E293B), Color(0xFF111827)]
+                        : const [Color(0xFFFFFFFF), Color(0xFFF8FAFC)],
+                  ),
                 ),
               ),
             ),
-            Positioned(
-              left: 18,
-              top: 18,
-              right: 18,
-              child: _TopMeta(job: job),
-            ),
             if (dragOffset.dx.abs() > 18)
               Positioned(
-                top: 92,
-                left: dragOffset.dx > 0 ? 22 : null,
-                right: dragOffset.dx < 0 ? 22 : null,
+                top: 24,
+                left: dragOffset.dx > 0 ? 24 : null,
+                right: dragOffset.dx < 0 ? 24 : null,
                 child: _SwipeStamp(
                   label: dragOffset.dx > 0 ? 'POSTULER' : 'PASSER',
                   icon: dragOffset.dx > 0
                       ? Icons.favorite_rounded
                       : Icons.close_rounded,
                   color: dragOffset.dx > 0
-                      ? AppColors.accent
-                      : const Color(0xFFE7EDF3),
+                      ? AppColors.primary
+                      : const Color(0xFF7A8694),
                 ),
               ),
-            Positioned(
-              left: 22,
-              right: 22,
-              bottom: 24,
-              child: _Content(job: job),
+            LayoutBuilder(
+              builder: (context, constraints) {
+                final compact = constraints.maxHeight < 560;
+                final dense = constraints.maxHeight < 500;
+                final tight = constraints.maxHeight < 460;
+                final gap = dense ? 6.0 : (compact ? 10.0 : 18.0);
+
+                return Padding(
+                  padding: EdgeInsets.fromLTRB(
+                    dense ? 12 : (compact ? 16 : 22),
+                    dense ? 12 : (compact ? 16 : 22),
+                    dense ? 12 : (compact ? 16 : 22),
+                    dense ? 10 : (compact ? 14 : 18),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _CompanyHeader(job: job, compact: compact, dense: dense),
+                      SizedBox(height: dense ? 8 : (compact ? 12 : 22)),
+                      Text(
+                        job.title,
+                        maxLines: dense ? 2 : (compact ? 2 : 3),
+                        overflow: TextOverflow.ellipsis,
+                        style: (compact
+                                ? theme.textTheme.headlineSmall
+                                : theme.textTheme.headlineMedium)
+                            ?.copyWith(
+                          height: 1.08,
+                          fontWeight: FontWeight.w900,
+                        ),
+                      ),
+                      SizedBox(height: dense ? 4 : (compact ? 6 : 10)),
+                      Text(
+                        job.companyName ?? 'Entreprise',
+                        maxLines: dense ? 1 : 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: theme.textTheme.bodyLarge?.copyWith(
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                      SizedBox(height: dense ? 6 : (compact ? 8 : 12)),
+                      _DescriptionExcerpt(job: job, dense: dense),
+                      SizedBox(height: dense ? 6 : (compact ? 10 : 18)),
+                      _InfoGrid(job: job, compact: compact, dense: dense),
+                      if (job.requiredSkills.isNotEmpty &&
+                          !tight &&
+                          !dense) ...[
+                        SizedBox(height: gap),
+                        _SkillStrip(
+                            skills: job.requiredSkills, compact: compact),
+                      ],
+                      const Spacer(),
+                      SizedBox(height: dense ? 6 : (compact ? 8 : 12)),
+                      _Footer(job: job),
+                    ],
+                  ),
+                );
+              },
             ),
           ],
         ),
@@ -83,124 +134,106 @@ class JobCard extends StatelessWidget {
   }
 }
 
-class _HeroVisual extends StatelessWidget {
-  const _HeroVisual({required this.job});
+class _DescriptionExcerpt extends StatelessWidget {
+  const _DescriptionExcerpt({
+    required this.job,
+    required this.dense,
+  });
 
   final JobModel job;
+  final bool dense;
 
   @override
   Widget build(BuildContext context) {
-    final hasLogo =
-        job.companyLogoUrl != null && job.companyLogoUrl!.isNotEmpty;
-
-    if (hasLogo) {
-      return CachedNetworkImage(
-        imageUrl: job.companyLogoUrl!,
-        fit: BoxFit.cover,
-        placeholder: (context, url) => const _FallbackVisual(),
-        errorWidget: (context, url, error) => const _FallbackVisual(),
-      );
-    }
-
-    return const _FallbackVisual();
-  }
-}
-
-class _FallbackVisual extends StatelessWidget {
-  const _FallbackVisual();
-
-  @override
-  Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final theme = Theme.of(context);
 
     return Container(
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: isDark
-              ? const [Color(0xFF182434), Color(0xFF263849), Color(0xFF3F5669)]
-              : const [Color(0xFFEAF0F5), Color(0xFFDCE6EE), Color(0xFFB8C7B4)],
-        ),
+      width: double.infinity,
+      padding: EdgeInsets.symmetric(
+        horizontal: dense ? 10 : 12,
+        vertical: dense ? 8 : 10,
       ),
-      child: Center(
-        child: Container(
-          width: 138,
-          height: 138,
-          decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: isDark ? 0.10 : 0.40),
-            shape: BoxShape.circle,
-            border: Border.all(color: Colors.white.withValues(alpha: 0.24)),
-          ),
-          child: const Center(child: KibareLogo(size: 86)),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.primary.withValues(alpha: 0.06),
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Text(
+        job.description,
+        maxLines: dense ? 2 : 3,
+        overflow: TextOverflow.ellipsis,
+        style: theme.textTheme.bodyMedium?.copyWith(
+          height: 1.34,
+          fontWeight: FontWeight.w700,
         ),
       ),
     );
   }
 }
 
-class _ReadabilityOverlay extends StatelessWidget {
-  const _ReadabilityOverlay({required this.isDark});
-
-  final bool isDark;
-
-  @override
-  Widget build(BuildContext context) {
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [
-            Colors.black.withValues(alpha: isDark ? 0.30 : 0.14),
-            Colors.transparent,
-            Colors.black.withValues(alpha: 0.34),
-            Colors.black.withValues(alpha: 0.88),
-          ],
-          stops: const [0, 0.34, 0.62, 1],
-        ),
-      ),
-    );
-  }
-}
-
-class _TopMeta extends StatelessWidget {
-  const _TopMeta({required this.job});
+class _CompanyHeader extends StatelessWidget {
+  const _CompanyHeader({
+    required this.job,
+    required this.compact,
+    required this.dense,
+  });
 
   final JobModel job;
+  final bool compact;
+  final bool dense;
 
   @override
   Widget build(BuildContext context) {
     return Row(
       children: [
-        _GlassPill(
-          icon: Icons.business_center_outlined,
-          label: _formatContract(job.contractType),
+        _CompanyLogo(job: job, compact: compact, dense: dense),
+        SizedBox(width: dense ? 8 : (compact ? 10 : 12)),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Offre recommandee',
+                style: Theme.of(context).textTheme.labelLarge,
+              ),
+              SizedBox(height: dense ? 1 : (compact ? 2 : 4)),
+              Text(
+                _formatContract(job.contractType),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: Theme.of(context).textTheme.bodyMedium,
+              ),
+            ],
+          ),
         ),
-        const Spacer(),
         if (job.matchScore != null)
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
-            decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.18),
-              borderRadius: BorderRadius.circular(18),
-              border: Border.all(color: Colors.white.withValues(alpha: 0.22)),
+            padding: EdgeInsets.symmetric(
+              horizontal: dense ? 8 : (compact ? 10 : 12),
+              vertical: dense ? 6 : (compact ? 8 : 10),
             ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
+            decoration: BoxDecoration(
+              color: _matchTone(job.matchScore!).background,
+              borderRadius: BorderRadius.circular(18),
+              border: Border.all(color: _matchTone(job.matchScore!).border),
+            ),
+            child: Column(
               children: [
-                const Icon(
-                  Icons.auto_awesome_rounded,
-                  color: AppColors.accent,
-                  size: 17,
-                ),
-                const SizedBox(width: 6),
                 Text(
-                  '${job.matchScore}% match',
-                  style: const TextStyle(
-                    color: Colors.white,
+                  '${job.matchScore}%',
+                  style: TextStyle(
+                    color: _matchTone(job.matchScore!).foreground,
+                    fontSize: dense ? 15 : 18,
                     fontWeight: FontWeight.w900,
-                    fontSize: 13,
+                    height: 1,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  'match',
+                  style: TextStyle(
+                    color: _matchTone(job.matchScore!).foreground,
+                    fontSize: 11,
+                    fontWeight: FontWeight.w800,
                   ),
                 ),
               ],
@@ -211,162 +244,228 @@ class _TopMeta extends StatelessWidget {
   }
 }
 
-class _Content extends StatelessWidget {
-  const _Content({required this.job});
+class _CompanyLogo extends StatelessWidget {
+  const _CompanyLogo({
+    required this.job,
+    required this.compact,
+    required this.dense,
+  });
 
   final JobModel job;
+  final bool compact;
+  final bool dense;
+
+  @override
+  Widget build(BuildContext context) {
+    final hasLogo =
+        job.companyLogoUrl != null && job.companyLogoUrl!.isNotEmpty;
+
+    return Container(
+      width: dense ? 42 : (compact ? 48 : 58),
+      height: dense ? 42 : (compact ? 48 : 58),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(20),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: hasLogo
+          ? CachedNetworkImage(
+              imageUrl: job.companyLogoUrl!,
+              fit: BoxFit.cover,
+              errorWidget: (_, __, ___) => Center(
+                  child: KibareLogo(size: dense ? 24 : (compact ? 28 : 34))),
+            )
+          : Center(child: KibareLogo(size: dense ? 24 : (compact ? 28 : 34))),
+    );
+  }
+}
+
+class _InfoGrid extends StatelessWidget {
+  const _InfoGrid({
+    required this.job,
+    required this.compact,
+    required this.dense,
+  });
+
+  final JobModel job;
+  final bool compact;
+  final bool dense;
 
   @override
   Widget build(BuildContext context) {
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      mainAxisSize: MainAxisSize.min,
       children: [
-        Text(
-          job.title,
-          maxLines: 3,
-          overflow: TextOverflow.ellipsis,
-          style: const TextStyle(
-            color: Colors.white,
-            fontSize: 30,
-            fontWeight: FontWeight.w900,
-            height: 1.03,
-          ),
-        ),
-        const SizedBox(height: 10),
         Row(
           children: [
             Expanded(
-              child: Text(
-                job.companyName ?? 'Entreprise',
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                  color: Colors.white.withValues(alpha: 0.86),
-                  fontSize: 16,
-                  fontWeight: FontWeight.w800,
-                ),
+              child: _InfoTile(
+                icon: Icons.location_on_outlined,
+                label: 'Lieu',
+                value: job.location.isEmpty ? 'Non precise' : job.location,
+                compact: compact,
               ),
             ),
-            if (_salaryLabel(job) != null) ...[
-              const SizedBox(width: 10),
-              Text(
-                _salaryLabel(job)!,
-                style: const TextStyle(
-                  color: AppColors.accent,
-                  fontWeight: FontWeight.w900,
-                  fontSize: 13,
+            SizedBox(width: compact ? 8 : 10),
+            Expanded(
+              child: _InfoTile(
+                icon: Icons.payments_outlined,
+                label: 'Salaire',
+                value: _salaryLabel(job) ?? 'A negocier',
+                compact: compact,
+              ),
+            ),
+          ],
+        ),
+        if (!dense) ...[
+          SizedBox(height: compact ? 8 : 10),
+          Row(
+            children: [
+              Expanded(
+                child: _InfoTile(
+                  icon: Icons.schedule_rounded,
+                  label: 'Limite',
+                  value: job.deadline == null
+                      ? 'Non precisee'
+                      : _formatDate(job.deadline!),
+                  compact: compact,
+                ),
+              ),
+              SizedBox(width: compact ? 8 : 10),
+              Expanded(
+                child: _InfoTile(
+                  icon: Icons.business_center_outlined,
+                  label: 'Contrat',
+                  value: _formatContract(job.contractType),
+                  compact: compact,
                 ),
               ),
             ],
-          ],
-        ),
-        const SizedBox(height: 12),
-        Wrap(
-          spacing: 8,
-          runSpacing: 8,
-          children: [
-            _GlassPill(
-              icon: Icons.location_on_outlined,
-              label: job.location.isEmpty ? 'Lieu non precise' : job.location,
-            ),
-            if (job.deadline != null)
-              _GlassPill(
-                icon: Icons.event_available_outlined,
-                label: 'Avant ${_formatDate(job.deadline!)}',
-              ),
-          ],
-        ),
-        const SizedBox(height: 12),
-        if (job.requiredSkills.isNotEmpty)
-          SizedBox(
-            height: 34,
-            child: ListView.separated(
-              scrollDirection: Axis.horizontal,
-              physics: const BouncingScrollPhysics(),
-              itemCount: job.requiredSkills.take(6).length,
-              separatorBuilder: (_, __) => const SizedBox(width: 8),
-              itemBuilder: (context, index) {
-                final skill = job.requiredSkills[index];
-                return Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 8,
-                  ),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.14),
-                    borderRadius: BorderRadius.circular(999),
-                    border: Border.all(
-                      color: Colors.white.withValues(alpha: 0.18),
-                    ),
-                  ),
-                  child: Text(
-                    skill,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 12,
-                      fontWeight: FontWeight.w800,
-                    ),
-                  ),
-                );
-              },
-            ),
           ),
-        const SizedBox(height: 14),
-        Text(
-          job.description,
-          maxLines: 3,
-          overflow: TextOverflow.ellipsis,
-          style: TextStyle(
-            color: Colors.white.withValues(alpha: 0.76),
-            fontSize: 13.5,
-            fontWeight: FontWeight.w600,
-            height: 1.4,
-          ),
-        ),
+        ],
       ],
     );
   }
 }
 
-class _GlassPill extends StatelessWidget {
-  const _GlassPill({
+class _InfoTile extends StatelessWidget {
+  const _InfoTile({
     required this.icon,
     required this.label,
+    required this.value,
+    required this.compact,
   });
 
   final IconData icon;
   final String label;
+  final String value;
+  final bool compact;
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Container(
-      constraints: const BoxConstraints(maxWidth: 210),
-      padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 8),
+      padding: EdgeInsets.all(compact ? 8 : 12),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.16),
-        borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.20)),
+        color: isDark
+            ? Colors.white.withValues(alpha: 0.06)
+            : const Color(0xFFF1F5F9),
+        borderRadius: BorderRadius.circular(18),
       ),
       child: Row(
-        mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 15, color: Colors.white),
-          const SizedBox(width: 6),
-          Flexible(
-            child: Text(
-              label,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 12,
-                fontWeight: FontWeight.w900,
-              ),
+          Icon(
+            icon,
+            size: compact ? 16 : 18,
+            color: Theme.of(context).colorScheme.primary,
+          ),
+          SizedBox(width: compact ? 6 : 8),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(label, style: Theme.of(context).textTheme.labelSmall),
+                SizedBox(height: compact ? 1 : 2),
+                Text(
+                  value,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        fontWeight: FontWeight.w900,
+                      ),
+                ),
+              ],
             ),
           ),
         ],
       ),
+    );
+  }
+}
+
+class _SkillStrip extends StatelessWidget {
+  const _SkillStrip({
+    required this.skills,
+    required this.compact,
+  });
+
+  final List<String> skills;
+  final bool compact;
+
+  @override
+  Widget build(BuildContext context) {
+    return Wrap(
+      spacing: compact ? 6 : 8,
+      runSpacing: compact ? 6 : 8,
+      children: skills.take(compact ? 3 : 5).map((skill) {
+        return Container(
+          padding: EdgeInsets.symmetric(
+            horizontal: compact ? 9 : 11,
+            vertical: compact ? 5 : 7,
+          ),
+          decoration: BoxDecoration(
+            color: AppColors.secondary.withValues(alpha: 0.12),
+            borderRadius: BorderRadius.circular(999),
+          ),
+          child: Text(
+            skill,
+            style: TextStyle(
+              color: Theme.of(context).brightness == Brightness.dark
+                  ? const Color(0xFFE2E8F0)
+                  : AppColors.primary,
+              fontSize: 12,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+        );
+      }).toList(),
+    );
+  }
+}
+
+class _Footer extends StatelessWidget {
+  const _Footer({required this.job});
+
+  final JobModel job;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Icon(
+          Icons.touch_app_outlined,
+          size: 18,
+          color: Theme.of(context).colorScheme.primary,
+        ),
+        const SizedBox(width: 7),
+        Expanded(
+          child: Text(
+            'Touchez la carte pour voir les details',
+            style: Theme.of(context).textTheme.labelLarge,
+          ),
+        ),
+        const Icon(Icons.arrow_forward_ios_rounded, size: 15),
+      ],
     );
   }
 }
@@ -385,26 +484,25 @@ class _SwipeStamp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Transform.rotate(
-      angle: label == 'POSTULER' ? -0.16 : 0.16,
+      angle: label == 'POSTULER' ? -0.12 : 0.12,
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
         decoration: BoxDecoration(
-          color: color.withValues(alpha: 0.16),
+          color: color.withValues(alpha: 0.10),
           borderRadius: BorderRadius.circular(18),
-          border: Border.all(color: color, width: 2.4),
+          border: Border.all(color: color, width: 2),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, color: color, size: 24),
+            Icon(icon, color: color, size: 22),
             const SizedBox(width: 8),
             Text(
               label,
               style: TextStyle(
                 color: color,
-                fontSize: 20,
+                fontSize: 18,
                 fontWeight: FontWeight.w900,
-                letterSpacing: 0,
               ),
             ),
           ],
@@ -426,7 +524,7 @@ String _formatDate(DateTime date) {
   final day = date.day.toString().padLeft(2, '0');
   final month = date.month.toString().padLeft(2, '0');
 
-  return '$day/$month';
+  return '$day/$month/${date.year}';
 }
 
 String? _salaryLabel(JobModel job) {
@@ -447,13 +545,49 @@ String? _salaryLabel(JobModel job) {
 String _compactMoney(int value) {
   if (value >= 1000000) {
     final millions = value / 1000000;
-    return '${millions.toStringAsFixed(millions >= 10 ? 0 : 1)}M FCFA';
+    return '${millions.toStringAsFixed(millions >= 10 ? 0 : 1)}M';
   }
 
   if (value >= 1000) {
     final thousands = value / 1000;
-    return '${thousands.toStringAsFixed(thousands >= 10 ? 0 : 1)}k FCFA';
+    return '${thousands.toStringAsFixed(thousands >= 10 ? 0 : 1)}k';
   }
 
-  return '$value FCFA';
+  return '$value';
+}
+
+_MatchTone _matchTone(int score) {
+  if (score >= 75) {
+    return const _MatchTone(
+      background: Color(0xFFE7F3EC),
+      border: Color(0xFF9FCDB2),
+      foreground: Color(0xFF2F6F5E),
+    );
+  }
+
+  if (score >= 50) {
+    return const _MatchTone(
+      background: Color(0xFFFFF4D8),
+      border: Color(0xFFE6C46E),
+      foreground: Color(0xFF8A6516),
+    );
+  }
+
+  return const _MatchTone(
+    background: Color(0xFFFFE8E3),
+    border: Color(0xFFE7A99C),
+    foreground: Color(0xFF9A3E31),
+  );
+}
+
+class _MatchTone {
+  const _MatchTone({
+    required this.background,
+    required this.border,
+    required this.foreground,
+  });
+
+  final Color background;
+  final Color border;
+  final Color foreground;
 }

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../theme/app_theme.dart';
+import '../theme/responsive.dart';
 
 class SwipeButtons extends StatelessWidget {
   const SwipeButtons({
@@ -17,9 +18,10 @@ class SwipeButtons extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final compact = Responsive.compact(context);
 
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 24),
+      padding: EdgeInsets.symmetric(horizontal: compact ? 16 : 24),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         crossAxisAlignment: CrossAxisAlignment.end,
@@ -27,25 +29,28 @@ class SwipeButtons extends StatelessWidget {
           _ActionButton(
             tooltip: 'Passer',
             icon: Icons.close_rounded,
-            color: const Color(0xFF7A8694),
-            size: 58,
+            color: const Color(0xFF9AA5B1),
+            foregroundColor: const Color(0xFF45515F),
+            size: compact ? 52 : 58,
             onPressed: onDislike,
           ),
-          const SizedBox(width: 18),
+          SizedBox(width: compact ? 12 : 18),
           _ActionButton(
             tooltip: 'Mettre en favori',
             icon: Icons.star_rounded,
-            color: isDark ? AppColors.accent : AppColors.secondary,
-            size: 50,
+            color: const Color(0xFFC8A24A),
+            foregroundColor:
+                isDark ? const Color(0xFFFFE6A3) : const Color(0xFF7A5A12),
+            size: compact ? 46 : 50,
             onPressed: onSuperlike,
           ),
-          const SizedBox(width: 18),
+          SizedBox(width: compact ? 12 : 18),
           _ActionButton(
             tooltip: 'Postuler',
             icon: Icons.favorite_rounded,
-            color: AppColors.primary,
+            color: isDark ? AppColors.accent : const Color(0xFF2F6F5E),
             foregroundColor: Colors.white,
-            size: 66,
+            size: compact ? 58 : 66,
             onPressed: onLike,
           ),
         ],
@@ -75,7 +80,7 @@ class _ActionButton extends StatelessWidget {
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final bgColor = foregroundColor == null
-        ? color.withValues(alpha: isDark ? 0.18 : 0.12)
+        ? color.withValues(alpha: isDark ? 0.20 : 0.14)
         : color;
 
     return Tooltip(

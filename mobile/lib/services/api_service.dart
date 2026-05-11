@@ -167,14 +167,14 @@ class ApiService {
     }
 
     if (error?.type == DioExceptionType.connectionError) {
-      return 'Connexion au backend impossible. Le backend repond sur le PC, mais le telephone ne le voit pas encore. Essayez de relancer l app apres mobile/scripts/connect_backend.ps1, ou configurez dans l admin l adresse https://192.168.11.105:8000 si le telephone est sur le meme Wi-Fi.';
+      return 'Connexion internet requise. Vérifiez votre Wi-Fi ou vos données mobiles, puis réessayez.';
     }
 
     if (error?.type == DioExceptionType.connectionTimeout ||
         error?.type == DioExceptionType.receiveTimeout) {
-      return 'Le serveur met trop de temps a repondre.';
+      return 'Connexion internet instable. Le serveur met trop de temps à répondre.';
     }
 
-    return error?.message ?? 'Une erreur reseau est survenue.';
+    return error?.message ?? 'Une erreur réseau est survenue.';
   }
 }

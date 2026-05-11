@@ -4,7 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'providers/theme_provider.dart';
 import 'routes/app_router.dart';
 import 'theme/app_theme.dart';
-import 'widgets/theme_mode_toggle.dart';
+import 'theme/responsive.dart';
 
 class KibareJobApp extends ConsumerWidget {
   const KibareJobApp({super.key});
@@ -19,19 +19,15 @@ class KibareJobApp extends ConsumerWidget {
       theme: AppTheme.light(),
       darkTheme: AppTheme.dark(),
       themeMode: themeMode,
+      routerConfig: appRouter,
       builder: (context, child) {
-        return Stack(
-          children: [
-            if (child != null) child,
-            const Positioned(
-              right: 16,
-              bottom: 16,
-              child: SafeArea(child: ThemeModeToggle()),
-            ),
-          ],
+        return MediaQuery(
+          data: MediaQuery.of(context).copyWith(
+            textScaler: Responsive.textScaler(context),
+          ),
+          child: child ?? const SizedBox.shrink(),
         );
       },
-      routerConfig: appRouter,
     );
   }
 }

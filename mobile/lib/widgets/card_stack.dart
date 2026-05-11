@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../models/job_model.dart';
+import '../theme/responsive.dart';
 import 'job_card.dart';
 
 class CardStack extends StatefulWidget {
@@ -8,10 +9,12 @@ class CardStack extends StatefulWidget {
     super.key,
     required this.jobs,
     required this.onSwipe,
+    required this.onOpenDetails,
   });
 
   final List<JobModel> jobs;
   final Future<void> Function(JobModel job, String direction) onSwipe;
+  final void Function(JobModel job) onOpenDetails;
 
   @override
   State<CardStack> createState() => _CardStackState();
@@ -67,8 +70,12 @@ class _CardStackState extends State<CardStack> {
 
     return LayoutBuilder(
       builder: (context, constraints) {
+        final compact = Responsive.compact(context);
         final cardWidth = constraints.maxWidth.clamp(280.0, 560.0);
-        final cardHeight = constraints.maxHeight.clamp(420.0, 760.0);
+        final cardHeight = constraints.maxHeight.clamp(
+          compact ? 300.0 : 340.0,
+          compact ? 620.0 : 760.0,
+        );
 
         return Stack(
           alignment: Alignment.center,
@@ -113,6 +120,7 @@ class _CardStackState extends State<CardStack> {
             height: cardHeight,
             child: isTop
                 ? GestureDetector(
+                    onTap: () => widget.onOpenDetails(job),
                     onPanUpdate: (details) {
                       setState(() => _dragOffset += details.delta);
                     },

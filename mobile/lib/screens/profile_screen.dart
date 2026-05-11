@@ -4,6 +4,9 @@ import 'package:go_router/go_router.dart';
 
 import '../providers/auth_provider.dart';
 import '../providers/profile_provider.dart';
+import '../theme/responsive.dart';
+import '../widgets/app_bottom_navigation.dart';
+import '../widgets/kibare_tab_app_bar.dart';
 import '../widgets/loading_widget.dart';
 
 class ProfileScreen extends ConsumerWidget {
@@ -15,36 +18,9 @@ class ProfileScreen extends ConsumerWidget {
     final user = ref.watch(authControllerProvider).valueOrNull;
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Mon profil'),
-        actions: [
-          IconButton(
-            tooltip: 'Offres',
-            onPressed: () => context.go('/swipe'),
-            icon: const Icon(Icons.view_carousel_outlined),
-          ),
-          IconButton(
-            tooltip: 'Abonnement',
-            onPressed: () => context.go('/subscription'),
-            icon: const Icon(Icons.workspace_premium_outlined),
-          ),
-          IconButton(
-            tooltip: 'Documents',
-            onPressed: () => context.go('/documents'),
-            icon: const Icon(Icons.folder_outlined),
-          ),
-          IconButton(
-            tooltip: 'Deconnexion',
-            onPressed: () async {
-              await ref.read(authControllerProvider.notifier).logout();
-              if (context.mounted) {
-                context.go('/login');
-              }
-            },
-            icon: const Icon(Icons.logout),
-          ),
-        ],
-      ),
+      appBar: const KibareTabAppBar(),
+      bottomNavigationBar:
+          const AppBottomNavigation(currentTab: AppTab.profile),
       body: profileState.when(
         loading: () => const LoadingWidget(),
         error: (error, _) => Center(child: Text(error.toString())),
@@ -52,36 +28,58 @@ class ProfileScreen extends ConsumerWidget {
           if (profile == null) {
             return const Center(child: Text('Profil introuvable'));
           }
-          return ListView(
-            padding: const EdgeInsets.all(16),
-            children: [
-              Text(
-                '${profile.firstName} ${profile.lastName}',
-                style: Theme.of(context).textTheme.headlineSmall,
-              ),
-              const SizedBox(height: 8),
-              Text(user?.email ?? ''),
-              const SizedBox(height: 16),
-              LinearProgressIndicator(
-                value: profile.profileCompletedPercent / 100,
-              ),
-              const SizedBox(height: 8),
-              Text('Profil complete a ${profile.profileCompletedPercent}%'),
-              const SizedBox(height: 24),
-              _InfoTile(label: 'Ville', value: profile.city),
-              _InfoTile(label: 'Niveau', value: profile.educationLevel),
-              _InfoTile(label: 'Disponibilite', value: profile.availability),
-              _InfoTile(
-                label: 'Competences',
-                value: profile.skills.isEmpty ? 'Aucune' : profile.skills.join(', '),
-              ),
-              const SizedBox(height: 20),
-              FilledButton.icon(
-                onPressed: () => context.go('/documents'),
-                icon: const Icon(Icons.description_outlined),
-                label: const Text('Gerer mes documents'),
-              ),
-            ],
+          return Responsive.centeredContent(
+            context: context,
+            child: ListView(
+              padding: EdgeInsets.all(Responsive.horizontalPadding(context)),
+              children: [
+                Text(
+                  '${profile.firstName} ${profile.lastName}',
+                  style: Theme.of(context).textTheme.headlineSmall,
+                ),
+                const SizedBox(height: 8),
+                Text(user?.email ?? ''),
+                const SizedBox(height: 16),
+                LinearProgressIndicator(
+                  value: profile.profileCompletedPercent / 100,
+                ),
+                const SizedBox(height: 8),
+                Text('Profil complete a ${profile.profileCompletedPercent}%'),
+                const SizedBox(height: 24),
+                _InfoTile(label: 'Ville', value: profile.city),
+                _InfoTile(label: 'Niveau', value: profile.educationLevel),
+                _InfoTile(label: 'Disponibilite', value: profile.availability),
+                _InfoTile(
+                  label: 'Competences',
+                  value: profile.skills.isEmpty
+                      ? 'Aucune'
+                      : profile.skills.join(', '),
+                ),
+                const SizedBox(height: 20),
+                FilledButton.icon(
+                  onPressed: () => context.push('/documents'),
+                  icon: const Icon(Icons.description_outlined),
+                  label: const Text('Gerer mes documents'),
+                ),
+                const SizedBox(height: 12),
+                OutlinedButton.icon(
+                  onPressed: () => context.push('/subscription'),
+                  icon: const Icon(Icons.workspace_premium_outlined),
+                  label: const Text('Gérer mon abonnement'),
+                ),
+                const SizedBox(height: 12),
+                OutlinedButton.icon(
+                  onPressed: () async {
+                    await ref.read(authControllerProvider.notifier).logout();
+                    if (context.mounted) {
+                      context.go('/login');
+                    }
+                  },
+                  icon: const Icon(Icons.logout_rounded),
+                  label: const Text('Déconnexion'),
+                ),
+              ],
+            ),
           );
         },
       ),
