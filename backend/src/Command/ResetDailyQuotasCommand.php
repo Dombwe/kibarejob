@@ -11,7 +11,7 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 
 #[AsCommand(
     name: 'subscription:reset-daily',
-    description: 'Reinitialise les compteurs quotidiens des candidats.',
+    description: 'Réinitialise les compteurs quotidiens des candidats.',
 )]
 class ResetDailyQuotasCommand extends Command
 {
@@ -24,7 +24,7 @@ class ResetDailyQuotasCommand extends Command
     {
         $this->subscriptionService->resetDailyCounters();
 
-        (new SymfonyStyle($input, $output))->success('Compteurs quotidiens reinitialises.');
+        (new SymfonyStyle($input, $output))->success('Compteurs quotidiens réinitialisés.');
 
         return Command::SUCCESS;
     }

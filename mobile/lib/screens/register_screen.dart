@@ -62,7 +62,25 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     await ref.read(authControllerProvider.notifier).loginWithGoogle();
     if (mounted && ref.read(authControllerProvider).valueOrNull != null) {
       context.go('/swipe');
+    } else if (mounted && ref.read(authControllerProvider).hasError) {
+      ScaffoldMessenger.of(context)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(
+          SnackBar(
+            content:
+                Text(_friendlyError(ref.read(authControllerProvider).error)),
+          ),
+        );
     }
+  }
+
+  String _friendlyError(Object? error) {
+    final message = error?.toString().replaceFirst('Exception: ', '').trim();
+    if (message != null && message.isNotEmpty) {
+      return message;
+    }
+
+    return 'Connexion Google impossible. Verifiez la configuration OAuth.';
   }
 
   // ignore: unused_element

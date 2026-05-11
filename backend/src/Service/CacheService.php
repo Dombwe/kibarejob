@@ -10,6 +10,8 @@ class CacheService
 {
     private const DAILY_FREE_SWIPE_LIMIT = 10;
 
+    private bool $redisAvailable = true;
+
     public function __construct(
         private readonly mixed $redis,
         private readonly EntityManagerInterface $entityManager,
@@ -22,7 +24,16 @@ class CacheService
      */
     public function getFeed(string|int $userId, int $page): ?array
     {
-        $cached = $this->redis->get($this->feedKey($userId, $page));
+        if (!$this->redisAvailable) {
+            return null;
+        }
+
+        try {
+            $cached = $this->redis->get($this->feedKey($userId, $page));
+        } catch (\Throwable) {
+            $this->redisAvailable = false;
+            return null;
+        }
 
         return $cached ? json_decode((string) $cached, true) : null;
     }
@@ -32,14 +43,30 @@ class CacheService
      */
     public function setFeed(string|int $userId, int $page, array $feed, ?int $ttl = null): void
     {
-        $this->redis->setex($this->feedKey($userId, $page), $ttl ?? $this->defaultTtl, json_encode($feed, JSON_THROW_ON_ERROR));
+        if (!$this->redisAvailable) {
+            return;
+        }
+
+        try {
+            $this->redis->setex($this->feedKey($userId, $page), $ttl ?? $this->defaultTtl, json_encode($feed, JSON_THROW_ON_ERROR));
+        } catch (\Throwable) {
+            $this->redisAvailable = false;
+        }
     }
 
     public function invalidateFeed(string|int|null $userId = null): void
     {
         $pattern = null === $userId ? 'feed:*' : sprintf('feed:%s:*', $userId);
-        foreach ($this->scanKeys($pattern) as $key) {
-            $this->redis->del($key);
+        if (!$this->redisAvailable) {
+            return;
+        }
+
+        try {
+            foreach ($this->scanKeys($pattern) as $key) {
+                $this->redis->del($key);
+            }
+        } catch (\Throwable) {
+            $this->redisAvailable = false;
         }
     }
 
@@ -49,7 +76,15 @@ class CacheService
     public function getTopSkills(): array
     {
         $key = 'stats:top_skills';
-        $cached = $this->redis->get($key);
+        $cached = null;
+        if ($this->redisAvailable) {
+            try {
+                $cached = $this->redis->get($key);
+            } catch (\Throwable) {
+                $this->redisAvailable = false;
+            }
+        }
+
         if ($cached) {
             return json_decode((string) $cached, true);
         }
@@ -74,7 +109,13 @@ class CacheService
             array_values(array_slice($skills, 0, 20, true)),
         );
 
-        $this->redis->setex($key, 3600, json_encode($topSkills, JSON_THROW_ON_ERROR));
+        if ($this->redisAvailable) {
+            try {
+                $this->redis->setex($key, 3600, json_encode($topSkills, JSON_THROW_ON_ERROR));
+            } catch (\Throwable) {
+                $this->redisAvailable = false;
+            }
+        }
 
         return $topSkills;
     }
@@ -87,7 +128,14 @@ class CacheService
     public function getDailyQuota(string|int $userId): array
     {
         $key = "user:{$userId}:quota";
-        $cached = $this->redis->get($key);
+        $cached = null;
+        if ($this->redisAvailable) {
+            try {
+                $cached = $this->redis->get($key);
+            } catch (\Throwable) {
+                $this->redisAvailable = false;
+            }
+        }
 
         if ($cached) {
             return json_decode((string) $cached, true);
@@ -104,7 +152,13 @@ class CacheService
             'reset_at' => (new \DateTimeImmutable('tomorrow'))->format('Y-m-d 00:00:00'),
         ];
 
-        $this->redis->setex($key, 3600, json_encode($data, JSON_THROW_ON_ERROR));
+        if ($this->redisAvailable) {
+            try {
+                $this->redis->setex($key, 3600, json_encode($data, JSON_THROW_ON_ERROR));
+            } catch (\Throwable) {
+                $this->redisAvailable = false;
+            }
+        }
 
         return $data;
     }
@@ -114,9 +168,17 @@ class CacheService
         $key = "user:{$userId}:quota";
         $usedKey = $key . ':used_today';
 
-        $this->redis->incr($usedKey);
-        $this->redis->expire($usedKey, 3600);
-        $this->redis->del($key);
+        if (!$this->redisAvailable) {
+            return;
+        }
+
+        try {
+            $this->redis->incr($usedKey);
+            $this->redis->expire($usedKey, 3600);
+            $this->redis->del($key);
+        } catch (\Throwable) {
+            $this->redisAvailable = false;
+        }
     }
 
     private function feedKey(string|int $userId, int $page): string

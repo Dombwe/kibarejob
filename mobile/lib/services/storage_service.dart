@@ -45,6 +45,13 @@ class StorageService {
     return _profileBox.put('theme_mode', themeMode);
   }
 
+  bool get hasSeenOnboarding =>
+      _profileBox.get('has_seen_onboarding', defaultValue: false) == true;
+
+  Future<void> markOnboardingSeen() {
+    return _profileBox.put('has_seen_onboarding', true);
+  }
+
   List<Map<String, dynamic>> get queuedSwipes {
     final items = _offlineBox.get('swipe_queue', defaultValue: <dynamic>[]);
     return (items as List<dynamic>)

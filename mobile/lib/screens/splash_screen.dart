@@ -16,6 +16,7 @@ class SplashScreen extends ConsumerStatefulWidget {
 class _SplashScreenState extends ConsumerState<SplashScreen> {
   final _pageController = PageController();
   int _currentPage = 0;
+  bool _isRedirecting = true;
 
   static const _slides = [
     _SplashSlideData(
@@ -39,6 +40,14 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
   ];
 
   @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _redirectIfOnboardingSeen();
+    });
+  }
+
+  @override
   void dispose() {
     _pageController.dispose();
     super.dispose();
@@ -56,7 +65,28 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
     _enterApp();
   }
 
-  void _enterApp() {
+  void _redirectIfOnboardingSeen() {
+    final storage = ref.read(storageServiceProvider);
+    if (storage.hasSeenOnboarding) {
+      _goToNextScreen();
+      return;
+    }
+
+    if (mounted) {
+      setState(() => _isRedirecting = false);
+    }
+  }
+
+  Future<void> _enterApp() async {
+    await ref.read(storageServiceProvider).markOnboardingSeen();
+    if (!mounted) {
+      return;
+    }
+
+    _goToNextScreen();
+  }
+
+  void _goToNextScreen() {
     final user = ref.read(authControllerProvider).valueOrNull;
     context.go(user == null ? '/login' : '/swipe');
   }
@@ -65,6 +95,14 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
+
+    if (_isRedirecting) {
+      return Scaffold(
+        backgroundColor:
+            isDark ? AppColors.darkBackground : AppColors.lightBackground,
+        body: const SizedBox.expand(),
+      );
+    }
 
     return Scaffold(
       body: DecoratedBox(
@@ -102,7 +140,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
                     ),
                     const Spacer(),
                     TextButton(
-                      onPressed: _enterApp,
+                      onPressed: () => _enterApp(),
                       child: const Text('Passer'),
                     ),
                   ],

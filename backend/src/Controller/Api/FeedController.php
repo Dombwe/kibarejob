@@ -91,11 +91,39 @@ class FeedController extends AbstractController
     private function getCandidateProfile(): CandidateProfile
     {
         $user = $this->getUser();
-        if (!$user instanceof User || !$user->getCandidateProfile() instanceof CandidateProfile) {
+        if (!$user instanceof User) {
             throw $this->createAccessDeniedException('Profil candidat requis.');
         }
 
-        return $user->getCandidateProfile();
+        if ($user->getCandidateProfile() instanceof CandidateProfile) {
+            return $user->getCandidateProfile();
+        }
+
+        $roles = array_values(array_filter(
+            $user->getRoles(),
+            static fn (string $role): bool => 'ROLE_USER' !== $role
+        ));
+
+        if (!in_array('ROLE_CANDIDATE', $roles, true)) {
+            $roles[] = 'ROLE_CANDIDATE';
+            $user->setRoles(array_values(array_unique($roles)));
+        }
+
+        $profile = (new CandidateProfile())
+            ->setUser($user)
+            ->setFirstName($user->getFirstName() ?: 'Candidat')
+            ->setLastName($user->getLastName() ?: 'KIBARE-JOB')
+            ->setCity('Ouagadougou')
+            ->setEducationLevel('Aucun')
+            ->setSkills([])
+            ->setLanguages([['name' => 'Francais', 'level' => 'Debutant']])
+            ->setAvailability('Immediate');
+
+        $user->setCandidateProfile($profile);
+        $this->entityManager->persist($profile);
+        $this->entityManager->flush();
+
+        return $profile;
     }
 
     /**

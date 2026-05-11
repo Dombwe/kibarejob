@@ -6,7 +6,7 @@ class MatchingService {
   final JobService _jobService;
 
   Future<int> getMatchScore(String offerId) async {
-    final feed = await _jobService.fetchFeed(limit: 30);
+    final feed = await _jobService.fetchFeed(limit: 10);
     for (final job in feed.jobs) {
       if (job.id == offerId) {
         return job.matchScore ?? 0;

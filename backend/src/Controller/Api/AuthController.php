@@ -111,25 +111,14 @@ class AuthController extends AbstractController
                 ->setProfileCompletedPercent(20)
                 ->setIsEmailVerified(true);
             $user->setPasswordHash($this->passwordHasher->hashPassword($user, bin2hex(random_bytes(24))));
-
-            $profile = (new CandidateProfile())
-                ->setUser($user)
-                ->setFirstName((string) ($googleProfile['given_name'] ?? 'Candidat'))
-                ->setLastName((string) ($googleProfile['family_name'] ?? 'KIBARE-JOB'))
-                ->setPhotoUrl($googleProfile['picture'] ?? null)
-                ->setCity('Ouagadougou')
-                ->setEducationLevel('Aucun')
-                ->setSkills([])
-                ->setLanguages([['name' => 'Francais', 'level' => 'Debutant']])
-                ->setAvailability('Immediate');
-
             $this->entityManager->persist($user);
-            $this->entityManager->persist($profile);
         }
 
         if (!$user->isActive() || $user->isDeleted()) {
             return $this->json(['message' => 'Compte inactif ou supprime.'], JsonResponse::HTTP_FORBIDDEN);
         }
+
+        $this->ensureMobileCandidateProfile($user, $googleProfile);
 
         $user
             ->setIsEmailVerified(true)
@@ -429,6 +418,59 @@ class AuthController extends AbstractController
             'profileCompletedPercent' => $user->getProfileCompletedPercent(),
             'subscriptionTier' => $user->getSubscriptionTier()->value,
         ];
+    }
+
+    /**
+     * @param array<string, mixed> $googleProfile
+     */
+    private function ensureMobileCandidateProfile(User $user, array $googleProfile): void
+    {
+        $roles = array_values(array_filter(
+            $user->getRoles(),
+            static fn (string $role): bool => 'ROLE_USER' !== $role
+        ));
+
+        if (!in_array('ROLE_CANDIDATE', $roles, true)) {
+            $roles[] = 'ROLE_CANDIDATE';
+            $user->setRoles(array_values(array_unique($roles)));
+        }
+
+        $firstName = trim((string) ($googleProfile['given_name'] ?? $user->getFirstName() ?? 'Candidat'));
+        $lastName = trim((string) ($googleProfile['family_name'] ?? $user->getLastName() ?? 'KIBARE-JOB'));
+
+        if ('' === $firstName) {
+            $firstName = 'Candidat';
+        }
+
+        if ('' === $lastName) {
+            $lastName = 'KIBARE-JOB';
+        }
+
+        if (null === $user->getFirstName() || '' === trim($user->getFirstName())) {
+            $user->setFirstName($firstName);
+        }
+
+        if (null === $user->getLastName() || '' === trim($user->getLastName())) {
+            $user->setLastName($lastName);
+        }
+
+        if ($user->getCandidateProfile() instanceof CandidateProfile) {
+            return;
+        }
+
+        $profile = (new CandidateProfile())
+            ->setUser($user)
+            ->setFirstName($firstName)
+            ->setLastName($lastName)
+            ->setPhotoUrl(is_string($googleProfile['picture'] ?? null) ? $googleProfile['picture'] : null)
+            ->setCity('Ouagadougou')
+            ->setEducationLevel('Aucun')
+            ->setSkills([])
+            ->setLanguages([['name' => 'Francais', 'level' => 'Debutant']])
+            ->setAvailability('Immediate');
+
+        $user->setCandidateProfile($profile);
+        $this->entityManager->persist($profile);
     }
 
     /**

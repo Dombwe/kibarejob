@@ -78,6 +78,15 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       ..showSnackBar(SnackBar(content: Text(message)));
   }
 
+  String _friendlyError(Object? error) {
+    final message = error?.toString().replaceFirst('Exception: ', '').trim();
+    if (message != null && message.isNotEmpty) {
+      return message;
+    }
+
+    return 'Connexion impossible. Verifiez vos identifiants ou la configuration Google.';
+  }
+
   @override
   Widget build(BuildContext context) {
     final authState = ref.watch(authControllerProvider);
@@ -87,6 +96,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     ref.listen(authControllerProvider, (_, next) {
       if (next.valueOrNull != null) {
         context.go('/swipe');
+      }
+
+      if (next.hasError) {
+        _showMessage(_friendlyError(next.error));
       }
     });
 

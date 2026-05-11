@@ -18,6 +18,11 @@ class MatchingService
         'Doctorat' => 6,
     ];
 
+    /**
+     * @var array<string, string[]>
+     */
+    private array $candidateDocumentTextCache = [];
+
     public function __construct(private readonly CandidateDocumentRepository $documentRepository)
     {
     }
@@ -92,18 +97,9 @@ class MatchingService
             return 100;
         }
 
-        $documents = $this->documentRepository->findBy([
-            'candidate' => $candidate->getUser(),
-            'isDeleted' => false,
-        ]);
-
-        if ([] === $documents) {
+        $availableText = $this->getCandidateDocumentText($candidate);
+        if ([] === $availableText) {
             return 0;
-        }
-
-        $availableText = [];
-        foreach ($documents as $document) {
-            $availableText[] = $this->normalize($document->getTitle() . ' ' . (string) $document->getDescription() . ' ' . (string) $document->getDocumentNumber());
         }
 
         $matches = 0;
@@ -118,6 +114,31 @@ class MatchingService
         }
 
         return (int) round(($matches / count($requiredDocuments)) * 100);
+    }
+
+    /**
+     * @return string[]
+     */
+    private function getCandidateDocumentText(CandidateProfile $candidate): array
+    {
+        $candidateId = (string) $candidate->getUser()->getId();
+        if (array_key_exists($candidateId, $this->candidateDocumentTextCache)) {
+            return $this->candidateDocumentTextCache[$candidateId];
+        }
+
+        $documents = $this->documentRepository->findBy([
+            'candidate' => $candidate->getUser(),
+            'isDeleted' => false,
+        ]);
+
+        $availableText = [];
+        foreach ($documents as $document) {
+            $availableText[] = $this->normalize($document->getTitle() . ' ' . (string) $document->getDescription() . ' ' . (string) $document->getDocumentNumber());
+        }
+
+        $this->candidateDocumentTextCache[$candidateId] = $availableText;
+
+        return $availableText;
     }
 
     private function estimateExperienceYears(CandidateProfile $candidate): int

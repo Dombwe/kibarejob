@@ -15,7 +15,7 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 
 #[AsCommand(
     name: 'document:cleanup',
-    description: 'Supprime les documents candidats non utilises de plus de 90 jours et nettoie les chunks expires.',
+    description: 'Supprime les documents candidats non utilisés de plus de 90 jours et nettoie les chunks expirés.',
 )]
 class CleanupDocumentsCommand extends Command
 {
@@ -33,8 +33,8 @@ class CleanupDocumentsCommand extends Command
     {
         $this
             ->addOption('days', null, InputOption::VALUE_REQUIRED, 'Age minimum des documents a supprimer', 90)
-            ->addOption('include-active', null, InputOption::VALUE_NONE, 'Inclut aussi les documents actifs non utilises')
-            ->addOption('dry-run', null, InputOption::VALUE_NONE, 'Affiche ce qui serait supprime sans modifier la base');
+            ->addOption('include-active', null, InputOption::VALUE_NONE, 'Inclut aussi les documents actifs non utilisés')
+            ->addOption('dry-run', null, InputOption::VALUE_NONE, 'Affiche ce qui serait supprimé sans modifier la base');
     }
 
     protected function execute(InputInterface $input, OutputInterface $output): int
@@ -92,7 +92,7 @@ class CleanupDocumentsCommand extends Command
         }
 
         $io->success(sprintf(
-            '%d document(s) %s, %d fichier(s) supprime(s), %d dossier(s) de chunks nettoye(s).',
+            '%d document(s) %s, %d fichier(s) supprimé(s), %d dossier(s) de chunks nettoye(s).',
             $deletedDocuments,
             $dryRun ? 'detecte(s)' : 'supprime(s)',
             $deletedFiles,

@@ -23,22 +23,68 @@ class _CardStackState extends State<CardStack> {
   @override
   Widget build(BuildContext context) {
     if (widget.jobs.isEmpty) {
-      return const Center(child: Text('Aucune offre disponible pour le moment'));
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(28),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 86,
+                height: 86,
+                decoration: BoxDecoration(
+                  color: Theme.of(context)
+                      .colorScheme
+                      .primary
+                      .withValues(alpha: 0.10),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  Icons.work_outline_rounded,
+                  color: Theme.of(context).colorScheme.primary,
+                  size: 38,
+                ),
+              ),
+              const SizedBox(height: 18),
+              Text(
+                'Aucune offre disponible',
+                textAlign: TextAlign.center,
+                style: Theme.of(context).textTheme.headlineSmall,
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'De nouvelles opportunites apparaitront ici des qu elles seront publiees.',
+                textAlign: TextAlign.center,
+                style: Theme.of(context).textTheme.bodyMedium,
+              ),
+            ],
+          ),
+        ),
+      );
     }
 
     final visibleJobs = widget.jobs.take(3).toList().reversed.toList();
 
-    return Stack(
-      alignment: Alignment.center,
-      children: [
-        for (var index = 0; index < visibleJobs.length; index++)
-          _buildPositionedCard(
-            context,
-            visibleJobs[index],
-            index,
-            visibleJobs.length - 1,
-          ),
-      ],
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final cardWidth = constraints.maxWidth.clamp(280.0, 560.0);
+        final cardHeight = constraints.maxHeight.clamp(420.0, 760.0);
+
+        return Stack(
+          alignment: Alignment.center,
+          children: [
+            for (var index = 0; index < visibleJobs.length; index++)
+              _buildPositionedCard(
+                context,
+                visibleJobs[index],
+                index,
+                visibleJobs.length - 1,
+                cardWidth,
+                cardHeight,
+              ),
+          ],
+        );
+      },
     );
   }
 
@@ -47,11 +93,14 @@ class _CardStackState extends State<CardStack> {
     JobModel job,
     int index,
     int topIndex,
+    double cardWidth,
+    double cardHeight,
   ) {
     final isTop = index == topIndex;
-    final scale = 1 - ((topIndex - index) * 0.04);
-    final yOffset = (topIndex - index) * 14.0;
-    final angle = isTop ? _dragOffset.dx / 900 : 0.0;
+    final depth = topIndex - index;
+    final scale = 1 - (depth * 0.045);
+    final yOffset = depth * 16.0;
+    final angle = isTop ? _dragOffset.dx / 780 : 0.0;
 
     return Transform.translate(
       offset: isTop ? _dragOffset : Offset(0, yOffset),
@@ -60,15 +109,15 @@ class _CardStackState extends State<CardStack> {
         child: Transform.scale(
           scale: scale,
           child: SizedBox(
-            width: MediaQuery.of(context).size.width * 0.9,
-            height: MediaQuery.of(context).size.height * 0.66,
+            width: cardWidth,
+            height: cardHeight,
             child: isTop
                 ? GestureDetector(
                     onPanUpdate: (details) {
                       setState(() => _dragOffset += details.delta);
                     },
                     onPanEnd: (_) => _handlePanEnd(job),
-                    child: JobCard(job: job),
+                    child: JobCard(job: job, dragOffset: _dragOffset),
                   )
                 : JobCard(job: job),
           ),

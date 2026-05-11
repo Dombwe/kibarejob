@@ -11,7 +11,7 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 
 #[AsCommand(
     name: 'subscription:reset-monthly',
-    description: 'Reinitialise les compteurs mensuels des employeurs.',
+    description: 'Réinitialise les compteurs mensuels des employeurs.',
 )]
 class ResetMonthlyQuotasCommand extends Command
 {
@@ -24,7 +24,7 @@ class ResetMonthlyQuotasCommand extends Command
     {
         $this->subscriptionService->resetMonthlyCounters();
 
-        (new SymfonyStyle($input, $output))->success('Compteurs mensuels reinitialises.');
+        (new SymfonyStyle($input, $output))->success('Compteurs mensuels réinitialisés.');
 
         return Command::SUCCESS;
     }

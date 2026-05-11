@@ -21,12 +21,18 @@ class AuthResult {
 class AuthService {
   const AuthService(this._api, this._storage);
 
+  static const _defaultGoogleWebClientId =
+      '380349066467-s2fjkk9hcr55nr3fukimm43sj2fo9p16.apps.googleusercontent.com';
   static bool _googleInitialized = false;
 
   final ApiService _api;
   final StorageService _storage;
 
   UserModel? get cachedUser {
+    if (!isLoggedIn) {
+      return null;
+    }
+
     final user = _storage.cachedUser;
     return user == null ? null : UserModel.fromJson(user);
   }
@@ -50,12 +56,18 @@ class AuthService {
       );
     }
 
-    final account = await GoogleSignIn.instance.authenticate();
+    final GoogleSignInAccount account;
+    try {
+      account = await GoogleSignIn.instance.authenticate();
+    } on GoogleSignInException catch (error) {
+      throw Exception(_googleErrorMessage(error));
+    }
+
     final idToken = account.authentication.idToken;
 
     if (idToken == null || idToken.isEmpty) {
       throw Exception(
-        'Google n\'a pas fourni de jeton de connexion. Verifiez la configuration OAuth.',
+        'Google n\'a pas fourni de jeton de connexion. Verifiez la configuration OAuth dans Google Cloud.',
       );
     }
 
@@ -112,7 +124,10 @@ class AuthService {
       return;
     }
 
-    const webClientId = String.fromEnvironment('GOOGLE_WEB_CLIENT_ID');
+    const webClientId = String.fromEnvironment(
+      'GOOGLE_WEB_CLIENT_ID',
+      defaultValue: _defaultGoogleWebClientId,
+    );
     const androidClientId = String.fromEnvironment('GOOGLE_ANDROID_CLIENT_ID');
 
     await GoogleSignIn.instance.initialize(
@@ -122,8 +137,29 @@ class AuthService {
     _googleInitialized = true;
   }
 
+  String _googleErrorMessage(GoogleSignInException error) {
+    if (error.code == GoogleSignInExceptionCode.canceled) {
+      return 'Google a interrompu la connexion apres le choix du compte. Verifiez dans Google Cloud le package Android, le SHA-1 debug et le client ID Web.';
+    }
+
+    if (error.code == GoogleSignInExceptionCode.uiUnavailable) {
+      return 'Google Play Services n\'est pas disponible sur cet appareil.';
+    }
+
+    if (error.code == GoogleSignInExceptionCode.clientConfigurationError) {
+      return 'Configuration Google incorrecte. Verifiez le package Android, le SHA-1 et les identifiants OAuth.';
+    }
+
+    return error.description ??
+        'Connexion Google impossible. Verifiez la configuration OAuth.';
+  }
+
   Future<AuthResult> _persistAuth(Map<String, dynamic> data) async {
     final token = data['token']?.toString() ?? '';
+    if (token.isEmpty) {
+      throw Exception('Le backend n\'a pas renvoye de jeton de connexion.');
+    }
+
     final userJson = Map<String, dynamic>.from(data['user'] as Map);
     final user = UserModel.fromJson(userJson);
     await _storage.saveToken(token);

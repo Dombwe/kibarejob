@@ -17,7 +17,7 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 
 #[AsCommand(
     name: 'matching:precompute-scores',
-    description: 'Pre-calcule les scores de matching candidats/offres pour le feed.',
+    description: 'Pré-calcule les scores de matching candidats/offres pour le feed.',
 )]
 class PrecomputeScoresCommand extends Command
 {
@@ -33,7 +33,7 @@ class PrecomputeScoresCommand extends Command
     {
         $this
             ->addOption('limit-candidates', null, InputOption::VALUE_REQUIRED, 'Nombre max de candidats a traiter', 500)
-            ->addOption('limit-offers', null, InputOption::VALUE_REQUIRED, 'Nombre max d offres actives a traiter', 500);
+            ->addOption('limit-offers', null, InputOption::VALUE_REQUIRED, 'Nombre max d\'offres actives a traiter', 500);
     }
 
     protected function execute(InputInterface $input, OutputInterface $output): int
@@ -76,7 +76,7 @@ class PrecomputeScoresCommand extends Command
             }
         }
 
-        $io->success(sprintf('%d score(s) pre-calcules pour %d candidat(s) et %d offre(s).', $computed, count($candidates), count($offers)));
+        $io->success(sprintf('%d score(s) pré-calcules pour %d candidat(s) et %d offre(s).', $computed, count($candidates), count($offers)));
 
         return Command::SUCCESS;
     }

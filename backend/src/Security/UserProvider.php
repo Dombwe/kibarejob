@@ -18,7 +18,7 @@ class UserProvider implements UserProviderInterface
     {
         $user = $this->userRepository->findOneBy(['email' => mb_strtolower($identifier)]);
 
-        if (!$user instanceof User || !$user->isActive() || $user->isDeleted()) {
+        if (!$user instanceof User || !$user->isActive() || $user->isDeleted() || !$user->isEmailVerified()) {
             throw new UserNotFoundException(sprintf('User "%s" not found.', $identifier));
         }
 
@@ -33,7 +33,7 @@ class UserProvider implements UserProviderInterface
 
         $refreshedUser = $this->userRepository->find($user->getId());
 
-        if (!$refreshedUser instanceof User || !$refreshedUser->isActive() || $refreshedUser->isDeleted()) {
+        if (!$refreshedUser instanceof User || !$refreshedUser->isActive() || $refreshedUser->isDeleted() || !$refreshedUser->isEmailVerified()) {
             throw new UserNotFoundException('User not found.');
         }
 

@@ -6,8 +6,9 @@ class JobService {
 
   final ApiService _api;
 
-  Future<FeedResult> fetchFeed({int cursor = 0, int limit = 10}) async {
-    final data = await _api.getJson('/api/jobs/feed?cursor=$cursor&limit=$limit');
+  Future<FeedResult> fetchFeed({int cursor = 0, int limit = 6}) async {
+    final data =
+        await _api.getJson('/api/jobs/feed?cursor=$cursor&limit=$limit');
     final jobs = (data['items'] as List<dynamic>? ?? const [])
         .whereType<Map>()
         .map((item) => JobModel.fromJson(Map<String, dynamic>.from(item)))
