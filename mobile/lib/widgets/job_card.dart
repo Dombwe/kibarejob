@@ -111,7 +111,11 @@ class JobCard extends StatelessWidget {
                       SizedBox(height: dense ? 6 : (compact ? 8 : 12)),
                       _DescriptionExcerpt(job: job, dense: dense),
                       SizedBox(height: dense ? 6 : (compact ? 10 : 18)),
-                      _InfoGrid(job: job, compact: compact, dense: dense),
+                      _InfoGrid(
+                        job: job,
+                        compact: compact,
+                        tight: tight,
+                      ),
                       if (job.requiredSkills.isNotEmpty &&
                           !tight &&
                           !dense) ...[
@@ -121,7 +125,7 @@ class JobCard extends StatelessWidget {
                       ],
                       const Spacer(),
                       SizedBox(height: dense ? 6 : (compact ? 8 : 12)),
-                      _Footer(job: job),
+                      _MetricsStrip(job: job, compact: compact),
                     ],
                   ),
                 );
@@ -284,15 +288,17 @@ class _InfoGrid extends StatelessWidget {
   const _InfoGrid({
     required this.job,
     required this.compact,
-    required this.dense,
+    required this.tight,
   });
 
   final JobModel job;
   final bool compact;
-  final bool dense;
+  final bool tight;
 
   @override
   Widget build(BuildContext context) {
+    final documents = _documentsLabel(job);
+
     return Column(
       children: [
         Row(
@@ -316,30 +322,37 @@ class _InfoGrid extends StatelessWidget {
             ),
           ],
         ),
-        if (!dense) ...[
+        SizedBox(height: compact ? 8 : 10),
+        Row(
+          children: [
+            Expanded(
+              child: _InfoTile(
+                icon: Icons.schedule_rounded,
+                label: 'Expiration',
+                value: job.deadline == null
+                    ? 'Non precisee'
+                    : _formatDate(job.deadline!),
+                compact: compact,
+              ),
+            ),
+            SizedBox(width: compact ? 8 : 10),
+            Expanded(
+              child: _InfoTile(
+                icon: Icons.school_outlined,
+                label: 'Niveau requis',
+                value: _educationLabel(job),
+                compact: compact,
+              ),
+            ),
+          ],
+        ),
+        if (!tight) ...[
           SizedBox(height: compact ? 8 : 10),
-          Row(
-            children: [
-              Expanded(
-                child: _InfoTile(
-                  icon: Icons.schedule_rounded,
-                  label: 'Limite',
-                  value: job.deadline == null
-                      ? 'Non precisee'
-                      : _formatDate(job.deadline!),
-                  compact: compact,
-                ),
-              ),
-              SizedBox(width: compact ? 8 : 10),
-              Expanded(
-                child: _InfoTile(
-                  icon: Icons.business_center_outlined,
-                  label: 'Contrat',
-                  value: _formatContract(job.contractType),
-                  compact: compact,
-                ),
-              ),
-            ],
+          _InfoTile(
+            icon: Icons.description_outlined,
+            label: 'Documents requis',
+            value: documents,
+            compact: compact,
           ),
         ],
       ],
@@ -443,31 +456,85 @@ class _SkillStrip extends StatelessWidget {
   }
 }
 
-class _Footer extends StatelessWidget {
-  const _Footer({required this.job});
+class _MetricsStrip extends StatelessWidget {
+  const _MetricsStrip({
+    required this.job,
+    required this.compact,
+  });
 
   final JobModel job;
+  final bool compact;
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Icon(
-          Icons.touch_app_outlined,
-          size: 18,
-          color: Theme.of(context).colorScheme.primary,
-        ),
-        const SizedBox(width: 7),
-        Expanded(
-          child: Text(
-            'Touchez la carte pour voir les details',
-            style: Theme.of(context).textTheme.labelLarge,
+    final metrics = [
+      _MetricData(
+        icon: Icons.group_add_outlined,
+        label:
+            '${job.positions ?? 1} poste${(job.positions ?? 1) > 1 ? 's' : ''}',
+      ),
+      _MetricData(
+        icon: Icons.visibility_outlined,
+        label: '${job.viewsCount} vue${job.viewsCount > 1 ? 's' : ''}',
+      ),
+      _MetricData(
+        icon: Icons.send_outlined,
+        label:
+            '${job.applicationsCount} candidature${job.applicationsCount > 1 ? 's' : ''}',
+      ),
+      _MetricData(
+        icon: Icons.calendar_today_outlined,
+        label: job.createdAt == null
+            ? 'Publication récente'
+            : _formatDate(job.createdAt!),
+      ),
+    ];
+
+    return Wrap(
+      spacing: compact ? 6 : 8,
+      runSpacing: compact ? 6 : 8,
+      children: metrics.map((metric) {
+        return Container(
+          padding: EdgeInsets.symmetric(
+            horizontal: compact ? 8 : 10,
+            vertical: compact ? 5 : 6,
           ),
-        ),
-        const Icon(Icons.arrow_forward_ios_rounded, size: 15),
-      ],
+          decoration: BoxDecoration(
+            color:
+                Theme.of(context).colorScheme.primary.withValues(alpha: 0.08),
+            borderRadius: BorderRadius.circular(999),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                metric.icon,
+                size: compact ? 13 : 14,
+                color: Theme.of(context).colorScheme.primary,
+              ),
+              SizedBox(width: compact ? 4 : 5),
+              Text(
+                metric.label,
+                style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                      fontWeight: FontWeight.w800,
+                    ),
+              ),
+            ],
+          ),
+        );
+      }).toList(),
     );
   }
+}
+
+class _MetricData {
+  const _MetricData({
+    required this.icon,
+    required this.label,
+  });
+
+  final IconData icon;
+  final String label;
 }
 
 class _SwipeStamp extends StatelessWidget {
@@ -540,6 +607,30 @@ String? _salaryLabel(JobModel job) {
   }
 
   return _compactMoney(min ?? max!);
+}
+
+String _educationLabel(JobModel job) {
+  final values = [
+    job.requiredEducation?.trim(),
+    job.educationField?.trim(),
+  ].whereType<String>().where((value) => value.isNotEmpty).toList();
+
+  if (values.isEmpty) {
+    return 'Non precise';
+  }
+
+  return values.join(' - ');
+}
+
+String _documentsLabel(JobModel job) {
+  if (job.requiredDocuments.isEmpty) {
+    return 'CV, lettre de motivation';
+  }
+
+  return job.requiredDocuments.take(3).join(', ') +
+      (job.requiredDocuments.length > 3
+          ? ' +${job.requiredDocuments.length - 3}'
+          : '');
 }
 
 String _compactMoney(int value) {

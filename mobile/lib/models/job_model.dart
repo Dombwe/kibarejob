@@ -22,6 +22,7 @@ class JobModel {
     this.viewsCount = 0,
     this.applicationsCount = 0,
     this.likesCount = 0,
+    this.createdAt,
     this.salaryMin,
     this.salaryMax,
     this.matchScore,
@@ -49,6 +50,7 @@ class JobModel {
   final int viewsCount;
   final int applicationsCount;
   final int likesCount;
+  final DateTime? createdAt;
   final int? salaryMin;
   final int? salaryMax;
   final int? matchScore;
@@ -89,6 +91,7 @@ class JobModel {
       applicationsCount:
           int.tryParse(offer['applicationsCount']?.toString() ?? '') ?? 0,
       likesCount: int.tryParse(offer['likesCount']?.toString() ?? '') ?? 0,
+      createdAt: DateTime.tryParse(offer['createdAt']?.toString() ?? ''),
       salaryMin: int.tryParse(offer['salaryMin']?.toString() ?? ''),
       salaryMax: int.tryParse(offer['salaryMax']?.toString() ?? ''),
       matchScore: int.tryParse(json['matchScore']?.toString() ?? ''),
@@ -119,6 +122,7 @@ class JobModel {
         'viewsCount': viewsCount,
         'applicationsCount': applicationsCount,
         'likesCount': likesCount,
+        'createdAt': createdAt?.toIso8601String(),
         'salaryMin': salaryMin,
         'salaryMax': salaryMax,
         'company': {

@@ -50,7 +50,7 @@ class SwipeButtons extends StatelessWidget {
             icon: Icons.favorite_rounded,
             color: isDark ? AppColors.accent : const Color(0xFF2F6F5E),
             foregroundColor: Colors.white,
-            size: compact ? 58 : 66,
+            size: compact ? 52 : 58,
             onPressed: onLike,
           ),
         ],

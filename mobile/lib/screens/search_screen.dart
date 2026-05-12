@@ -240,16 +240,25 @@ class _MetaChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Icon(icon, size: 15, color: Theme.of(context).colorScheme.primary),
-        const SizedBox(width: 4),
-        Text(
-          label,
-          style: Theme.of(context).textTheme.labelSmall,
-        ),
-      ],
+    return ConstrainedBox(
+      constraints: BoxConstraints(
+        maxWidth: MediaQuery.sizeOf(context).width * 0.58,
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 15, color: Theme.of(context).colorScheme.primary),
+          const SizedBox(width: 4),
+          Flexible(
+            child: Text(
+              label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: Theme.of(context).textTheme.labelSmall,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
