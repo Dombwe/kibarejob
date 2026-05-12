@@ -7,6 +7,7 @@ import 'package:go_router/go_router.dart';
 
 import '../providers/document_provider.dart';
 import '../services/compression_service.dart';
+import '../services/api_service.dart';
 import '../widgets/loading_widget.dart';
 
 class DocumentUploadScreen extends ConsumerStatefulWidget {
@@ -44,6 +45,7 @@ class _DocumentUploadScreenState extends ConsumerState<DocumentUploadScreen> {
                   value: _type,
                   decoration: const InputDecoration(labelText: 'Type'),
                   items: const [
+                    DropdownMenuItem(value: 'cv', child: Text('CV')),
                     DropdownMenuItem(value: 'diploma', child: Text('Diplome')),
                     DropdownMenuItem(
                         value: 'certificate', child: Text('Certificat')),
@@ -102,6 +104,20 @@ class _DocumentUploadScreenState extends ConsumerState<DocumentUploadScreen> {
     if (file == null) {
       return;
     }
+
+    final fileSize = await file.length();
+    const maxUploadSize = 8 * 1024 * 1024;
+    if (fileSize > maxUploadSize) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Le fichier est trop lourd. Taille maximale : 8 Mo.'),
+          ),
+        );
+      }
+      return;
+    }
+
     setState(() => _isUploading = true);
     try {
       final lowerPath = file.path.toLowerCase();
@@ -120,10 +136,38 @@ class _DocumentUploadScreenState extends ConsumerState<DocumentUploadScreen> {
       if (mounted) {
         context.pop();
       }
+    } catch (error) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(_readableError(error))),
+        );
+      }
     } finally {
       if (mounted) {
         setState(() => _isUploading = false);
       }
     }
+  }
+
+  String _readableError(Object error) {
+    if (error is ApiException) {
+      final errors = error.data?['errors'];
+      if (errors is Map && errors.isNotEmpty) {
+        final first = errors.values.first;
+        if (first is List && first.isNotEmpty) {
+          return first.first.toString();
+        }
+        return first.toString();
+      }
+
+      return error.message;
+    }
+
+    final message = error.toString().replaceFirst('Exception: ', '');
+    if (message.contains('422') || message.contains('file')) {
+      return 'Le document ne peut pas etre envoye. Verifiez le format ou la taille du fichier.';
+    }
+
+    return 'Envoi impossible. Verifiez votre connexion puis reessayez.';
   }
 }

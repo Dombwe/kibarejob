@@ -117,15 +117,29 @@ class ValidationService
         $errors = [];
 
         if (!$file->isValid()) {
-            $errors[] = 'Le fichier envoyé est invalide.';
+            $errors[] = 'Le fichier envoye est invalide : ' . $file->getErrorMessage();
+
+            return $errors;
+        }
+
+        if (!is_file($file->getPathname()) || !is_readable($file->getPathname())) {
+            $errors[] = 'Le fichier envoye est introuvable ou illisible. Essayez avec un fichier plus leger.';
+
+            return $errors;
         }
 
         if ($file->getSize() > $maxBytes) {
-            $errors[] = sprintf('Le fichier ne doit pas dépasser %d Mo.', (int) ($maxBytes / 1024 / 1024));
+            $errors[] = sprintf('Le fichier ne doit pas depasser %d Mo.', (int) ($maxBytes / 1024 / 1024));
         }
 
-        if (!in_array($file->getMimeType(), $allowedMimeTypes, true)) {
-            $errors[] = 'Type de fichier non autorisé.';
+        try {
+            $mimeType = $file->getMimeType();
+        } catch (\Throwable) {
+            $mimeType = $file->getClientMimeType();
+        }
+
+        if (!in_array($mimeType, $allowedMimeTypes, true)) {
+            $errors[] = 'Type de fichier non autorise.';
         }
 
         return $errors;

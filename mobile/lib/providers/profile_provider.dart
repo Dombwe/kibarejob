@@ -13,10 +13,16 @@ class ProfileNotifier extends AsyncNotifier<CandidateProfileModel?> {
   Future<CandidateProfileModel?> build() async {
     final storage = ref.watch(storageServiceProvider);
     final cached = storage.cachedProfile;
-    if (cached != null) {
+
+    try {
+      return await fetchProfile();
+    } catch (_) {
+      if (cached == null) {
+        rethrow;
+      }
+
       return CandidateProfileModel.fromJson(cached);
     }
-    return fetchProfile();
   }
 
   Future<CandidateProfileModel?> fetchProfile() async {
@@ -31,13 +37,18 @@ class ProfileNotifier extends AsyncNotifier<CandidateProfileModel?> {
   }
 
   Future<void> updateProfile(Map<String, dynamic> payload) async {
-    state = const AsyncValue.loading();
-    state = await AsyncValue.guard(() async {
+    final previous = state.valueOrNull;
+    try {
       final api = ref.read(apiServiceProvider);
       final data = await api.putJson('/api/profile', data: payload);
       final profileJson = data['profile'] as Map<String, dynamic>;
       await ref.read(storageServiceProvider).saveProfile(profileJson);
-      return CandidateProfileModel.fromJson(profileJson);
-    });
+      state = AsyncValue.data(CandidateProfileModel.fromJson(profileJson));
+    } catch (error, stackTrace) {
+      state = previous == null
+          ? AsyncValue.error(error, stackTrace)
+          : AsyncValue.data(previous);
+      rethrow;
+    }
   }
 }

@@ -25,8 +25,9 @@ class DocumentsScreen extends ConsumerWidget {
         error: (error, _) => Center(child: Text(error.toString())),
         data: (documents) {
           if (documents.isEmpty) {
-            return const Center(child: Text('Aucun document ajoute'));
+            return const Center(child: Text('Aucun document ajouté'));
           }
+
           return RefreshIndicator(
             onRefresh: () =>
                 ref.read(documentProvider.notifier).fetchDocuments(),
@@ -35,11 +36,43 @@ class DocumentsScreen extends ConsumerWidget {
               itemCount: documents.length,
               itemBuilder: (context, index) {
                 final document = documents[index];
+
                 return DocumentCard(
                   document: document,
-                  onDelete: () => ref
-                      .read(documentProvider.notifier)
-                      .deleteDocument(document.id),
+                  onOpen: () => context.push(
+                    '/documents/${document.id}',
+                    extra: document,
+                  ),
+                  onDelete: () async {
+                    final confirmed = await showDialog<bool>(
+                          context: context,
+                          builder: (context) => AlertDialog(
+                            title: const Text('Supprimer le document ?'),
+                            content: Text(
+                              'Voulez-vous vraiment supprimer "${document.title}" ?',
+                            ),
+                            actions: [
+                              TextButton(
+                                onPressed: () => Navigator.pop(context, false),
+                                child: const Text('Annuler'),
+                              ),
+                              FilledButton(
+                                onPressed: () => Navigator.pop(context, true),
+                                child: const Text('Supprimer'),
+                              ),
+                            ],
+                          ),
+                        ) ??
+                        false;
+
+                    if (!confirmed) {
+                      return;
+                    }
+
+                    await ref
+                        .read(documentProvider.notifier)
+                        .deleteDocument(document.id);
+                  },
                 );
               },
             ),

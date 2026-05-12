@@ -4,6 +4,7 @@ namespace App\Controller\Api;
 
 use App\Entity\CandidateProfile;
 use App\Entity\User;
+use App\Service\CandidateProfileCompletionService;
 use App\Service\FileUploadService;
 use App\Service\ValidationService;
 use Doctrine\ORM\EntityManagerInterface;
@@ -19,6 +20,7 @@ class ProfileController extends AbstractController
         private readonly EntityManagerInterface $entityManager,
         private readonly FileUploadService $fileUploadService,
         private readonly ValidationService $validationService,
+        private readonly CandidateProfileCompletionService $completionService,
     ) {
     }
 
@@ -49,7 +51,7 @@ class ProfileController extends AbstractController
         $payload = $this->jsonPayload($request);
         $this->hydrateProfile($profile, $payload);
         $user->setUpdatedAt(new \DateTimeImmutable());
-        $user->setProfileCompletedPercent($this->calculateCompletion($profile));
+        $this->completionService->refresh($profile);
 
         $errors = $this->validationService->validateEntity($profile);
         if ([] !== $errors) {
@@ -83,6 +85,7 @@ class ProfileController extends AbstractController
             ->setCvOriginalUrl($upload['url'])
             ->setCvLastUpdated(new \DateTimeImmutable());
         $user->setUpdatedAt(new \DateTimeImmutable());
+        $this->completionService->refresh($profile);
 
         $this->entityManager->flush();
 
@@ -129,10 +132,10 @@ class ProfileController extends AbstractController
             $profile->setCity((string) $payload['city']);
         }
         if (array_key_exists('educationLevel', $payload) || array_key_exists('education_level', $payload)) {
-            $profile->setEducationLevel((string) ($payload['educationLevel'] ?? $payload['education_level']));
+            $profile->setEducationLevel((string) ($payload['educationLevel'] ?? ($payload['education_level'] ?? '')));
         }
         if (array_key_exists('educationField', $payload) || array_key_exists('education_field', $payload)) {
-            $profile->setEducationField($this->nullableString($payload['educationField'] ?? $payload['education_field']));
+            $profile->setEducationField($this->nullableString($payload['educationField'] ?? ($payload['education_field'] ?? null)));
         }
         if (array_key_exists('skills', $payload) && is_array($payload['skills'])) {
             $profile->setSkills($payload['skills']);
@@ -140,21 +143,30 @@ class ProfileController extends AbstractController
         if (array_key_exists('languages', $payload) && is_array($payload['languages'])) {
             $profile->setLanguages($payload['languages']);
         }
+        if (array_key_exists('experiences', $payload) && is_array($payload['experiences'])) {
+            $profile->setExperiences($this->stringList($payload['experiences']));
+        }
+        if (array_key_exists('interests', $payload) && is_array($payload['interests'])) {
+            $profile->setInterests($this->stringList($payload['interests']));
+        }
+        if (array_key_exists('references', $payload) && is_array($payload['references'])) {
+            $profile->setReferences($this->stringList($payload['references']));
+        }
         if (array_key_exists('drivingLicense', $payload) || array_key_exists('driving_license', $payload)) {
-            $profile->setDrivingLicense((bool) ($payload['drivingLicense'] ?? $payload['driving_license']));
+            $profile->setDrivingLicense((bool) ($payload['drivingLicense'] ?? ($payload['driving_license'] ?? false)));
         }
         if (array_key_exists('drivingLicenseCategory', $payload) || array_key_exists('driving_license_category', $payload)) {
-            $profile->setDrivingLicenseCategory($this->nullableString($payload['drivingLicenseCategory'] ?? $payload['driving_license_category']));
+            $profile->setDrivingLicenseCategory($this->nullableString($payload['drivingLicenseCategory'] ?? ($payload['driving_license_category'] ?? null)));
         }
         if (array_key_exists('availability', $payload)) {
             $profile->setAvailability((string) $payload['availability']);
         }
         if (array_key_exists('salaryExpectation', $payload) || array_key_exists('salary_expectation', $payload)) {
-            $value = $payload['salaryExpectation'] ?? $payload['salary_expectation'];
+            $value = $payload['salaryExpectation'] ?? ($payload['salary_expectation'] ?? null);
             $profile->setSalaryExpectation(null === $value || '' === $value ? null : (int) $value);
         }
         if (array_key_exists('birthDate', $payload) || array_key_exists('birth_date', $payload)) {
-            $value = $payload['birthDate'] ?? $payload['birth_date'];
+            $value = $payload['birthDate'] ?? ($payload['birth_date'] ?? null);
             $profile->setBirthDate($value ? new \DateTimeImmutable((string) $value) : null);
         }
     }
@@ -166,27 +178,13 @@ class ProfileController extends AbstractController
         return '' === $value ? null : $value;
     }
 
-    private function calculateCompletion(CandidateProfile $profile): int
+    /**
+     * @param array<int, mixed> $items
+     * @return string[]
+     */
+    private function stringList(array $items): array
     {
-        $fields = [
-            $profile->getFirstName(),
-            $profile->getLastName(),
-            $profile->getCity(),
-            $profile->getEducationLevel(),
-            $profile->getSkills(),
-            $profile->getLanguages(),
-            $profile->getAvailability(),
-            $profile->getCvOriginalUrl() ?? $profile->getCvGeneratedUrl(),
-        ];
-
-        $filled = 0;
-        foreach ($fields as $field) {
-            if ((is_array($field) && [] !== $field) || (!is_array($field) && null !== $field && '' !== $field)) {
-                ++$filled;
-            }
-        }
-
-        return (int) round(($filled / count($fields)) * 100);
+        return array_values(array_filter(array_map(static fn (mixed $item): string => trim((string) $item), $items)));
     }
 
     /**
@@ -205,6 +203,9 @@ class ProfileController extends AbstractController
             'educationField' => $profile->getEducationField(),
             'skills' => $profile->getSkills(),
             'languages' => $profile->getLanguages(),
+            'experiences' => $profile->getExperiences(),
+            'interests' => $profile->getInterests(),
+            'references' => $profile->getReferences(),
             'drivingLicense' => $profile->hasDrivingLicense(),
             'drivingLicenseCategory' => $profile->getDrivingLicenseCategory(),
             'availability' => $profile->getAvailability(),

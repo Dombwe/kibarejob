@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../models/document_model.dart';
 import 'auth_provider.dart';
+import 'profile_provider.dart';
 
 final documentProvider =
     AsyncNotifierProvider<DocumentNotifier, List<DocumentModel>>(
@@ -31,17 +32,23 @@ class DocumentNotifier extends AsyncNotifier<List<DocumentModel>> {
     String? description,
   }) async {
     state = const AsyncValue.loading();
-    state = await AsyncValue.guard(() async {
+    try {
       final api = ref.read(apiServiceProvider);
-      final formData = FormData.fromMap({
-        'file': await MultipartFile.fromFile(file.path),
-        'title': title,
-        'type': type,
-        'description': description,
-      });
-      await api.dio.post('/api/documents/upload', data: formData);
-      return fetchDocuments();
-    });
+      await api.postFormData(
+        '/api/documents/upload',
+        dataBuilder: () async => FormData.fromMap({
+          'file': await MultipartFile.fromFile(file.path),
+          'title': title,
+          'type': type,
+          'description': description,
+        }),
+      );
+      state = AsyncValue.data(await fetchDocuments());
+      ref.invalidate(profileProvider);
+    } catch (error, stackTrace) {
+      state = AsyncValue.error(error, stackTrace);
+      rethrow;
+    }
   }
 
   Future<void> deleteDocument(String id) async {

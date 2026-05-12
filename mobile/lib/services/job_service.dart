@@ -1,6 +1,37 @@
 import '../models/job_model.dart';
 import 'api_service.dart';
 
+class SwipeResult {
+  const SwipeResult({
+    required this.accepted,
+    this.swipeId,
+    this.direction,
+    this.queued = false,
+  });
+
+  final bool accepted;
+  final String? swipeId;
+  final String? direction;
+  final bool queued;
+}
+
+class ProfileCompletionRequiredException implements Exception {
+  const ProfileCompletionRequiredException({
+    required this.message,
+    this.missingProfileItems = const [],
+    this.missingDocuments = const [],
+    this.requiredDocuments = const [],
+  });
+
+  final String message;
+  final List<String> missingProfileItems;
+  final List<String> missingDocuments;
+  final List<String> requiredDocuments;
+
+  @override
+  String toString() => message;
+}
+
 class JobService {
   const JobService(this._api);
 
@@ -21,14 +52,46 @@ class JobService {
     );
   }
 
-  Future<void> swipe({
+  Future<SwipeResult> swipe({
     required String offerId,
     required String direction,
   }) async {
-    await _api.postJson(
-      '/api/jobs/$offerId/swipe',
-      data: {'direction': direction},
-    );
+    try {
+      final data = await _api.postJson(
+        '/api/jobs/$offerId/swipe',
+        data: {'direction': direction},
+      );
+
+      return SwipeResult(
+        accepted: data['accepted'] == true,
+        swipeId: data['swipeId']?.toString(),
+        direction: data['direction']?.toString(),
+        queued: data['queued'] == true,
+      );
+    } on ApiException catch (error) {
+      final data = error.data;
+      if (data?['code'] == 'profile_completion_required') {
+        throw ProfileCompletionRequiredException(
+          message: data?['message']?.toString() ?? error.message,
+          missingProfileItems: _stringList(data?['missingProfileItems']),
+          missingDocuments: _stringList(data?['missingDocuments']),
+          requiredDocuments: _stringList(data?['requiredDocuments']),
+        );
+      }
+
+      rethrow;
+    }
+  }
+
+  static List<String> _stringList(Object? value) {
+    if (value is! List) {
+      return const [];
+    }
+
+    return value
+        .map((item) => item.toString())
+        .where((item) => item.trim().isNotEmpty)
+        .toList();
   }
 }
 

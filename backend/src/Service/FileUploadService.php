@@ -32,6 +32,9 @@ class FileUploadService
         $extension = $file->guessExtension() ?: $file->getClientOriginalExtension() ?: 'bin';
         $fileName = sprintf('%s-%s.%s', $safeName ?: 'file', bin2hex(random_bytes(8)), $extension);
         $hash = hash_file('sha256', $file->getPathname());
+        $mimeType = $file->getMimeType();
+        $size = $file->getSize();
+        $clientOriginalName = $file->getClientOriginalName();
 
         $file->move($targetDirectory, $fileName);
 
@@ -41,9 +44,9 @@ class FileUploadService
             'path' => $this->storagePath . '/' . $relativePath,
             'url' => rtrim($this->storageBaseUrl, '/') . '/' . $relativePath,
             'hash' => $hash,
-            'originalName' => $file->getClientOriginalName(),
-            'mimeType' => $file->getMimeType(),
-            'size' => $file->getSize(),
+            'originalName' => $clientOriginalName,
+            'mimeType' => $mimeType,
+            'size' => $size,
         ];
     }
 }

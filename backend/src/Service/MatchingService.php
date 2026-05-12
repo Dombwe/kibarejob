@@ -104,7 +104,11 @@ class MatchingService
 
         $matches = 0;
         foreach ($requiredDocuments as $requiredDocument) {
-            $required = $this->normalize((string) $requiredDocument);
+            $required = $this->normalize($this->textFromMixed($requiredDocument));
+            if ('' === $required) {
+                continue;
+            }
+
             foreach ($availableText as $documentText) {
                 if (str_contains($documentText, $required) || str_contains($required, $documentText)) {
                     ++$matches;
@@ -114,6 +118,25 @@ class MatchingService
         }
 
         return (int) round(($matches / count($requiredDocuments)) * 100);
+    }
+
+    private function textFromMixed(mixed $value): string
+    {
+        if (is_string($value) || is_numeric($value)) {
+            return (string) $value;
+        }
+
+        if (is_array($value)) {
+            foreach (['name', 'label', 'title', 'type', 'document', 'documentType'] as $key) {
+                if (array_key_exists($key, $value) && (is_string($value[$key]) || is_numeric($value[$key]))) {
+                    return (string) $value[$key];
+                }
+            }
+
+            return implode(' ', array_map([$this, 'textFromMixed'], $value));
+        }
+
+        return '';
     }
 
     /**

@@ -8,7 +8,9 @@ use App\Entity\Enum\VerificationAction;
 use App\Entity\User;
 use App\Repository\CandidateDocumentRepository;
 use App\Service\ChunkedUploadService;
+use App\Service\CandidateProfileCompletionService;
 use App\Service\DocumentVerificationService;
+use App\Service\DocumentExtractorService;
 use App\Service\FileUploadService;
 use App\Service\SubscriptionService;
 use App\Service\ValidationService;
@@ -16,8 +18,10 @@ use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\File\File;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\ResponseHeaderBag;
 use Symfony\Component\Routing\Attribute\Route;
 
 #[Route('/api/documents')]
@@ -29,8 +33,10 @@ class DocumentController extends AbstractController
         private readonly FileUploadService $fileUploadService,
         private readonly ChunkedUploadService $chunkedUploadService,
         private readonly DocumentVerificationService $verificationService,
+        private readonly DocumentExtractorService $extractorService,
         private readonly SubscriptionService $subscriptionService,
         private readonly ValidationService $validationService,
+        private readonly CandidateProfileCompletionService $completionService,
         private readonly string $projectDir,
     ) {
     }
@@ -42,7 +48,7 @@ class DocumentController extends AbstractController
         $criteria = ['candidate' => $user, 'isDeleted' => false];
 
         if ($request->query->has('type')) {
-            $criteria['type'] = DocumentType::from((string) $request->query->get('type'));
+            $criteria['type'] = $this->documentTypeFromInput($request->query->get('type'));
         }
 
         $documents = $this->documentRepository->findBy($criteria, ['uploadedAt' => 'DESC']);
@@ -57,6 +63,7 @@ class DocumentController extends AbstractController
     {
         $user = $this->authenticatedUser();
         $file = $request->files->get('file') ?? $request->files->get('document');
+        $isCvUpload = $this->isCvTypeInput($request->request->get('type'));
 
         if (!$this->subscriptionService->canUploadDocument($user, $this->countActiveDocuments($user))) {
             return $this->json([
@@ -86,7 +93,10 @@ class DocumentController extends AbstractController
         }
 
         $this->entityManager->persist($document);
+        $this->syncCandidateCv($user, $document, $isCvUpload);
+        $this->enrichProfileFromCv($user, $document, $isCvUpload);
         $this->entityManager->flush();
+        $this->refreshCandidateProfileCompletion($user);
 
         return $this->json(['document' => $this->serializeDocument($document)], JsonResponse::HTTP_CREATED);
     }
@@ -99,6 +109,39 @@ class DocumentController extends AbstractController
         return $this->json(['document' => $this->serializeDocument($document)]);
     }
 
+    #[Route('/{id}/preview', name: 'api_documents_preview', methods: ['GET'])]
+    public function preview(string $id): JsonResponse
+    {
+        $document = $this->findOwnedDocument($id);
+        $absolutePath = $this->absolutePathFromUrl($document->getFileUrl());
+        $mimeType = is_file($absolutePath) ? (new File($absolutePath))->getMimeType() : null;
+        $extraction = $this->extractorService->extract($absolutePath, $mimeType);
+
+        return $this->json([
+            'document' => $this->serializeDocument($document),
+            'mimeType' => $mimeType,
+            'text' => $extraction['text'],
+            'method' => $extraction['method'],
+            'confidence' => $extraction['confidence'],
+        ]);
+    }
+
+    #[Route('/{id}/file', name: 'api_documents_file', methods: ['GET'])]
+    public function downloadFile(string $id): BinaryFileResponse
+    {
+        $document = $this->findOwnedDocument($id);
+        $absolutePath = $this->absolutePathFromUrl($document->getFileUrl());
+
+        if (!is_file($absolutePath) || !is_readable($absolutePath)) {
+            throw $this->createNotFoundException('Fichier introuvable.');
+        }
+
+        $response = new BinaryFileResponse($absolutePath);
+        $response->setContentDisposition(ResponseHeaderBag::DISPOSITION_INLINE, basename($absolutePath));
+
+        return $response;
+    }
+
     #[Route('/{id}', name: 'api_documents_update', methods: ['PUT'])]
     public function update(string $id, Request $request): JsonResponse
     {
@@ -106,7 +149,7 @@ class DocumentController extends AbstractController
         $payload = $this->jsonPayload($request);
 
         if (array_key_exists('type', $payload)) {
-            $document->setType(DocumentType::from((string) $payload['type']));
+            $document->setType($this->documentTypeFromInput($payload['type']));
         }
         if (array_key_exists('title', $payload)) {
             $document->setTitle((string) $payload['title']);
@@ -152,6 +195,7 @@ class DocumentController extends AbstractController
         $document = $this->findOwnedDocument($id);
         $document->setIsDeleted(true);
         $this->entityManager->flush();
+        $this->refreshCandidateProfileCompletion($document->getCandidate());
 
         return $this->json(null, JsonResponse::HTTP_NO_CONTENT);
     }
@@ -186,6 +230,8 @@ class DocumentController extends AbstractController
 
     private function handleChunkedUpload(Request $request, User $user, mixed $file): JsonResponse
     {
+        $isCvUpload = $this->isCvTypeInput($request->request->get('type'));
+
         if (!$file instanceof UploadedFile) {
             return $this->json(['errors' => ['file' => ['Chunk manquant.']]], JsonResponse::HTTP_UNPROCESSABLE_ENTITY);
         }
@@ -206,7 +252,10 @@ class DocumentController extends AbstractController
             ->setUploadedAt(new \DateTimeImmutable());
 
         $this->entityManager->persist($document);
+        $this->syncCandidateCv($user, $document, $isCvUpload);
+        $this->enrichProfileFromCv($user, $document, $isCvUpload);
         $this->entityManager->flush();
+        $this->refreshCandidateProfileCompletion($user);
 
         return $this->json([
             'upload' => $result,
@@ -236,7 +285,7 @@ class DocumentController extends AbstractController
 
         return (new CandidateDocument())
             ->setCandidate($user)
-            ->setType(DocumentType::from($type))
+            ->setType($this->documentTypeFromInput($type))
             ->setTitle((string) $request->request->get('title', 'Document'))
             ->setDescription($this->nullableString($request->request->get('description')))
             ->setIssuingOrganization($this->nullableString($request->request->get('issuingOrganization', $request->request->get('issuing_organization'))))
@@ -246,6 +295,247 @@ class DocumentController extends AbstractController
             ->setIsPublic(filter_var($request->request->get('isPublic', $request->request->get('is_public', true)), FILTER_VALIDATE_BOOL))
             ->setIsPinned(filter_var($request->request->get('isPinned', $request->request->get('is_pinned', false)), FILTER_VALIDATE_BOOL))
             ->setTags($this->jsonArray($request->request->get('tags')));
+    }
+
+    private function documentTypeFromInput(mixed $value): DocumentType
+    {
+        $type = strtolower(trim((string) $value));
+        $type = str_replace([' ', '-', '.'], '_', $type);
+
+        return match ($type) {
+            'cv', 'resume', 'curriculum_vitae',
+            'letter', 'lettre', 'lettre_motivation', 'motivation', 'motivation_letter' => DocumentType::Other,
+            'diplome', 'diploma', 'degree' => DocumentType::Diploma,
+            'certificat', 'certificate', 'certification' => DocumentType::Certificate,
+            'attestation', 'work_certificate', 'work_attestation' => DocumentType::Attestation,
+            default => DocumentType::tryFrom($type) ?? DocumentType::Other,
+        };
+    }
+
+    private function isCvTypeInput(mixed $value): bool
+    {
+        $type = strtolower(trim((string) $value));
+        $type = str_replace([' ', '-', '.'], '_', $type);
+
+        return in_array($type, ['cv', 'resume', 'curriculum_vitae'], true);
+    }
+
+    private function syncCandidateCv(User $user, CandidateDocument $document, bool $isCvUpload): void
+    {
+        if (!$isCvUpload) {
+            return;
+        }
+
+        $profile = $user->getCandidateProfile();
+        if (null === $profile) {
+            return;
+        }
+
+        $profile
+            ->setCvOriginalUrl($document->getFileUrl())
+            ->setCvLastUpdated(new \DateTimeImmutable());
+    }
+
+    private function enrichProfileFromCv(User $user, CandidateDocument $document, bool $isCvUpload): void
+    {
+        if (!$isCvUpload) {
+            return;
+        }
+
+        $profile = $user->getCandidateProfile();
+        if (null === $profile) {
+            return;
+        }
+
+        $absolutePath = $this->absolutePathFromUrl($document->getFileUrl());
+        $mimeType = is_file($absolutePath) ? (new File($absolutePath))->getMimeType() : null;
+        $result = $this->extractorService->extract($absolutePath, $mimeType);
+        $text = $result['text'];
+        if ('' === trim($text)) {
+            return;
+        }
+
+        if (null === $document->getDescription() || '' === trim($document->getDescription())) {
+            $document->setDescription(mb_substr($text, 0, 1800));
+        }
+
+        $skills = $this->mergeUnique($profile->getSkills(), $this->extractSkills($text));
+        if ([] !== $skills) {
+            $profile->setSkills($skills);
+        }
+
+        $languages = $this->mergeLanguageItems($profile->getLanguages(), $this->extractLanguages($text));
+        if ([] !== $languages) {
+            $profile->setLanguages($languages);
+        }
+
+        $experiences = $this->mergeUnique($profile->getExperiences(), $this->extractSectionItems($text, ['experience', 'experiences', 'experience professionnelle', 'expériences professionnelles']));
+        if ([] !== $experiences) {
+            $profile->setExperiences($experiences);
+        }
+
+        $interests = $this->mergeUnique($profile->getInterests(), $this->extractSectionItems($text, ['centres d interet', 'centres d’intérêt', 'loisirs', 'interets', 'intérêts']));
+        if ([] !== $interests) {
+            $profile->setInterests($interests);
+        }
+
+        $references = $this->mergeUnique($profile->getReferences(), $this->extractSectionItems($text, ['references', 'références', 'personnes de reference', 'personnes de référence']));
+        if ([] !== $references) {
+            $profile->setReferences($references);
+        }
+    }
+
+    /**
+     * @param string[] $current
+     * @param string[] $incoming
+     * @return string[]
+     */
+    private function mergeUnique(array $current, array $incoming): array
+    {
+        $items = [];
+        foreach (array_merge($current, $incoming) as $item) {
+            $label = trim((string) $item);
+            if ('' === $label) {
+                continue;
+            }
+
+            $items[mb_strtolower($label)] = mb_convert_case($label, MB_CASE_TITLE, 'UTF-8');
+        }
+
+        return array_values($items);
+    }
+
+    /**
+     * @param array<int, mixed> $current
+     * @param array<int, array{name: string, level: string}> $incoming
+     * @return array<int, array<string, string>>
+     */
+    private function mergeLanguageItems(array $current, array $incoming): array
+    {
+        $items = [];
+        foreach ($current as $language) {
+            if (is_array($language)) {
+                $name = trim((string) ($language['name'] ?? $language['language'] ?? ''));
+                if ('' !== $name) {
+                    $items[mb_strtolower($name)] = ['name' => mb_convert_case($name, MB_CASE_TITLE, 'UTF-8'), 'level' => (string) ($language['level'] ?? 'Intermediaire')];
+                }
+            }
+        }
+        foreach ($incoming as $language) {
+            $name = trim($language['name']);
+            if ('' !== $name) {
+                $items[mb_strtolower($name)] = $language;
+            }
+        }
+
+        return array_values($items);
+    }
+
+    /**
+     * @return string[]
+     */
+    private function extractSkills(string $text): array
+    {
+        $catalog = [
+            'Excel', 'Word', 'PowerPoint', 'Communication', 'Leadership', 'Gestion de projet',
+            'Comptabilite', 'Comptabilité', 'Marketing digital', 'Vente', 'Negociation', 'Négociation',
+            'Relation client', 'Analyse de donnees', 'Analyse de données', 'Python', 'PHP', 'JavaScript',
+            'React', 'Flutter', 'Dart', 'Laravel', 'Symfony', 'SQL', 'MySQL', 'PostgreSQL', 'Git',
+            'Gestion administrative', 'Ressources humaines', 'Logistique', 'Finance', 'Budget',
+        ];
+        $found = [];
+        $normalized = mb_strtolower($text);
+        foreach ($catalog as $skill) {
+            if (str_contains($normalized, mb_strtolower($skill))) {
+                $found[] = $skill;
+            }
+        }
+
+        return array_values(array_unique(array_merge($found, $this->extractSectionItems($text, ['competences', 'compétences', 'skills']))));
+    }
+
+    /**
+     * @return array<int, array{name: string, level: string}>
+     */
+    private function extractLanguages(string $text): array
+    {
+        $languages = ['francais' => 'Français', 'français' => 'Français', 'anglais' => 'Anglais', 'mooré' => 'Mooré', 'moore' => 'Mooré', 'dioula' => 'Dioula', 'fulfulde' => 'Fulfulde'];
+        $normalized = mb_strtolower($text);
+        $found = [];
+        foreach ($languages as $needle => $label) {
+            if (str_contains($normalized, $needle)) {
+                $found[mb_strtolower($label)] = ['name' => $label, 'level' => 'Intermediaire'];
+            }
+        }
+
+        return array_values($found);
+    }
+
+    /**
+     * @param string[] $headings
+     * @return string[]
+     */
+    private function extractSectionItems(string $text, array $headings): array
+    {
+        $lines = preg_split('/\R+/', $text) ?: [];
+        $items = [];
+        $capture = false;
+        $sectionHeadings = ['competences', 'compétences', 'skills', 'experience', 'experiences', 'expériences', 'formation', 'education', 'langues', 'languages', 'loisirs', 'interets', 'intérêts', 'references', 'références'];
+
+        foreach ($lines as $line) {
+            $clean = trim(preg_replace('/^[•\-\*\d\.\)\s]+/', '', $line) ?? $line);
+            $normalized = mb_strtolower(str_replace([':', '.', '-'], '', $clean));
+
+            if (in_array($normalized, $headings, true) || $this->lineContainsHeading($normalized, $headings)) {
+                $capture = true;
+                continue;
+            }
+
+            if ($capture && $this->lineContainsHeading($normalized, $sectionHeadings)) {
+                break;
+            }
+
+            if ($capture && '' !== $clean && mb_strlen($clean) <= 110) {
+                foreach (preg_split('/[,;|]/', $clean) ?: [] as $part) {
+                    $part = trim($part);
+                    if ('' !== $part && mb_strlen($part) >= 2 && mb_strlen($part) <= 80) {
+                        $items[] = $part;
+                    }
+                }
+            }
+
+            if (count($items) >= 12) {
+                break;
+            }
+        }
+
+        return array_values(array_unique($items));
+    }
+
+    /**
+     * @param string[] $headings
+     */
+    private function lineContainsHeading(string $line, array $headings): bool
+    {
+        foreach ($headings as $heading) {
+            if (str_contains($line, mb_strtolower($heading))) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private function refreshCandidateProfileCompletion(User $user): void
+    {
+        $profile = $user->getCandidateProfile();
+        if (null === $profile) {
+            return;
+        }
+
+        $this->completionService->refresh($profile);
+        $user->setUpdatedAt(new \DateTimeImmutable());
+        $this->entityManager->flush();
     }
 
     private function findOwnedDocument(string $id): CandidateDocument

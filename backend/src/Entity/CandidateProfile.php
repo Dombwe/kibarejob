@@ -51,6 +51,15 @@ class CandidateProfile
     #[ORM\Column(type: Types::JSON)]
     private array $languages = [];
 
+    #[ORM\Column(type: Types::JSON)]
+    private array $experiences = [];
+
+    #[ORM\Column(type: Types::JSON)]
+    private array $interests = [];
+
+    #[ORM\Column(name: 'profile_references', type: Types::JSON)]
+    private array $references = [];
+
     #[ORM\Column(options: ['default' => false])]
     private bool $drivingLicense = false;
 
@@ -96,6 +105,12 @@ class CandidateProfile
     public function setSkills(array $skills): self { $this->skills = $skills; return $this; }
     public function getLanguages(): array { return $this->languages; }
     public function setLanguages(array $languages): self { $this->languages = $languages; return $this; }
+    public function getExperiences(): array { return $this->experiences; }
+    public function setExperiences(array $experiences): self { $this->experiences = $experiences; return $this; }
+    public function getInterests(): array { return $this->interests; }
+    public function setInterests(array $interests): self { $this->interests = $interests; return $this; }
+    public function getReferences(): array { return $this->references; }
+    public function setReferences(array $references): self { $this->references = $references; return $this; }
     public function hasDrivingLicense(): bool { return $this->drivingLicense; }
     public function setDrivingLicense(bool $drivingLicense): self { $this->drivingLicense = $drivingLicense; return $this; }
     public function getDrivingLicenseCategory(): ?string { return $this->drivingLicenseCategory; }

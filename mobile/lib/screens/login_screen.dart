@@ -189,18 +189,18 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                   return null;
                                 },
                               ),
-                              Align(
-                                alignment: Alignment.centerRight,
-                                child: TextButton(
-                                  onPressed:
-                                      _isResending ? null : _resendVerification,
-                                  child: Text(
-                                    _isResending
-                                        ? 'Envoi en cours...'
-                                        : 'Renvoyer le lien de vérification',
-                                  ),
-                                ),
-                              ),
+                              // Align(
+                              //   alignment: Alignment.centerRight,
+                              //   child: TextButton(
+                              //     onPressed:
+                              //         _isResending ? null : _resendVerification,
+                              //     child: Text(
+                              //       _isResending
+                              //           ? 'Envoi en cours...'
+                              //           : 'Renvoyer le lien de vérification',
+                              //     ),
+                              //   ),
+                              // ),
                               if (authState.hasError) ...[
                                 const SizedBox(height: 8),
                                 _AuthNotice(

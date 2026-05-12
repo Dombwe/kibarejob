@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../models/job_model.dart';
+import '../services/api_service.dart';
 import '../services/job_service.dart';
 import '../services/matching_service.dart';
 import '../services/offline_service.dart';
@@ -54,17 +55,27 @@ class FeedNotifier extends AsyncNotifier<List<JobModel>> {
     return refresh();
   }
 
+  Future<void> retryOnline() async {
+    _offlineMode = false;
+    state = const AsyncValue.loading();
+    state = await AsyncValue.guard(refresh);
+  }
+
   Future<List<JobModel>> refresh() async {
     _cursor = 0;
     _hasMore = true;
+    _offlineMode = false;
     try {
       final result = await ref.read(jobServiceProvider).fetchFeed();
-      _offlineMode = false;
       _cursor = result.nextCursor ?? 0;
       _hasMore = result.hasMore;
       await ref.read(offlineServiceProvider).cacheJobs(result.jobs);
       return result.jobs;
-    } catch (_) {
+    } catch (error) {
+      if (!_shouldUseOfflineCache(error)) {
+        rethrow;
+      }
+
       final cachedJobs = ref.read(offlineServiceProvider).cachedJobs;
       if (cachedJobs.isEmpty) {
         rethrow;
@@ -77,7 +88,22 @@ class FeedNotifier extends AsyncNotifier<List<JobModel>> {
     }
   }
 
-  Future<void> swipe(JobModel job, String direction) async {
+  bool _shouldUseOfflineCache(Object error) {
+    if (error is ApiException) {
+      return error.statusCode == null;
+    }
+
+    final message = error.toString().toLowerCase();
+    return message.contains('connection') ||
+        message.contains('inaccessible') ||
+        message.contains('socket') ||
+        message.contains('timeout') ||
+        message.contains('network') ||
+        message.contains('reseau') ||
+        message.contains('réseau');
+  }
+
+  Future<SwipeResult> swipe(JobModel job, String direction) async {
     if (_offlineMode) {
       throw const OfflineSwipeException();
     }
@@ -88,17 +114,21 @@ class FeedNotifier extends AsyncNotifier<List<JobModel>> {
     );
 
     try {
-      await ref.read(jobServiceProvider).swipe(
+      final result = await ref.read(jobServiceProvider).swipe(
             offerId: job.id,
             direction: direction,
           );
+      if ((state.valueOrNull?.length ?? 0) <= 3 && _hasMore) {
+        await loadMore();
+      }
+
+      return result;
     } catch (error) {
       state = AsyncValue.data(currentJobs);
+      if (error is ProfileCompletionRequiredException) {
+        rethrow;
+      }
       throw Exception(_readableError(error));
-    }
-
-    if ((state.valueOrNull?.length ?? 0) <= 3 && _hasMore) {
-      await loadMore();
     }
   }
 

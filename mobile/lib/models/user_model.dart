@@ -48,6 +48,9 @@ class CandidateProfileModel {
     required this.educationLevel,
     required this.skills,
     required this.languages,
+    required this.experiences,
+    required this.interests,
+    required this.references,
     required this.availability,
     this.educationField,
     this.salaryExpectation,
@@ -64,6 +67,9 @@ class CandidateProfileModel {
   final String? educationField;
   final List<String> skills;
   final List<Map<String, dynamic>> languages;
+  final List<String> experiences;
+  final List<String> interests;
+  final List<String> references;
   final String availability;
   final int? salaryExpectation;
   final String? cvOriginalUrl;
@@ -79,6 +85,9 @@ class CandidateProfileModel {
       educationLevel: 'Aucun',
       skills: [],
       languages: [],
+      experiences: [],
+      interests: [],
+      references: [],
       availability: 'Immediate',
     );
   }
@@ -97,6 +106,15 @@ class CandidateProfileModel {
       languages: (json['languages'] as List<dynamic>? ?? const [])
           .whereType<Map>()
           .map((language) => Map<String, dynamic>.from(language))
+          .toList(),
+      experiences: (json['experiences'] as List<dynamic>? ?? const [])
+          .map((item) => item.toString())
+          .toList(),
+      interests: (json['interests'] as List<dynamic>? ?? const [])
+          .map((item) => item.toString())
+          .toList(),
+      references: (json['references'] as List<dynamic>? ?? const [])
+          .map((item) => item.toString())
           .toList(),
       availability: json['availability']?.toString() ?? 'Immediate',
       salaryExpectation:
@@ -117,6 +135,9 @@ class CandidateProfileModel {
         'educationField': educationField,
         'skills': skills,
         'languages': languages,
+        'experiences': experiences,
+        'interests': interests,
+        'references': references,
         'availability': availability,
         'salaryExpectation': salaryExpectation,
         'cvOriginalUrl': cvOriginalUrl,

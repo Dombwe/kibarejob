@@ -7,10 +7,12 @@ class DocumentCard extends StatelessWidget {
   const DocumentCard({
     super.key,
     required this.document,
+    this.onOpen,
     this.onDelete,
   });
 
   final DocumentModel document;
+  final VoidCallback? onOpen;
   final VoidCallback? onDelete;
 
   @override
@@ -32,10 +34,20 @@ class DocumentCard extends StatelessWidget {
         ),
         trailing: onDelete == null
             ? null
-            : IconButton(
-                tooltip: 'Supprimer',
-                icon: const Icon(Icons.delete_outline),
-                onPressed: onDelete,
+            : Wrap(
+                spacing: 2,
+                children: [
+                  IconButton(
+                    tooltip: 'Afficher',
+                    icon: const Icon(Icons.visibility_outlined),
+                    onPressed: onOpen,
+                  ),
+                  IconButton(
+                    tooltip: 'Supprimer',
+                    icon: const Icon(Icons.delete_outline),
+                    onPressed: onDelete,
+                  ),
+                ],
               ),
       ),
     );

@@ -1,11 +1,13 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../models/document_model.dart';
 import '../models/job_model.dart';
 import '../providers/auth_provider.dart';
 import '../models/swipe_model.dart';
 import '../screens/application_detail_screen.dart';
 import '../screens/document_upload_screen.dart';
+import '../screens/document_viewer_screen.dart';
 import '../screens/documents_screen.dart';
 import '../screens/job_detail_screen.dart';
 import '../screens/login_screen.dart';
@@ -60,6 +62,17 @@ final appRouter = GoRouter(
     GoRoute(
       path: '/documents/upload',
       builder: (context, state) => const DocumentUploadScreen(),
+    ),
+    GoRoute(
+      path: '/documents/:id',
+      builder: (context, state) {
+        final document = state.extra;
+        if (document is! DocumentModel) {
+          return const DocumentsScreen();
+        }
+
+        return DocumentViewerScreen(document: document);
+      },
     ),
     GoRoute(
       path: '/matches',

@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../models/job_model.dart';
 import '../providers/job_provider.dart';
+import '../services/job_service.dart';
 import '../theme/app_theme.dart';
 import '../theme/responsive.dart';
 import '../widgets/app_bottom_navigation.dart';
@@ -33,6 +34,7 @@ class SwipeScreen extends ConsumerWidget {
         data: (jobs) => _SwipeBody(
           jobs: jobs,
           isOffline: ref.read(feedProvider.notifier).isOfflineMode,
+          onRetryOnline: () => ref.read(feedProvider.notifier).retryOnline(),
           onSwipe: (job, direction) => _swipe(context, ref, job, direction),
           onOpenDetails: (job) => context.push('/jobs/${job.id}', extra: job),
         ),
@@ -52,13 +54,15 @@ class SwipeScreen extends ConsumerWidget {
       return;
     }
 
-    final swipeFuture = notifier.swipe(job, direction);
-    if (context.mounted && direction == 'like') {
-      await _showApplicationSentDialog(context, job);
-    }
-
     try {
-      await swipeFuture;
+      final result = await notifier.swipe(job, direction);
+      if (context.mounted && direction == 'like' && result.accepted) {
+        await _showApplicationSentDialog(context, job);
+      }
+    } on ProfileCompletionRequiredException catch (error) {
+      if (context.mounted) {
+        await _showProfileCompletionDialog(context, error);
+      }
     } catch (error) {
       if (context.mounted) {
         ScaffoldMessenger.of(context)
@@ -69,16 +73,111 @@ class SwipeScreen extends ConsumerWidget {
   }
 }
 
+Future<void> _showProfileCompletionDialog(
+  BuildContext context,
+  ProfileCompletionRequiredException error,
+) {
+  final missingProfile = error.missingProfileItems;
+  final missingDocuments = error.missingDocuments;
+
+  return showDialog<void>(
+    context: context,
+    barrierDismissible: true,
+    builder: (context) {
+      return AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        icon: const Icon(Icons.assignment_ind_outlined),
+        title: const Text('Profil à compléter'),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                error.message,
+                style: Theme.of(context).textTheme.bodyMedium,
+              ),
+              if (missingProfile.isNotEmpty) ...[
+                const SizedBox(height: 14),
+                Text(
+                  'Informations manquantes',
+                  style: Theme.of(context).textTheme.titleSmall,
+                ),
+                const SizedBox(height: 6),
+                ...missingProfile.map((item) => _MissingItem(label: item)),
+              ],
+              if (missingDocuments.isNotEmpty) ...[
+                const SizedBox(height: 14),
+                Text(
+                  'Documents à ajouter',
+                  style: Theme.of(context).textTheme.titleSmall,
+                ),
+                const SizedBox(height: 6),
+                ...missingDocuments.map((item) => _MissingItem(label: item)),
+              ],
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Plus tard'),
+          ),
+          FilledButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+              context.push(
+                missingDocuments.isNotEmpty ? '/documents' : '/profile',
+              );
+            },
+            child: Text(
+              missingDocuments.isNotEmpty
+                  ? 'Ajouter les documents'
+                  : 'Compléter mon profil',
+            ),
+          ),
+        ],
+      );
+    },
+  );
+}
+
+class _MissingItem extends StatelessWidget {
+  const _MissingItem({required this.label});
+
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 5),
+      child: Row(
+        children: [
+          Icon(
+            Icons.check_circle_outline,
+            size: 17,
+            color: Theme.of(context).colorScheme.primary,
+          ),
+          const SizedBox(width: 7),
+          Expanded(child: Text(label)),
+        ],
+      ),
+    );
+  }
+}
+
 class _SwipeBody extends StatelessWidget {
   const _SwipeBody({
     required this.jobs,
     required this.isOffline,
+    required this.onRetryOnline,
     required this.onSwipe,
     required this.onOpenDetails,
   });
 
   final List<JobModel> jobs;
   final bool isOffline;
+  final VoidCallback onRetryOnline;
   final Future<void> Function(JobModel job, String direction) onSwipe;
   final void Function(JobModel job) onOpenDetails;
 
@@ -124,6 +223,11 @@ class _SwipeBody extends StatelessWidget {
                         'Mode hors connexion : vous pouvez consulter les offres sauvegardées, mais pas swiper.',
                         style: Theme.of(context).textTheme.bodyMedium,
                       ),
+                    ),
+                    const SizedBox(width: 8),
+                    TextButton(
+                      onPressed: onRetryOnline,
+                      child: const Text('Revenir en ligne'),
                     ),
                   ],
                 ),
@@ -276,7 +380,11 @@ class _ErrorState extends StatelessWidget {
             ),
             const SizedBox(height: 18),
             Text(
-              'Chargement impossible',
+              message.toLowerCase().contains('inaccessible') ||
+                      message.toLowerCase().contains('connexion') ||
+                      message.toLowerCase().contains('network')
+                  ? 'Connexion au backend impossible'
+                  : 'Erreur de chargement',
               style: Theme.of(context).textTheme.headlineSmall,
               textAlign: TextAlign.center,
             ),
@@ -289,7 +397,7 @@ class _ErrorState extends StatelessWidget {
             const SizedBox(height: 20),
             FilledButton(
               onPressed: onRetry,
-              child: const Text('Reessayer'),
+              child: const Text('Réessayer'),
             ),
           ],
         ),

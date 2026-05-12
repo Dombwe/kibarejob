@@ -9,6 +9,7 @@ use App\Entity\JobOffer;
 use App\Entity\Swipe;
 use App\Entity\User;
 use App\Message\GenerateApplicationJob;
+use App\Repository\CandidateDocumentRepository;
 use App\Repository\JobOfferRepository;
 use App\Repository\SwipeRepository;
 use App\Service\CacheService;
@@ -28,6 +29,7 @@ class SwipeController extends AbstractController
     public function __construct(
         private readonly JobOfferRepository $offerRepository,
         private readonly SwipeRepository $swipeRepository,
+        private readonly CandidateDocumentRepository $documentRepository,
         private readonly EntityManagerInterface $entityManager,
         private readonly MessageBusInterface $messageBus,
         private readonly SubscriptionService $subscriptionService,
@@ -63,6 +65,20 @@ class SwipeController extends AbstractController
 
         if ($direction === SwipeDirection::Superlike && !$this->subscriptionService->canSuperSwipe($user)) {
             return $this->json(['error' => 'Le super swipe est réservé au plan Premium.'], JsonResponse::HTTP_FORBIDDEN);
+        }
+
+        if ($direction !== SwipeDirection::Dislike) {
+            $readiness = $this->applicationReadiness($candidateProfile, $offer);
+            if (!$readiness['ready']) {
+                return $this->json([
+                    'code' => 'profile_completion_required',
+                    'message' => 'Votre profil doit etre complete avant de postuler a cette offre.',
+                    'missingProfileItems' => $readiness['missingProfileItems'],
+                    'missingDocuments' => $readiness['missingDocuments'],
+                    'requiredDocuments' => $this->documentLabels($offer->getRequiredDocuments() ?? []),
+                    'canCreateCv' => true,
+                ], JsonResponse::HTTP_UNPROCESSABLE_ENTITY);
+            }
         }
 
         if ($this->swipeRepository->findOneBy(['candidate' => $user, 'offer' => $offer, 'isDeleted' => false]) instanceof Swipe) {
@@ -115,6 +131,145 @@ class SwipeController extends AbstractController
         }
 
         return $user;
+    }
+
+    /**
+     * @return array{ready: bool, missingProfileItems: string[], missingDocuments: string[]}
+     */
+    private function applicationReadiness(CandidateProfile $profile, JobOffer $offer): array
+    {
+        $missingProfileItems = [];
+
+        if ('' === trim($profile->getFirstName()) || '' === trim($profile->getLastName())) {
+            $missingProfileItems[] = 'Nom et prenom';
+        }
+
+        if ('' === trim($profile->getCity())) {
+            $missingProfileItems[] = 'Ville de residence';
+        }
+
+        if ('' === trim($profile->getEducationLevel())) {
+            $missingProfileItems[] = 'Niveau d etudes';
+        }
+
+        if ([] === array_filter($profile->getSkills(), static fn (mixed $skill): bool => '' !== trim((string) $skill))) {
+            $missingProfileItems[] = 'Competences';
+        }
+
+        if ([] === $profile->getLanguages()) {
+            $missingProfileItems[] = 'Langues parlees';
+        }
+
+        if ('' === trim($profile->getAvailability())) {
+            $missingProfileItems[] = 'Disponibilite';
+        }
+
+        if (null === $profile->getCvOriginalUrl() && null === $profile->getCvGeneratedUrl()) {
+            $missingProfileItems[] = 'CV original ou CV guide';
+        }
+
+        $missingDocuments = [];
+        $availableDocuments = $this->candidateDocumentHaystacks($profile->getUser());
+
+        foreach ($this->documentLabels($offer->getRequiredDocuments() ?? []) as $requiredDocument) {
+            $normalized = $this->normalizeDocumentLabel($requiredDocument);
+
+            if ($this->isCvDocument($normalized)) {
+                if (null === $profile->getCvOriginalUrl() && null === $profile->getCvGeneratedUrl()) {
+                    $missingDocuments[] = 'CV';
+                }
+                continue;
+            }
+
+            if ($this->isGeneratedDocument($normalized)) {
+                continue;
+            }
+
+            if (!$this->hasMatchingDocument($normalized, $availableDocuments)) {
+                $missingDocuments[] = $requiredDocument;
+            }
+        }
+
+        return [
+            'ready' => [] === $missingProfileItems && [] === $missingDocuments,
+            'missingProfileItems' => array_values(array_unique($missingProfileItems)),
+            'missingDocuments' => array_values(array_unique($missingDocuments)),
+        ];
+    }
+
+    /**
+     * @return string[]
+     */
+    private function documentLabels(array $documents): array
+    {
+        return array_values(array_filter(array_map(
+            static function (mixed $document): string {
+                if (is_array($document)) {
+                    return trim((string) ($document['label'] ?? $document['name'] ?? $document['title'] ?? ''));
+                }
+
+                return trim((string) $document);
+            },
+            $documents,
+        ), static fn (string $label): bool => '' !== $label));
+    }
+
+    /**
+     * @return string[]
+     */
+    private function candidateDocumentHaystacks(User $candidate): array
+    {
+        $documents = $this->documentRepository->findBy([
+            'candidate' => $candidate,
+            'isDeleted' => false,
+            'isPublic' => true,
+        ]);
+
+        return array_map(
+            fn ($document): string => $this->normalizeDocumentLabel(
+                $document->getTitle() . ' ' . (string) $document->getDescription() . ' ' . $document->getType()->value . ' ' . implode(' ', $document->getTags() ?? []),
+            ),
+            $documents,
+        );
+    }
+
+    /**
+     * @param string[] $availableDocuments
+     */
+    private function hasMatchingDocument(string $requiredDocument, array $availableDocuments): bool
+    {
+        foreach ($availableDocuments as $availableDocument) {
+            if (str_contains($availableDocument, $requiredDocument) || str_contains($requiredDocument, $availableDocument)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private function normalizeDocumentLabel(string $label): string
+    {
+        $normalized = mb_strtolower($label);
+        $normalized = strtr($normalized, [
+            'é' => 'e', 'è' => 'e', 'ê' => 'e', 'ë' => 'e',
+            'à' => 'a', 'â' => 'a', 'ä' => 'a',
+            'î' => 'i', 'ï' => 'i',
+            'ô' => 'o', 'ö' => 'o',
+            'ù' => 'u', 'û' => 'u', 'ü' => 'u',
+            'ç' => 'c',
+        ]);
+
+        return trim((string) preg_replace('/[^a-z0-9]+/', ' ', $normalized));
+    }
+
+    private function isCvDocument(string $normalized): bool
+    {
+        return 'cv' === $normalized || str_contains($normalized, 'curriculum');
+    }
+
+    private function isGeneratedDocument(string $normalized): bool
+    {
+        return str_contains($normalized, 'lettre') || str_contains($normalized, 'motivation');
     }
 
     /**

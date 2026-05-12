@@ -32,8 +32,8 @@ class ApplicationSetting
 
     #[Assert\NotBlank]
     #[Assert\Url]
-    #[ORM\Column(length: 255, options: ['default' => 'https://127.0.0.1:8000'])]
-    private string $localBaseUrl = 'https://127.0.0.1:8000';
+    #[ORM\Column(length: 255, options: ['default' => 'http://127.0.0.1:8000'])]
+    private string $localBaseUrl = 'http://127.0.0.1:8000';
 
     #[Assert\Url]
     #[ORM\Column(length: 255, nullable: true)]
