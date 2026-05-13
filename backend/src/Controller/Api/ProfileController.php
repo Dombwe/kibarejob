@@ -5,7 +5,9 @@ namespace App\Controller\Api;
 use App\Entity\CandidateProfile;
 use App\Entity\User;
 use App\Service\CandidateProfileCompletionService;
+use App\Service\CacheService;
 use App\Service\FileUploadService;
+use App\Service\ScoreCacheService;
 use App\Service\ValidationService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -21,6 +23,8 @@ class ProfileController extends AbstractController
         private readonly FileUploadService $fileUploadService,
         private readonly ValidationService $validationService,
         private readonly CandidateProfileCompletionService $completionService,
+        private readonly ScoreCacheService $scoreCacheService,
+        private readonly CacheService $cacheService,
     ) {
     }
 
@@ -52,6 +56,8 @@ class ProfileController extends AbstractController
         $this->hydrateProfile($profile, $payload);
         $user->setUpdatedAt(new \DateTimeImmutable());
         $this->completionService->refresh($profile);
+        $this->scoreCacheService->invalidateCandidate($profile);
+        $this->cacheService->invalidateFeed((string) $user->getId());
 
         $errors = $this->validationService->validateEntity($profile);
         if ([] !== $errors) {

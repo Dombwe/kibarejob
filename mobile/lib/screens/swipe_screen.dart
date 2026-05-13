@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../models/job_model.dart';
+import '../providers/auth_provider.dart';
 import '../providers/job_provider.dart';
 import '../services/job_service.dart';
 import '../theme/app_theme.dart';
@@ -30,11 +31,13 @@ class SwipeScreen extends ConsumerWidget {
         error: (error, _) => _ErrorState(
           message: error.toString(),
           onRetry: () => ref.invalidate(feedProvider),
+          onConfigureServer: () => _configureServer(context, ref),
         ),
         data: (jobs) => _SwipeBody(
           jobs: jobs,
           isOffline: ref.read(feedProvider.notifier).isOfflineMode,
           onRetryOnline: () => ref.read(feedProvider.notifier).retryOnline(),
+          onConfigureServer: () => _configureServer(context, ref),
           onSwipe: (job, direction) => _swipe(context, ref, job, direction),
           onOpenDetails: (job) => context.push('/jobs/${job.id}', extra: job),
         ),
@@ -54,23 +57,133 @@ class SwipeScreen extends ConsumerWidget {
       return;
     }
 
+    if (direction == 'like') {
+      _showBlockingLoader(context, 'Envoi de votre candidature...');
+    }
+
     try {
       final result = await notifier.swipe(job, direction);
+      if (context.mounted && direction == 'like') {
+        Navigator.of(context, rootNavigator: true).pop();
+      }
       if (context.mounted && direction == 'like' && result.accepted) {
-        await _showApplicationSentDialog(context, job);
+        await _showApplicationSentDialog(context, job, result);
       }
     } on ProfileCompletionRequiredException catch (error) {
+      if (context.mounted && direction == 'like') {
+        Navigator.of(context, rootNavigator: true).pop();
+      }
       if (context.mounted) {
         await _showProfileCompletionDialog(context, error);
       }
     } catch (error) {
+      if (context.mounted && direction == 'like') {
+        Navigator.of(context, rootNavigator: true).pop();
+      }
       if (context.mounted) {
-        ScaffoldMessenger.of(context)
-          ..hideCurrentSnackBar()
-          ..showSnackBar(SnackBar(content: Text(error.toString())));
+        if (direction == 'like') {
+          await _showApplicationErrorDialog(context, error.toString());
+        } else {
+          ScaffoldMessenger.of(context)
+            ..hideCurrentSnackBar()
+            ..showSnackBar(SnackBar(content: Text(error.toString())));
+        }
       }
     }
   }
+
+  Future<void> _configureServer(BuildContext context, WidgetRef ref) async {
+    final storage = ref.read(storageServiceProvider);
+    final controller = TextEditingController(
+      text: storage.apiBaseUrl ?? 'https://192.168.11.100:8000',
+    );
+
+    final value = await showDialog<String>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Adresse du backend'),
+        content: TextField(
+          controller: controller,
+          keyboardType: TextInputType.url,
+          decoration: const InputDecoration(
+            labelText: 'URL serveur',
+            hintText: 'https://192.168.11.100:8000',
+            prefixIcon: Icon(Icons.dns_outlined),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Annuler'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, controller.text.trim()),
+            child: const Text('Enregistrer'),
+          ),
+        ],
+      ),
+    );
+
+    controller.dispose();
+
+    if (value == null || value.isEmpty) {
+      return;
+    }
+
+    await storage.saveApiBaseUrl(value.replaceAll(RegExp(r'/+$'), ''));
+    ref.invalidate(feedProvider);
+  }
+}
+
+Future<void> _showApplicationErrorDialog(
+  BuildContext context,
+  String message,
+) {
+  return showDialog<void>(
+    context: context,
+    builder: (context) => AlertDialog(
+      icon: Icon(
+        Icons.error_outline_rounded,
+        color: Theme.of(context).colorScheme.error,
+      ),
+      title: const Text('Candidature non envoyée'),
+      content: Text(message.replaceFirst('Exception: ', '')),
+      actions: [
+        FilledButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text('Compris'),
+        ),
+      ],
+    ),
+  );
+}
+
+void _showBlockingLoader(BuildContext context, String message) {
+  showDialog<void>(
+    context: context,
+    barrierDismissible: false,
+    builder: (context) => PopScope(
+      canPop: false,
+      child: Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const CircularProgressIndicator(),
+              const SizedBox(height: 18),
+              Text(
+                message,
+                textAlign: TextAlign.center,
+                style: Theme.of(context).textTheme.bodyLarge,
+              ),
+            ],
+          ),
+        ),
+      ),
+    ),
+  );
 }
 
 Future<void> _showProfileCompletionDialog(
@@ -171,6 +284,7 @@ class _SwipeBody extends StatelessWidget {
     required this.jobs,
     required this.isOffline,
     required this.onRetryOnline,
+    required this.onConfigureServer,
     required this.onSwipe,
     required this.onOpenDetails,
   });
@@ -178,6 +292,7 @@ class _SwipeBody extends StatelessWidget {
   final List<JobModel> jobs;
   final bool isOffline;
   final VoidCallback onRetryOnline;
+  final VoidCallback onConfigureServer;
   final Future<void> Function(JobModel job, String direction) onSwipe;
   final void Function(JobModel job) onOpenDetails;
 
@@ -229,6 +344,11 @@ class _SwipeBody extends StatelessWidget {
                       onPressed: onRetryOnline,
                       child: const Text('Revenir en ligne'),
                     ),
+                    IconButton(
+                      tooltip: 'Configurer le serveur',
+                      onPressed: onConfigureServer,
+                      icon: const Icon(Icons.dns_outlined),
+                    ),
                   ],
                 ),
               ),
@@ -270,7 +390,11 @@ void _showOfflineSwipeMessage(BuildContext context) {
     );
 }
 
-Future<void> _showApplicationSentDialog(BuildContext context, JobModel job) {
+Future<void> _showApplicationSentDialog(
+  BuildContext context,
+  JobModel job,
+  SwipeResult result,
+) {
   return showDialog<void>(
     context: context,
     barrierDismissible: true,
@@ -286,23 +410,29 @@ Future<void> _showApplicationSentDialog(BuildContext context, JobModel job) {
               Container(
                 width: 100,
                 height: 100,
-                decoration: const BoxDecoration(
+                decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   gradient: LinearGradient(
-                    colors: [Color(0xFFB8C7B4), Color(0xFF2F6F5E)],
+                    colors: result.emailSent
+                        ? const [Color(0xFFB8C7B4), Color(0xFF2F6F5E)]
+                        : const [Color(0xFFFDE68A), Color(0xFFB45309)],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                   ),
                 ),
-                child: const Icon(
-                  Icons.favorite_border_rounded,
+                child: Icon(
+                  result.emailSent
+                      ? Icons.mark_email_read_outlined
+                      : Icons.mark_email_unread_outlined,
                   color: Colors.white,
                   size: 50,
                 ),
               ),
               const SizedBox(height: 24),
               Text(
-                'Candidature envoyée !',
+                result.emailSent
+                    ? 'Candidature envoyée !'
+                    : 'Candidature non envoyée',
                 textAlign: TextAlign.center,
                 style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                       fontWeight: FontWeight.w900,
@@ -310,13 +440,17 @@ Future<void> _showApplicationSentDialog(BuildContext context, JobModel job) {
               ),
               const SizedBox(height: 12),
               Text(
-                'Votre profil et vos documents ont été préparés et envoyés à :',
+                result.emailSent
+                    ? 'L’email de candidature a bien été transmis. Une copie a été envoyée à votre adresse mail et la preuve d’envoi est disponible dans l’onglet Candidatures.'
+                    : (result.hasEmailError
+                        ? result.emailError!
+                        : 'Votre candidature est enregistrée, mais l’email n’a pas été confirmé. Vous pourrez la renvoyer depuis l’onglet Candidatures.'),
                 textAlign: TextAlign.center,
                 style: Theme.of(context).textTheme.bodyLarge,
               ),
               const SizedBox(height: 12),
               Text(
-                job.companyName ?? 'Entreprise',
+                result.emailRecipient ?? job.companyName ?? 'Entreprise',
                 textAlign: TextAlign.center,
                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
                       color: const Color(0xFF2F6F5E),
@@ -333,11 +467,20 @@ Future<void> _showApplicationSentDialog(BuildContext context, JobModel job) {
               SizedBox(
                 width: double.infinity,
                 child: FilledButton(
-                  onPressed: () => Navigator.of(context).pop(),
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                    if (!result.emailSent) {
+                      context.push('/matches');
+                    }
+                  },
                   style: FilledButton.styleFrom(
                     backgroundColor: const Color(0xFF2F6F5E),
                   ),
-                  child: const Text('Continuer à swiper'),
+                  child: Text(
+                    result.emailSent
+                        ? 'Continuer à swiper'
+                        : 'Voir mes candidatures',
+                  ),
                 ),
               ),
             ],
@@ -352,10 +495,12 @@ class _ErrorState extends StatelessWidget {
   const _ErrorState({
     required this.message,
     required this.onRetry,
+    required this.onConfigureServer,
   });
 
   final String message;
   final VoidCallback onRetry;
+  final VoidCallback onConfigureServer;
 
   @override
   Widget build(BuildContext context) {
@@ -395,9 +540,21 @@ class _ErrorState extends StatelessWidget {
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 20),
-            FilledButton(
-              onPressed: onRetry,
-              child: const Text('Réessayer'),
+            Wrap(
+              alignment: WrapAlignment.center,
+              spacing: 10,
+              runSpacing: 10,
+              children: [
+                OutlinedButton.icon(
+                  onPressed: onConfigureServer,
+                  icon: const Icon(Icons.dns_outlined),
+                  label: const Text('Configurer'),
+                ),
+                FilledButton(
+                  onPressed: onRetry,
+                  child: const Text('Réessayer'),
+                ),
+              ],
             ),
           ],
         ),

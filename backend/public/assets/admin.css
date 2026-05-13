@@ -37,6 +37,16 @@ body.ea .content-body {
     border-color: rgba(226, 232, 240, .9);
 }
 
+.kj-admin-logo {
+    display: block;
+    width: auto;
+    height: 44px;
+    max-width: 190px;
+    border-radius: 16px;
+    object-fit: contain;
+    box-shadow: 0 10px 24px rgba(38, 56, 73, .14);
+}
+
 .ea-sidebar .main-header #header-logo a,
 .sidebar .main-header #header-logo a,
 .responsive-logo,

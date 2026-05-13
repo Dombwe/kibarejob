@@ -25,6 +25,18 @@ class HomeController extends AbstractController
         return $this->render('home/faq.html.twig');
     }
 
+    #[Route('/confidentialite', name: 'privacy_policy', methods: ['GET'])]
+    public function privacy(): Response
+    {
+        return $this->render('home/privacy.html.twig');
+    }
+
+    #[Route('/conditions-utilisation', name: 'terms_of_use', methods: ['GET'])]
+    public function terms(): Response
+    {
+        return $this->render('home/terms.html.twig');
+    }
+
     #[Route('/contact', name: 'contact', methods: ['GET', 'POST'])]
     public function contact(Request $request, ContactEmailService $contactEmail): Response
     {

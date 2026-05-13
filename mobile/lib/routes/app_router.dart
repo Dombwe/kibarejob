@@ -6,6 +6,7 @@ import '../models/job_model.dart';
 import '../providers/auth_provider.dart';
 import '../models/swipe_model.dart';
 import '../screens/application_detail_screen.dart';
+import '../screens/cv_generator_screen.dart';
 import '../screens/document_upload_screen.dart';
 import '../screens/document_viewer_screen.dart';
 import '../screens/documents_screen.dart';
@@ -62,6 +63,10 @@ final appRouter = GoRouter(
     GoRoute(
       path: '/documents/upload',
       builder: (context, state) => const DocumentUploadScreen(),
+    ),
+    GoRoute(
+      path: '/documents/generate-cv',
+      builder: (context, state) => const CvGeneratorScreen(),
     ),
     GoRoute(
       path: '/documents/:id',

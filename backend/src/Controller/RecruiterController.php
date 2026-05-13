@@ -4,9 +4,13 @@ namespace App\Controller;
 
 use App\Entity\Enum\ContractType;
 use App\Entity\Enum\JobOfferStatus;
+use App\Entity\Enum\SwipeStatus;
 use App\Entity\JobOffer;
+use App\Entity\Notification;
+use App\Entity\Swipe;
 use App\Entity\User;
 use App\Service\DashboardStatsService;
+use App\Service\NotificationService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\RedirectResponse;
@@ -113,6 +117,7 @@ class RecruiterController extends AbstractController
                     ->setSalaryMin($this->nullableInt($request->request->get('salaryMin')))
                     ->setSalaryMax($this->nullableInt($request->request->get('salaryMax')))
                     ->setIsRemoteAllowed((bool) $request->request->get('isRemoteAllowed'))
+                    ->setApplicationEmail($user->getEmail())
                     ->setScheduledPublishAt($status === JobOfferStatus::Draft ? $publicationDate : null)
                     ->setStatus($status);
 
@@ -217,6 +222,7 @@ class RecruiterController extends AbstractController
                     ->setSalaryMin($this->nullableInt($request->request->get('salaryMin')))
                     ->setSalaryMax($this->nullableInt($request->request->get('salaryMax')))
                     ->setIsRemoteAllowed((bool) $request->request->get('isRemoteAllowed'))
+                    ->setApplicationEmail($offer->getApplicationEmail() ?: $user->getEmail())
                     ->setScheduledPublishAt($status === JobOfferStatus::Draft ? $publicationDate : null)
                     ->setStatus($status);
 
@@ -319,6 +325,76 @@ class RecruiterController extends AbstractController
         ));
     }
 
+    #[Route('/recruteur/candidatures/{id}/statut/{status}', name: 'recruiter_application_status', methods: ['POST'])]
+    public function updateApplicationStatus(
+        string $id,
+        string $status,
+        Request $request,
+        EntityManagerInterface $entityManager,
+        NotificationService $notificationService,
+    ): RedirectResponse {
+        $user = $this->requireRecruiterUser();
+        $swipe = $this->requireOwnedApplication($user, $id, $entityManager);
+        if (!$this->isCsrfTokenValid('application_status_' . $id, (string) $request->request->get('_token'))) {
+            throw $this->createAccessDeniedException();
+        }
+
+        $newStatus = SwipeStatus::tryFrom($status);
+        if (!$newStatus instanceof SwipeStatus) {
+            $this->addFlash('error', 'Statut de candidature invalide.');
+
+            return $this->redirectToApplications($swipe);
+        }
+
+        $swipe->setStatus($newStatus);
+        if (SwipeStatus::Viewed === $newStatus && null === $swipe->getViewedAt()) {
+            $swipe->setViewedAt(new \DateTimeImmutable());
+        }
+
+        $notificationService->notify(
+            $swipe->getCandidate(),
+            'application_status',
+            'Statut de candidature mis à jour',
+            sprintf('Votre candidature pour %s est maintenant : %s.', $swipe->getOffer()->getTitle(), $this->candidateStatusLabel($newStatus)),
+            [
+                'swipeId' => (string) $swipe->getId(),
+                'offerId' => (string) $swipe->getOffer()->getId(),
+                'status' => $newStatus->value,
+            ],
+        );
+
+        $entityManager->flush();
+        $this->addFlash('success', 'Le statut de la candidature a été mis à jour.');
+
+        return $this->redirectToApplications($swipe);
+    }
+
+    #[Route('/recruteur/notifications/lues', name: 'recruiter_notifications_read_all', methods: ['POST'])]
+    public function markNotificationsRead(Request $request, EntityManagerInterface $entityManager): RedirectResponse
+    {
+        $user = $this->requireRecruiterUser();
+        if (!$this->isCsrfTokenValid('recruiter_notifications_read_all', (string) $request->request->get('_token'))) {
+            throw $this->createAccessDeniedException();
+        }
+
+        $notifications = $entityManager->getRepository(Notification::class)->findBy([
+            'user' => $user,
+            'isDeleted' => false,
+            'isRead' => false,
+        ]);
+
+        foreach ($notifications as $notification) {
+            if ($notification instanceof Notification) {
+                $notification->setIsRead(true);
+            }
+        }
+
+        $entityManager->flush();
+        $this->addFlash('success', 'Vos notifications ont été marquées comme lues.');
+
+        return $this->redirect($request->headers->get('referer') ?: $this->generateUrl('recruiter_dashboard'));
+    }
+
     #[Route('/recruteur/statistiques', name: 'recruiter_stats', methods: ['GET'])]
     public function stats(DashboardStatsService $dashboardStats): Response
     {
@@ -371,6 +447,34 @@ class RecruiterController extends AbstractController
         }
 
         return $offer;
+    }
+
+    private function requireOwnedApplication(User $user, string $id, EntityManagerInterface $entityManager): Swipe
+    {
+        $swipe = $entityManager->getRepository(Swipe::class)->find($id);
+        if (!$swipe instanceof Swipe || $swipe->isDeleted() || $swipe->getOffer()->isDeleted() || $swipe->getOffer()->getEmployer() !== $user) {
+            throw $this->createNotFoundException('Candidature introuvable.');
+        }
+
+        return $swipe;
+    }
+
+    private function redirectToApplications(Swipe $swipe): RedirectResponse
+    {
+        return $this->redirectToRoute('recruiter_offer_applications', [
+            'id' => (string) $swipe->getOffer()->getId(),
+        ]);
+    }
+
+    private function candidateStatusLabel(SwipeStatus $status): string
+    {
+        return match ($status) {
+            SwipeStatus::Sent => 'envoyée',
+            SwipeStatus::Viewed => 'consultée',
+            SwipeStatus::Interview => 'entretien',
+            SwipeStatus::Rejected => 'refusée',
+            SwipeStatus::Hired => 'retenue',
+        };
     }
 
     private function nullableInt(mixed $value): ?int

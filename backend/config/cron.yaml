@@ -12,3 +12,15 @@ monthly:
 matching_scores:
     command: 'bin/console matching:precompute-scores'
     schedule: '0 */6 * * *'
+
+external_jobs_import:
+    command: 'bin/console jobs:import-external --limit=50'
+    schedule: '15 */4 * * *'
+
+scheduled_commands:
+    command: 'bin/console app:scheduled-commands:run'
+    schedule: '*/5 * * * *'
+
+documents_cleanup:
+    command: 'bin/console document:cleanup'
+    schedule: '30 2 * * *'

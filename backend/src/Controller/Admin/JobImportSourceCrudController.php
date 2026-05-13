@@ -72,10 +72,12 @@ class JobImportSourceCrudController extends AbstractCrudController
                 );
             });
         yield TextField::new('importStatus', 'Statut import')->onlyOnIndex();
+        yield IntegerField::new('lastImportedCount', 'Importées')->hideOnForm();
+        yield IntegerField::new('lastSkippedCount', 'Ignorées')->hideOnForm();
         yield IntegerField::new('maxItemsPerRun', 'Limite')->hideOnIndex();
         yield IntegerField::new('minReliabilityScore', 'Score min.')->hideOnIndex();
-        yield IntegerField::new('lastImportedCount', 'Dernier import')->hideOnIndex()->hideOnForm();
         yield TextareaField::new('lastError', 'Dernière erreur')->hideOnIndex()->hideOnForm();
+        yield TextareaField::new('lastStatusMessage', 'Résumé du dernier import')->hideOnIndex()->hideOnForm();
         yield DateTimeField::new('lastRunAt', 'Dernier passage')->hideOnForm();
         yield DateTimeField::new('lastSuccessAt', 'Dernier succès')->hideOnForm();
         yield DateTimeField::new('createdAt', 'Créée le')->hideOnForm();

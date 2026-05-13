@@ -132,15 +132,7 @@ class FeedController extends AbstractController
      */
     private function getSwipedOfferIds(User $candidate): array
     {
-        $swipes = $this->swipeRepository->findBy([
-            'candidate' => $candidate,
-            'isDeleted' => false,
-        ]);
-
-        return array_values(array_filter(array_map(
-            static fn ($swipe): ?string => $swipe->getOffer()->getId()?->toString(),
-            $swipes,
-        )));
+        return $this->swipeRepository->findOfferIdsByCandidate($candidate);
     }
 
     /**

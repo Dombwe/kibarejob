@@ -22,18 +22,24 @@
     <div class="mb-6 flex flex-col gap-4 sm:flex-row">
         <label class="relative flex-1">
             <svg class="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" viewBox="0 0 24 24" fill="none"><path d="m21 21-4.3-4.3M10.5 18a7.5 7.5 0 1 1 0-15 7.5 7.5 0 0 1 0 15Z" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-            <input class="w-full rounded-2xl border border-slate-200 bg-white py-3 pl-11 pr-4 font-semibold outline-none focus:ring-4 focus:ring-secondary/20" placeholder="Rechercher une offre...">
+            <input data-offer-search class="w-full rounded-2xl border border-slate-200 bg-white py-3 pl-11 pr-4 font-semibold outline-none focus:ring-4 focus:ring-secondary/20" placeholder="Rechercher une offre...">
         </label>
         <div class="flex flex-wrap gap-2">
-            {% for filter in ['Toutes', 'Active', 'Programmée', 'Clôturée', 'Brouillon'] %}
-                <button class="rounded-2xl px-4 py-2 text-sm font-black transition {% if loop.first %}bg-secondary text-white{% else %}border border-slate-200 bg-white text-slate-600 hover:bg-slate-50{% endif %}">{{ filter }}</button>
+            {% for filter in [
+                {label: 'Toutes', status: 'all'},
+                {label: 'Active', status: 'active'},
+                {label: 'Programmée', status: 'scheduled'},
+                {label: 'Clôturée', status: 'closed'},
+                {label: 'Brouillon', status: 'draft'}
+            ] %}
+                <button type="button" data-offer-filter="{{ filter.status }}" class="rounded-2xl px-4 py-2 text-sm font-black transition {% if loop.first %}bg-secondary text-white{% else %}border border-slate-200 bg-white text-slate-600 hover:bg-slate-50{% endif %}">{{ filter.label }}</button>
             {% endfor %}
         </div>
     </div>
 
     <div class="space-y-4">
         {% for offer in offers %}
-            <article class="fade-in rounded-3xl bg-white p-5 shadow-sm ring-1 ring-slate-100 transition hover:shadow-md">
+            <article class="fade-in rounded-3xl bg-white p-5 shadow-sm ring-1 ring-slate-100 transition hover:shadow-md" data-offer-card data-status="{{ offer.filterStatus|default(offer.status) }}" data-search="{{ (offer.title ~ ' ' ~ offer.location ~ ' ' ~ offer.contract ~ ' ' ~ offer.statusLabel)|lower|e('html_attr') }}">
                 <div class="flex flex-col gap-4 lg:flex-row lg:items-center">
                     <div class="flex-1">
                         <div class="mb-3 flex items-start justify-between gap-3">
@@ -50,7 +56,7 @@
                                 {% if offer.boosted %}
                                     <span class="rounded-full bg-gradient-to-r from-secondary to-primary px-3 py-1 text-xs font-black text-white">Boostée</span>
                                 {% endif %}
-                                <span class="rounded-full px-3 py-1 text-xs font-black {% if offer.status == 'active' %}bg-accent/35 text-primary{% elseif offer.statusLabel == 'Programmée' %}bg-secondary/10 text-primary{% elseif offer.status == 'draft' %}bg-slate-100 text-slate-700{% else %}bg-slate-100 text-slate-700{% endif %}">
+                                <span class="rounded-full px-3 py-1 text-xs font-black {% if offer.status == 'active' %}bg-accent/35 text-primary{% elseif offer.filterStatus|default('') == 'scheduled' %}bg-secondary/10 text-primary{% elseif offer.status == 'draft' %}bg-slate-100 text-slate-700{% else %}bg-slate-100 text-slate-700{% endif %}">
                                     {{ offer.statusLabel|default(offer.status == 'active' ? 'Active' : (offer.status == 'draft' ? 'Brouillon' : 'Clôturée')) }}
                                 </span>
                             </div>
@@ -99,4 +105,40 @@
         {% endfor %}
     </div>
 </div>
+
+<script>
+(() => {
+    const cards = [...document.querySelectorAll('[data-offer-card]')];
+    const search = document.querySelector('[data-offer-search]');
+    const filters = [...document.querySelectorAll('[data-offer-filter]')];
+    let activeStatus = 'all';
+
+    const refresh = () => {
+        const term = (search?.value || '').trim().toLowerCase();
+        cards.forEach((card) => {
+            const statusMatches = activeStatus === 'all' || card.dataset.status === activeStatus;
+            const textMatches = !term || (card.dataset.search || '').includes(term);
+            card.classList.toggle('hidden', !(statusMatches && textMatches));
+        });
+    };
+
+    filters.forEach((button) => {
+        button.addEventListener('click', () => {
+            activeStatus = button.dataset.offerFilter || 'all';
+            filters.forEach((item) => {
+                const active = item === button;
+                item.classList.toggle('bg-secondary', active);
+                item.classList.toggle('text-white', active);
+                item.classList.toggle('border', !active);
+                item.classList.toggle('border-slate-200', !active);
+                item.classList.toggle('bg-white', !active);
+                item.classList.toggle('text-slate-600', !active);
+            });
+            refresh();
+        });
+    });
+
+    search?.addEventListener('input', refresh);
+})();
+</script>
 {% endblock %}

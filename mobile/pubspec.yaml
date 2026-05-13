@@ -35,4 +35,5 @@ flutter:
   uses-material-design: true
   assets:
     - assets/branding/kibare_job_logo.svg
+    - assets/branding/logo_kj.png
     - assets/branding/google_g.svg

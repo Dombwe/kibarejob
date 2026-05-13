@@ -24,7 +24,7 @@ class ChunkedUploadService
         }
 
         $safeUploadId = preg_replace('/[^A-Za-z0-9_-]/', '', $uploadId) ?: bin2hex(random_bytes(8));
-        $chunkDirectory = $this->projectDir . DIRECTORY_SEPARATOR . $this->storagePath . DIRECTORY_SEPARATOR . 'chunks' . DIRECTORY_SEPARATOR . $safeUploadId;
+        $chunkDirectory = $this->resolveStorageRoot() . DIRECTORY_SEPARATOR . 'chunks' . DIRECTORY_SEPARATOR . $safeUploadId;
 
         if (!is_dir($chunkDirectory)) {
             mkdir($chunkDirectory, 0775, true);
@@ -42,7 +42,7 @@ class ChunkedUploadService
             ];
         }
 
-        $finalDirectory = $this->projectDir . DIRECTORY_SEPARATOR . $this->storagePath . DIRECTORY_SEPARATOR . 'documents';
+        $finalDirectory = $this->resolveStorageRoot() . DIRECTORY_SEPARATOR . 'documents';
         if (!is_dir($finalDirectory)) {
             mkdir($finalDirectory, 0775, true);
         }
@@ -85,7 +85,7 @@ class ChunkedUploadService
 
     public function cleanupExpiredChunks(int $olderThanHours = 24): int
     {
-        $chunksRoot = $this->projectDir . DIRECTORY_SEPARATOR . $this->storagePath . DIRECTORY_SEPARATOR . 'chunks';
+        $chunksRoot = $this->resolveStorageRoot() . DIRECTORY_SEPARATOR . 'chunks';
         if (!is_dir($chunksRoot)) {
             return 0;
         }
@@ -109,5 +109,14 @@ class ChunkedUploadService
         }
 
         rmdir($directory);
+    }
+
+    private function resolveStorageRoot(): string
+    {
+        if (str_starts_with($this->storagePath, '/') || preg_match('/^[A-Za-z]:[\/\\\\]/', $this->storagePath)) {
+            return rtrim($this->storagePath, '/\\');
+        }
+
+        return $this->projectDir . DIRECTORY_SEPARATOR . trim($this->storagePath, '/\\');
     }
 }

@@ -56,8 +56,8 @@ class DashboardController extends AbstractDashboardController
     public function configureDashboard(): Dashboard
     {
         return Dashboard::new()
-            ->setTitle('KIBARE-JOB')
-            ->setFaviconPath('/favicon.ico');
+            ->setTitle('<img src="/assets/brand/kibare-job-logo.jpg" alt="KIBARE-JOB" class="kj-admin-logo">')
+            ->setFaviconPath('/assets/brand/kibare-job-icon.png');
     }
 
     public function configureCrud(): Crud
@@ -81,7 +81,7 @@ class DashboardController extends AbstractDashboardController
     })();
 </script>
 HTML)
-            ->addCssFile('assets/admin.css?v=20260509-cron-actions')
+            ->addCssFile('assets/admin.css?v=20260513-logo')
             ->addJsFile('assets/admin-theme.js?v=20260509-cron-actions');
     }
 

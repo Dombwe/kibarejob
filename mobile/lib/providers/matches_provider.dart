@@ -11,3 +11,12 @@ final applicationServiceProvider = Provider<ApplicationService>((ref) {
 final matchesProvider = FutureProvider<List<SwipeModel>>((ref) {
   return ref.watch(applicationServiceProvider).fetchMatches();
 });
+
+final matchDetailProvider =
+    FutureProvider.family<SwipeModel, String>((ref, id) {
+  return ref.watch(applicationServiceProvider).fetchMatch(id);
+});
+
+final deleteMatchProvider = FutureProvider.family<void, String>((ref, id) {
+  return ref.watch(applicationServiceProvider).deleteMatch(id);
+});

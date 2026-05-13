@@ -20,7 +20,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _obscurePassword = true;
-  bool _isResending = false;
 
   @override
   void dispose() {
@@ -44,25 +43,44 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     await ref.read(authControllerProvider.notifier).loginWithGoogle();
   }
 
-  Future<void> _resendVerification() async {
-    final email = _emailController.text.trim();
-    if (email.isEmpty) {
-      _showMessage('Renseignez votre email pour recevoir un nouveau lien.');
+  Future<void> _configureServer() async {
+    final storage = ref.read(storageServiceProvider);
+    var serverUrl = storage.apiBaseUrl ?? 'https://192.168.11.100:8000';
+
+    final value = await showDialog<String>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Adresse du backend'),
+        content: TextFormField(
+          initialValue: serverUrl,
+          keyboardType: TextInputType.url,
+          onChanged: (value) => serverUrl = value,
+          decoration: const InputDecoration(
+            labelText: 'URL serveur',
+            hintText: 'https://192.168.11.100:8000',
+            prefixIcon: Icon(Icons.dns_outlined),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Annuler'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, serverUrl.trim()),
+            child: const Text('Enregistrer'),
+          ),
+        ],
+      ),
+    );
+
+    if (value == null || value.isEmpty) {
       return;
     }
 
-    setState(() => _isResending = true);
-    try {
-      final message = await ref
-          .read(authControllerProvider.notifier)
-          .resendVerification(email);
-      _showMessage(message);
-    } catch (error) {
-      _showMessage(error.toString());
-    } finally {
-      if (mounted) {
-        setState(() => _isResending = false);
-      }
+    await storage.saveApiBaseUrl(value.replaceAll(RegExp(r'/+$'), ''));
+    if (mounted) {
+      _showMessage('Adresse backend enregistrée. Réessayez la connexion.');
     }
   }
 
@@ -128,10 +146,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    const _AuthBrandHeader(
+                    _AuthBrandHeader(
                       title: 'Bon retour',
                       subtitle:
                           'Connectez-vous avec votre email confirmé pour retrouver vos offres et candidatures.',
+                      onConfigureServer: _configureServer,
                     ),
                     const SizedBox(height: 24),
                     Card(
@@ -263,10 +282,15 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 }
 
 class _AuthBrandHeader extends StatelessWidget {
-  const _AuthBrandHeader({required this.title, required this.subtitle});
+  const _AuthBrandHeader({
+    required this.title,
+    required this.subtitle,
+    required this.onConfigureServer,
+  });
 
   final String title;
   final String subtitle;
+  final VoidCallback onConfigureServer;
 
   @override
   Widget build(BuildContext context) {
@@ -275,11 +299,17 @@ class _AuthBrandHeader extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Row(
+        Row(
           children: [
-            KibareLogo(size: 58),
-            Spacer(),
-            ThemeModeToggle(compact: true),
+            const KibareLogo(size: 58),
+            const Spacer(),
+            IconButton(
+              tooltip: 'Configurer le serveur',
+              onPressed: onConfigureServer,
+              icon: const Icon(Icons.dns_outlined),
+            ),
+            const SizedBox(width: 4),
+            const ThemeModeToggle(compact: true),
           ],
         ),
         const SizedBox(height: 22),

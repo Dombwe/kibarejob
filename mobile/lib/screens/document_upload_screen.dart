@@ -53,8 +53,16 @@ class _DocumentUploadScreenState extends ConsumerState<DocumentUploadScreen> {
                         value: 'attestation', child: Text('Attestation')),
                     DropdownMenuItem(value: 'other', child: Text('Autre')),
                   ],
-                  onChanged: (value) =>
-                      setState(() => _type = value ?? 'other'),
+                  onChanged: (value) {
+                    setState(() {
+                      _type = value ?? 'other';
+                      if (_type == 'cv' &&
+                          (_titleController.text.trim().isEmpty ||
+                              _titleController.text.trim() == 'Document')) {
+                        _titleController.text = 'CV';
+                      }
+                    });
+                  },
                 ),
                 const SizedBox(height: 12),
                 TextField(
@@ -96,7 +104,14 @@ class _DocumentUploadScreenState extends ConsumerState<DocumentUploadScreen> {
     if (path == null) {
       return;
     }
-    setState(() => _file = File(path));
+    final selectedFile = File(path);
+    final name = selectedFile.path.split(Platform.pathSeparator).last;
+    setState(() {
+      _file = selectedFile;
+      if (_titleController.text.trim().isEmpty) {
+        _titleController.text = _type == 'cv' ? 'CV' : name;
+      }
+    });
   }
 
   Future<void> _upload() async {
@@ -129,7 +144,7 @@ class _DocumentUploadScreenState extends ConsumerState<DocumentUploadScreen> {
           : file;
       await ref.read(documentProvider.notifier).uploadDocument(
             file: uploadFile,
-            title: _titleController.text.trim(),
+            title: _safeTitle(uploadFile),
             type: _type,
             description: _descriptionController.text.trim(),
           );
@@ -165,9 +180,22 @@ class _DocumentUploadScreenState extends ConsumerState<DocumentUploadScreen> {
 
     final message = error.toString().replaceFirst('Exception: ', '');
     if (message.contains('422') || message.contains('file')) {
-      return 'Le document ne peut pas etre envoye. Verifiez le format ou la taille du fichier.';
+      return 'Le document ne peut pas être envoyé. Vérifiez le format ou la taille du fichier.';
     }
 
-    return 'Envoi impossible. Verifiez votre connexion puis reessayez.';
+    return 'Envoi impossible. Vérifiez votre connexion puis réessayez.';
+  }
+
+  String _safeTitle(File file) {
+    final title = _titleController.text.trim();
+    if (title.isNotEmpty) {
+      return title;
+    }
+
+    if (_type == 'cv') {
+      return 'CV';
+    }
+
+    return file.path.split(Platform.pathSeparator).last;
   }
 }

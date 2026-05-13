@@ -40,7 +40,16 @@ class ProfileScreen extends ConsumerWidget {
                 children: [
                   _ProfileHeader(profile: profile, email: user?.email ?? ''),
                   const SizedBox(height: 18),
-                  _InfoCard(profile: profile),
+                  _InfoCard(
+                    profile: profile,
+                    onEdit: () => _editPersonalInfo(context, ref, profile),
+                  ),
+                  const SizedBox(height: 14),
+                  _AvailabilitySection(
+                    availability: profile.availability,
+                    onChanged: (value) =>
+                        _updateAvailability(context, ref, profile, value),
+                  ),
                   const SizedBox(height: 14),
                   _EditableListSection(
                     title: 'Compétences',
@@ -72,8 +81,8 @@ class ProfileScreen extends ConsumerWidget {
                     emptyText: 'Ajoutez vos personnes de référence.',
                     items: profile.references,
                     multiline: true,
-                    onChanged: (items) => _updateList(
-                        context, ref, profile, 'references', items),
+                    onChanged: (items) =>
+                        _updateList(context, ref, profile, 'references', items),
                   ),
                   const SizedBox(height: 20),
                   FilledButton.icon(
@@ -127,6 +136,56 @@ class ProfileScreen extends ConsumerWidget {
       },
     );
   }
+
+  static Future<void> _updateAvailability(
+    BuildContext context,
+    WidgetRef ref,
+    CandidateProfileModel profile,
+    String availability,
+  ) {
+    final payload = profile.toJson();
+    payload['availability'] = availability;
+
+    return ref.read(profileProvider.notifier).updateProfile(payload).catchError(
+      (Object error) {
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Mise à jour impossible : $error')),
+          );
+        }
+      },
+    );
+  }
+
+  static Future<void> _editPersonalInfo(
+    BuildContext context,
+    WidgetRef ref,
+    CandidateProfileModel profile,
+  ) async {
+    final values = await showDialog<Map<String, dynamic>>(
+      context: context,
+      builder: (context) => _ProfileDetailsDialog(profile: profile),
+    );
+    if (values == null) {
+      return;
+    }
+
+    final payload = profile.toJson()..addAll(values);
+    try {
+      await ref.read(profileProvider.notifier).updateProfile(payload);
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Profil mis à jour.')),
+        );
+      }
+    } catch (error) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Mise à jour impossible : $error')),
+        );
+      }
+    }
+  }
 }
 
 class _ProfileHeader extends StatelessWidget {
@@ -173,9 +232,10 @@ class _ProfileHeader extends StatelessWidget {
 }
 
 class _InfoCard extends StatelessWidget {
-  const _InfoCard({required this.profile});
+  const _InfoCard({required this.profile, required this.onEdit});
 
   final CandidateProfileModel profile;
+  final VoidCallback onEdit;
 
   @override
   Widget build(BuildContext context) {
@@ -184,6 +244,31 @@ class _InfoCard extends StatelessWidget {
         padding: const EdgeInsets.all(14),
         child: Column(
           children: [
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    'Informations personnelles',
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.w900,
+                        ),
+                  ),
+                ),
+                IconButton(
+                  tooltip: 'Modifier',
+                  onPressed: onEdit,
+                  icon: const Icon(Icons.edit_outlined),
+                ),
+              ],
+            ),
+            _InfoTile(label: 'Nom', value: profile.lastName),
+            _InfoTile(label: 'Prénom(s)', value: profile.firstName),
+            _InfoTile(
+              label: 'Date de naissance',
+              value: profile.birthDate?.isNotEmpty == true
+                  ? profile.birthDate!
+                  : 'Non renseigné',
+            ),
             _InfoTile(label: 'Ville', value: profile.city),
             _InfoTile(label: 'Niveau', value: profile.educationLevel),
             _InfoTile(
@@ -192,11 +277,210 @@ class _InfoCard extends StatelessWidget {
                   ? profile.educationField!
                   : 'Non renseigné',
             ),
-            _InfoTile(label: 'Disponibilité', value: profile.availability),
+            _InfoTile(
+              label: 'Prétention salariale',
+              value: profile.salaryExpectation == null
+                  ? 'Non renseigné'
+                  : '${profile.salaryExpectation} FCFA',
+            ),
           ],
         ),
       ),
     );
+  }
+}
+
+class _ProfileDetailsDialog extends StatefulWidget {
+  const _ProfileDetailsDialog({required this.profile});
+
+  final CandidateProfileModel profile;
+
+  @override
+  State<_ProfileDetailsDialog> createState() => _ProfileDetailsDialogState();
+}
+
+class _ProfileDetailsDialogState extends State<_ProfileDetailsDialog> {
+  late final TextEditingController _firstNameController;
+  late final TextEditingController _lastNameController;
+  late final TextEditingController _birthDateController;
+  late final TextEditingController _cityController;
+  late final TextEditingController _educationLevelController;
+  late final TextEditingController _educationFieldController;
+  late final TextEditingController _salaryController;
+
+  @override
+  void initState() {
+    super.initState();
+    final profile = widget.profile;
+    _firstNameController = TextEditingController(text: profile.firstName);
+    _lastNameController = TextEditingController(text: profile.lastName);
+    _birthDateController = TextEditingController(text: profile.birthDate ?? '');
+    _cityController = TextEditingController(text: profile.city);
+    _educationLevelController =
+        TextEditingController(text: profile.educationLevel);
+    _educationFieldController =
+        TextEditingController(text: profile.educationField ?? '');
+    _salaryController = TextEditingController(
+        text: profile.salaryExpectation?.toString() ?? '');
+  }
+
+  @override
+  void dispose() {
+    _firstNameController.dispose();
+    _lastNameController.dispose();
+    _birthDateController.dispose();
+    _cityController.dispose();
+    _educationLevelController.dispose();
+    _educationFieldController.dispose();
+    _salaryController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Text('Modifier mon profil'),
+      content: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: _lastNameController,
+              textCapitalization: TextCapitalization.words,
+              decoration: const InputDecoration(labelText: 'Nom'),
+            ),
+            TextField(
+              controller: _firstNameController,
+              textCapitalization: TextCapitalization.words,
+              decoration: const InputDecoration(labelText: 'Prénom(s)'),
+            ),
+            TextField(
+              controller: _birthDateController,
+              readOnly: true,
+              decoration: const InputDecoration(
+                labelText: 'Date de naissance',
+                suffixIcon: Icon(Icons.calendar_today_outlined),
+              ),
+              onTap: _pickBirthDate,
+            ),
+            TextField(
+              controller: _cityController,
+              textCapitalization: TextCapitalization.words,
+              decoration: const InputDecoration(labelText: 'Ville'),
+            ),
+            TextField(
+              controller: _educationLevelController,
+              textCapitalization: TextCapitalization.words,
+              decoration: const InputDecoration(labelText: 'Niveau d’études'),
+            ),
+            TextField(
+              controller: _educationFieldController,
+              textCapitalization: TextCapitalization.sentences,
+              decoration: const InputDecoration(labelText: 'Domaine d’étude'),
+            ),
+            TextField(
+              controller: _salaryController,
+              keyboardType: TextInputType.number,
+              decoration:
+                  const InputDecoration(labelText: 'Prétention salariale'),
+            ),
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text('Annuler'),
+        ),
+        FilledButton(
+          onPressed: () {
+            Navigator.pop(context, {
+              'firstName': _firstNameController.text.trim(),
+              'lastName': _lastNameController.text.trim(),
+              'birthDate': _birthDateController.text.trim(),
+              'city': _cityController.text.trim(),
+              'educationLevel': _educationLevelController.text.trim(),
+              'educationField': _educationFieldController.text.trim(),
+              'salaryExpectation': int.tryParse(_salaryController.text.trim()),
+            });
+          },
+          child: const Text('Enregistrer'),
+        ),
+      ],
+    );
+  }
+
+  Future<void> _pickBirthDate() async {
+    final initialDate =
+        DateTime.tryParse(_birthDateController.text) ?? DateTime(2000);
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: initialDate,
+      firstDate: DateTime(1940),
+      lastDate: DateTime.now(),
+    );
+    if (picked == null) {
+      return;
+    }
+
+    _birthDateController.text = '${picked.year.toString().padLeft(4, '0')}-'
+        '${picked.month.toString().padLeft(2, '0')}-'
+        '${picked.day.toString().padLeft(2, '0')}';
+  }
+}
+
+class _AvailabilitySection extends StatelessWidget {
+  const _AvailabilitySection({
+    required this.availability,
+    required this.onChanged,
+  });
+
+  final String availability;
+  final ValueChanged<String> onChanged;
+
+  static const _options = [
+    'Immédiate',
+    'Sous 1 semaine',
+    'Sous 2 semaines',
+    'Sous 1 mois',
+    'Préavis en cours',
+    'Non disponible',
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    final current = _normalizeLegacyAvailability(availability);
+
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(14),
+        child: DropdownButtonFormField<String>(
+          value: _options.contains(current) ? current : _options.first,
+          decoration: const InputDecoration(
+            labelText: 'Disponibilité',
+            prefixIcon: Icon(Icons.event_available_outlined),
+          ),
+          items: [
+            for (final option in _options)
+              DropdownMenuItem(value: option, child: Text(option)),
+          ],
+          onChanged: (value) {
+            if (value != null) {
+              onChanged(value);
+            }
+          },
+        ),
+      ),
+    );
+  }
+
+  String _normalizeLegacyAvailability(String value) {
+    final normalized = value.trim().toLowerCase();
+    if (normalized == 'immediate' || normalized == 'immédiate') {
+      return 'Immédiate';
+    }
+
+    return value;
   }
 }
 

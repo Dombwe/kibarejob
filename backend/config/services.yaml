@@ -1,6 +1,6 @@
 parameters:
-    app.storage_base_url: '/storage'
-    app.storage_path: 'var/storage'
+    app.storage_base_url_default: '/storage'
+    app.storage_path_default: 'var/storage'
     app.redis_cache_ttl_default: 120
     messenger_transport_dsn_default: 'doctrine://default?auto_setup=0'
     app.subscription_mode_default: 'mock'
@@ -12,6 +12,8 @@ parameters:
     app.payment_method: '%env(default:app.payment_method_default:PAYMENT_METHOD)%'
     app.redis_cache_ttl: '%env(int:default:app.redis_cache_ttl_default:REDIS_CACHE_TTL)%'
     app.public_url: '%env(default:app.public_url_default:APP_PUBLIC_URL)%'
+    app.storage_base_url: '%env(default:app.storage_base_url_default:KIBARE_STORAGE_BASE_URL)%'
+    app.storage_path: '%env(default:app.storage_path_default:KIBARE_STORAGE_PATH)%'
     app.mail_from: '%env(default:app.mail_from_default:MAIL_FROM)%'
     app.contact_to: '%env(default:app.contact_to_default:CONTACT_TO)%'
 
@@ -43,10 +45,31 @@ services:
     App\Controller\Api\DocumentController:
         arguments:
             $projectDir: '%kernel.project_dir%'
+            $storagePath: '%app.storage_path%'
+
+    App\Controller\Api\AppConfigController:
+        arguments:
+            $storageBaseUrl: '%app.storage_base_url%'
+
+    App\Controller\StorageController:
+        arguments:
+            $projectDir: '%kernel.project_dir%'
+            $storagePath: '%app.storage_path%'
+
+    App\Controller\Api\CandidatureController:
+        arguments:
+            $mailFrom: '%app.mail_from%'
 
     App\Command\CleanupDocumentsCommand:
         arguments:
             $projectDir: '%kernel.project_dir%'
+            $storagePath: '%app.storage_path%'
+
+    App\Command\CheckStorageCommand:
+        arguments:
+            $projectDir: '%kernel.project_dir%'
+            $storagePath: '%app.storage_path%'
+            $storageBaseUrl: '%app.storage_base_url%'
 
     App\Service\SubscriptionService:
         arguments:
@@ -67,10 +90,16 @@ services:
             $mailFrom: '%app.mail_from%'
             $contactTo: '%app.contact_to%'
 
+    App\Service\CvAdapterService:
+        arguments:
+            $projectDir: '%kernel.project_dir%'
+            $storagePath: '%app.storage_path%'
+
     App\MessageHandler\GenerateApplicationJobHandler:
         arguments:
             $mailFrom: '%app.mail_from%'
             $projectDir: '%kernel.project_dir%'
+            $storagePath: '%app.storage_path%'
 
     App\Middleware\QuotaMiddleware:
         tags:

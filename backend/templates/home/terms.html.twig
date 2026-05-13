@@ -1,0 +1,63 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Conditions d'utilisation - KIBARE-JOB{% endblock %}
+
+{% block body %}
+<main class="min-h-screen bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100">
+    <header class="border-b border-slate-200 bg-white/90 px-4 py-5 backdrop-blur dark:border-slate-800 dark:bg-slate-900/90">
+        <div class="mx-auto flex max-w-5xl items-center justify-between">
+            <a href="{{ path('home') }}">
+                <img src="{{ asset('assets/brand/kibare-job-logo.jpg') }}" alt="KIBARE-JOB" class="h-12 w-auto rounded-2xl shadow-lg shadow-secondary/20">
+            </a>
+            <nav class="flex items-center gap-5 text-sm font-bold text-slate-600 dark:text-slate-300">
+                <a href="{{ path('home') }}">Accueil</a>
+                <a href="{{ path('privacy_policy') }}">Confidentialité</a>
+                <a href="{{ path('contact') }}">Contact</a>
+            </nav>
+        </div>
+    </header>
+
+    <section class="mx-auto max-w-5xl px-4 py-14">
+        <p class="mb-3 text-sm font-black uppercase tracking-wide text-secondary">Cadre d'utilisation</p>
+        <h1 class="text-4xl font-black tracking-tight">Conditions d'utilisation</h1>
+        <p class="mt-5 max-w-3xl text-lg leading-8 text-slate-600 dark:text-slate-300">
+            Ces conditions définissent les règles principales d'utilisation de KIBARE-JOB pour les candidats, recruteurs, administrateurs et partenaires.
+        </p>
+
+        <div class="mt-10 grid gap-5">
+            {% set sections = [
+                {
+                    title: 'Compte utilisateur',
+                    text: "L'utilisateur s'engage à fournir des informations exactes, à sécuriser son compte et à ne pas utiliser la plateforme pour des actions frauduleuses ou contraires à la loi."
+                },
+                {
+                    title: 'Candidatures',
+                    text: "Le candidat reste responsable des informations transmises dans ses documents. KIBARE-JOB peut l'aider à préparer un dossier, mais ne garantit pas l'obtention d'un emploi."
+                },
+                {
+                    title: "Offres d'emploi",
+                    text: "Les recruteurs doivent publier des offres réelles, compréhensibles et conformes. Les offres externes importées sont filtrées, mais doivent rester vérifiables par leur lien source."
+                },
+                {
+                    title: 'Génération assistée',
+                    text: "Les contenus générés pour les CV et lettres sont des aides à la rédaction. L'utilisateur doit vérifier les informations avant toute utilisation professionnelle."
+                },
+                {
+                    title: 'Disponibilité du service',
+                    text: "KIBARE-JOB vise une haute disponibilité, mais des interruptions peuvent survenir pendant la maintenance, la mise à jour ou les incidents techniques."
+                },
+                {
+                    title: 'Signalement',
+                    text: "Toute offre suspecte, donnée incorrecte ou usage abusif peut être signalé via la page Contact afin que notre équipe puisse effectuer une vérification."
+                }
+            ] %}
+            {% for section in sections %}
+                <article class="rounded-3xl bg-white p-6 shadow-sm ring-1 ring-slate-100 dark:bg-slate-900 dark:ring-slate-800">
+                    <h2 class="text-xl font-black">{{ section.title }}</h2>
+                    <p class="mt-3 leading-7 text-slate-600 dark:text-slate-300">{{ section.text }}</p>
+                </article>
+            {% endfor %}
+        </div>
+    </section>
+</main>
+{% endblock %}

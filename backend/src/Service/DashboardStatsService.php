@@ -193,6 +193,7 @@ class DashboardStatsService
                 'applications' => $applicationCounts[(string) $offer->getId()] ?? $offer->getApplicationsCount(),
                 'views' => $offer->getViewsCount(),
                 'status' => $offer->getStatus()->value,
+                'filterStatus' => $offer->getScheduledPublishAt() instanceof \DateTimeImmutable ? 'scheduled' : $offer->getStatus()->value,
                 'statusLabel' => $this->offerStatusLabel($offer),
                 'postedAt' => $offer->getScheduledPublishAt() instanceof \DateTimeImmutable
                     ? 'Prévue le ' . $offer->getScheduledPublishAt()->format('d/m/Y H:i')
@@ -279,6 +280,7 @@ class DashboardStatsService
                 'viewed' => count(array_filter($swipes, static fn (Swipe $swipe): bool => SwipeStatus::Viewed === $swipe->getStatus())),
                 'interview' => count(array_filter($swipes, static fn (Swipe $swipe): bool => SwipeStatus::Interview === $swipe->getStatus())),
                 'hired' => count(array_filter($swipes, static fn (Swipe $swipe): bool => SwipeStatus::Hired === $swipe->getStatus())),
+                'rejected' => count(array_filter($swipes, static fn (Swipe $swipe): bool => SwipeStatus::Rejected === $swipe->getStatus())),
             ],
         ];
     }

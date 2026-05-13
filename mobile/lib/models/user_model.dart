@@ -44,6 +44,7 @@ class CandidateProfileModel {
     required this.userId,
     required this.firstName,
     required this.lastName,
+    this.birthDate,
     required this.city,
     required this.educationLevel,
     required this.skills,
@@ -62,6 +63,7 @@ class CandidateProfileModel {
   final String userId;
   final String firstName;
   final String lastName;
+  final String? birthDate;
   final String city;
   final String educationLevel;
   final String? educationField;
@@ -88,7 +90,7 @@ class CandidateProfileModel {
       experiences: [],
       interests: [],
       references: [],
-      availability: 'Immediate',
+      availability: 'Immédiate',
     );
   }
 
@@ -97,6 +99,7 @@ class CandidateProfileModel {
       userId: json['userId']?.toString() ?? '',
       firstName: json['firstName']?.toString() ?? '',
       lastName: json['lastName']?.toString() ?? '',
+      birthDate: json['birthDate']?.toString(),
       city: json['city']?.toString() ?? '',
       educationLevel: json['educationLevel']?.toString() ?? 'Aucun',
       educationField: json['educationField']?.toString(),
@@ -116,7 +119,7 @@ class CandidateProfileModel {
       references: (json['references'] as List<dynamic>? ?? const [])
           .map((item) => item.toString())
           .toList(),
-      availability: json['availability']?.toString() ?? 'Immediate',
+      availability: json['availability']?.toString() ?? 'Immédiate',
       salaryExpectation:
           int.tryParse(json['salaryExpectation']?.toString() ?? ''),
       cvOriginalUrl: json['cvOriginalUrl']?.toString(),
@@ -130,6 +133,7 @@ class CandidateProfileModel {
         'userId': userId,
         'firstName': firstName,
         'lastName': lastName,
+        'birthDate': birthDate,
         'city': city,
         'educationLevel': educationLevel,
         'educationField': educationField,

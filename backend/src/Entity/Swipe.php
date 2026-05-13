@@ -46,6 +46,30 @@ class Swipe
     #[ORM\Column(type: Types::JSON, nullable: true)]
     private ?array $documentsSent = null;
 
+    #[ORM\Column(options: ['default' => false])]
+    private bool $emailSent = false;
+
+    #[ORM\Column(length: 255, nullable: true)]
+    private ?string $emailRecipient = null;
+
+    #[ORM\Column(length: 255, nullable: true)]
+    private ?string $emailSender = null;
+
+    #[ORM\Column(length: 255, nullable: true)]
+    private ?string $emailReplyTo = null;
+
+    #[ORM\Column(length: 255, nullable: true)]
+    private ?string $emailSubject = null;
+
+    #[ORM\Column(type: Types::TEXT, nullable: true)]
+    private ?string $emailBody = null;
+
+    #[ORM\Column(type: Types::TEXT, nullable: true)]
+    private ?string $emailError = null;
+
+    #[ORM\Column(nullable: true)]
+    private ?\DateTimeImmutable $emailSentAt = null;
+
     #[ORM\Column(enumType: SwipeStatus::class, options: ['default' => 'sent'])]
     private SwipeStatus $status = SwipeStatus::Sent;
 
@@ -74,6 +98,22 @@ class Swipe
     public function setMotivationLetterText(?string $motivationLetterText): self { $this->motivationLetterText = $motivationLetterText; return $this; }
     public function getDocumentsSent(): ?array { return $this->documentsSent; }
     public function setDocumentsSent(?array $documentsSent): self { $this->documentsSent = $documentsSent; return $this; }
+    public function isEmailSent(): bool { return $this->emailSent; }
+    public function setEmailSent(bool $emailSent): self { $this->emailSent = $emailSent; return $this; }
+    public function getEmailRecipient(): ?string { return $this->emailRecipient; }
+    public function setEmailRecipient(?string $emailRecipient): self { $this->emailRecipient = $emailRecipient; return $this; }
+    public function getEmailSender(): ?string { return $this->emailSender; }
+    public function setEmailSender(?string $emailSender): self { $this->emailSender = $emailSender; return $this; }
+    public function getEmailReplyTo(): ?string { return $this->emailReplyTo; }
+    public function setEmailReplyTo(?string $emailReplyTo): self { $this->emailReplyTo = $emailReplyTo; return $this; }
+    public function getEmailSubject(): ?string { return $this->emailSubject; }
+    public function setEmailSubject(?string $emailSubject): self { $this->emailSubject = $emailSubject; return $this; }
+    public function getEmailBody(): ?string { return $this->emailBody; }
+    public function setEmailBody(?string $emailBody): self { $this->emailBody = $emailBody; return $this; }
+    public function getEmailError(): ?string { return $this->emailError; }
+    public function setEmailError(?string $emailError): self { $this->emailError = $emailError; return $this; }
+    public function getEmailSentAt(): ?\DateTimeImmutable { return $this->emailSentAt; }
+    public function setEmailSentAt(?\DateTimeImmutable $emailSentAt): self { $this->emailSentAt = $emailSentAt; return $this; }
     public function getStatus(): SwipeStatus { return $this->status; }
     public function setStatus(SwipeStatus $status): self { $this->status = $status; return $this; }
     public function getSentAt(): \DateTimeImmutable { return $this->sentAt; }

@@ -26,7 +26,7 @@ class JobDetailScreen extends ConsumerWidget {
     final horizontalPadding = Responsive.horizontalPadding(context);
 
     return Scaffold(
-      appBar: const KibareTabAppBar(),
+      appBar: const KibareTabAppBar(showBackButton: true),
       bottomNavigationBar:
           const AppBottomNavigation(currentTab: AppTab.discover),
       body: DecoratedBox(

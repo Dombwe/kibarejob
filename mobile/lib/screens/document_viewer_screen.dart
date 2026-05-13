@@ -41,9 +41,8 @@ class _ImagePreview extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return FutureBuilder<List<int>>(
-      future: ref.read(apiServiceProvider).getBytes(
-            '/api/documents/${document.id}/file',
-          ),
+      future:
+          ref.read(apiServiceProvider).getBytes(_documentFilePath(document)),
       builder: (context, snapshot) {
         if (snapshot.connectionState != ConnectionState.done) {
           return const LoadingWidget(message: 'Chargement du document...');
@@ -72,9 +71,8 @@ class _PdfPreview extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return FutureBuilder<List<int>>(
-      future: ref.read(apiServiceProvider).getBytes(
-            '/api/documents/${document.id}/file',
-          ),
+      future:
+          ref.read(apiServiceProvider).getBytes(_documentFilePath(document)),
       builder: (context, snapshot) {
         if (snapshot.connectionState != ConnectionState.done) {
           return const LoadingWidget(message: 'Chargement du document...');
@@ -87,6 +85,14 @@ class _PdfPreview extends ConsumerWidget {
       },
     );
   }
+}
+
+String _documentFilePath(DocumentModel document) {
+  if (document.id.isEmpty && document.fileUrl.isNotEmpty) {
+    return document.fileUrl;
+  }
+
+  return '/api/documents/${document.id}/file';
 }
 
 class _TextPreview extends ConsumerWidget {

@@ -21,7 +21,7 @@ class FileUploadService
     public function upload(UploadedFile $file, string $directory): array
     {
         $safeDirectory = trim($directory, '/\\');
-        $targetDirectory = $this->projectDir . DIRECTORY_SEPARATOR . $this->storagePath . DIRECTORY_SEPARATOR . $safeDirectory;
+        $targetDirectory = $this->resolveStorageRoot() . DIRECTORY_SEPARATOR . $safeDirectory;
 
         if (!is_dir($targetDirectory)) {
             mkdir($targetDirectory, 0775, true);
@@ -48,5 +48,14 @@ class FileUploadService
             'mimeType' => $mimeType,
             'size' => $size,
         ];
+    }
+
+    private function resolveStorageRoot(): string
+    {
+        if (str_starts_with($this->storagePath, '/') || preg_match('/^[A-Za-z]:[\/\\\\]/', $this->storagePath)) {
+            return rtrim($this->storagePath, '/\\');
+        }
+
+        return $this->projectDir . DIRECTORY_SEPARATOR . trim($this->storagePath, '/\\');
     }
 }

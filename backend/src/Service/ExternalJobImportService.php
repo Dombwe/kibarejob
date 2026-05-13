@@ -88,11 +88,15 @@ class ExternalJobImportService
             $score = $this->calculateReliabilityScore($source, $normalized);
 
             if ($score < $source->getMinReliabilityScore()) {
+                $skipped++;
                 $skipReasons['reliability']++;
+                continue;
             }
 
             if (!$this->matchesTargetLocality($source, $normalized)) {
+                $skipped++;
                 $skipReasons['locality']++;
+                continue;
             }
 
             if ($this->alreadyImported($source, $normalized)) {

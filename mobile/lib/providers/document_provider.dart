@@ -34,7 +34,7 @@ class DocumentNotifier extends AsyncNotifier<List<DocumentModel>> {
     state = const AsyncValue.loading();
     try {
       final api = ref.read(apiServiceProvider);
-      await api.postFormData(
+      final data = await api.postFormData(
         '/api/documents/upload',
         dataBuilder: () async => FormData.fromMap({
           'file': await MultipartFile.fromFile(file.path),
@@ -43,6 +43,7 @@ class DocumentNotifier extends AsyncNotifier<List<DocumentModel>> {
           'description': description,
         }),
       );
+      await _syncReturnedProfile(data);
       state = AsyncValue.data(await fetchDocuments());
       ref.invalidate(profileProvider);
     } catch (error, stackTrace) {
@@ -51,9 +52,37 @@ class DocumentNotifier extends AsyncNotifier<List<DocumentModel>> {
     }
   }
 
+  Future<DocumentModel> generateCv(Map<String, dynamic> payload) async {
+    state = const AsyncValue.loading();
+    try {
+      final api = ref.read(apiServiceProvider);
+      final data =
+          await api.postJson('/api/documents/generate-cv', data: payload);
+      final documentJson = data['document'] as Map<String, dynamic>;
+      final document = DocumentModel.fromJson(documentJson);
+      await _syncReturnedProfile(data);
+      state = AsyncValue.data(await fetchDocuments());
+      ref.invalidate(profileProvider);
+      return document;
+    } catch (error, stackTrace) {
+      state = AsyncValue.error(error, stackTrace);
+      rethrow;
+    }
+  }
+
   Future<void> deleteDocument(String id) async {
     final api = ref.read(apiServiceProvider);
-    await api.dio.delete('/api/documents/$id');
+    await api.delete('/api/documents/$id');
     state = AsyncValue.data(await fetchDocuments());
+    ref.invalidate(profileProvider);
+  }
+
+  Future<void> _syncReturnedProfile(Map<String, dynamic> data) async {
+    final profile = data['profile'];
+    if (profile is Map) {
+      await ref
+          .read(storageServiceProvider)
+          .saveProfile(Map<String, dynamic>.from(profile));
+    }
   }
 }

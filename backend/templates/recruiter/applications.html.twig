@@ -6,7 +6,7 @@
 {% block recruiter_content %}
 {% set applications = applications|default([]) %}
 {% set selectedOffer = selectedOffer|default(null) %}
-{% set statusCounts = statusCounts|default({all: applications|length, new: 0, viewed: 0, interview: 0, hired: 0}) %}
+{% set statusCounts = statusCounts|default({all: applications|length, new: 0, viewed: 0, interview: 0, hired: 0, rejected: 0}) %}
 
 <div class="p-4 lg:p-8">
     <div class="mb-6 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
@@ -28,17 +28,18 @@
     <div class="mb-6 flex flex-col gap-4 lg:flex-row">
         <label class="relative flex-1">
             <svg class="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" viewBox="0 0 24 24" fill="none"><path d="m21 21-4.3-4.3M10.5 18a7.5 7.5 0 1 1 0-15 7.5 7.5 0 0 1 0 15Z" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-            <input class="w-full rounded-2xl border border-slate-200 bg-white py-3 pl-11 pr-4 font-semibold outline-none focus:ring-4 focus:ring-secondary/20" placeholder="Rechercher par candidat ou offre...">
+            <input data-application-search class="w-full rounded-2xl border border-slate-200 bg-white py-3 pl-11 pr-4 font-semibold outline-none focus:ring-4 focus:ring-secondary/20" placeholder="Rechercher par candidat, offre, ville...">
         </label>
         <div class="flex flex-wrap gap-2">
             {% for filter in [
-                {label: 'Toutes', count: statusCounts.all},
-                {label: 'Nouvelles', count: statusCounts.new},
-                {label: 'Consultées', count: statusCounts.viewed},
-                {label: 'Entretiens', count: statusCounts.interview},
-                {label: 'Recrutées', count: statusCounts.hired}
+                {label: 'Toutes', count: statusCounts.all, status: 'all'},
+                {label: 'Nouvelles', count: statusCounts.new, status: 'sent'},
+                {label: 'Consultées', count: statusCounts.viewed, status: 'viewed'},
+                {label: 'Entretiens', count: statusCounts.interview, status: 'interview'},
+                {label: 'Recrutées', count: statusCounts.hired, status: 'hired'},
+                {label: 'Refusées', count: statusCounts.rejected, status: 'rejected'}
             ] %}
-                <button class="rounded-2xl px-4 py-2 text-sm font-black transition {% if loop.first %}bg-secondary text-white{% else %}border border-slate-200 bg-white text-slate-600 hover:bg-slate-50{% endif %}">{{ filter.label }} ({{ filter.count }})</button>
+                <button type="button" data-application-filter="{{ filter.status }}" class="rounded-2xl px-4 py-2 text-sm font-black transition {% if loop.first %}bg-secondary text-white{% else %}border border-slate-200 bg-white text-slate-600 hover:bg-slate-50{% endif %}">{{ filter.label }} ({{ filter.count }})</button>
             {% endfor %}
         </div>
     </div>
@@ -46,13 +47,13 @@
     <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
         {% for app in applications %}
             {% set modalId = 'candidate-' ~ app.id %}
-            <article class="fade-in cursor-pointer rounded-3xl bg-white p-5 shadow-sm ring-1 ring-slate-100 transition hover:-translate-y-1 hover:ring-secondary/20 hover:shadow-lg" data-application-card data-modal-target="{{ modalId }}">
+            <article class="fade-in cursor-pointer rounded-3xl bg-white p-5 shadow-sm ring-1 ring-slate-100 transition hover:-translate-y-1 hover:ring-secondary/20 hover:shadow-lg" data-application-card data-status="{{ app.status }}" data-search="{{ (app.candidate ~ ' ' ~ app.job ~ ' ' ~ app.location ~ ' ' ~ app.email ~ ' ' ~ app.skills|join(' '))|lower|e('html_attr') }}" data-modal-target="{{ modalId }}">
                 <div class="mb-4 flex items-start gap-4">
                     <div class="grid h-14 w-14 shrink-0 place-items-center rounded-full bg-gradient-to-br from-secondary to-primary text-lg font-black text-white">{{ app.avatar }}</div>
                     <div class="min-w-0 flex-1">
                         <div class="flex items-center justify-between gap-2">
                             <h2 class="truncate font-black text-slate-900">{{ app.candidate }}</h2>
-                            <span class="shrink-0 rounded-full px-2 py-0.5 text-xs font-black {% if app.status == 'sent' or app.status == 'new' %}bg-secondary/15 text-primary{% elseif app.status == 'interview' %}bg-secondary/15 text-primary{% elseif app.status == 'hired' %}bg-accent/35 text-primary{% elseif app.status == 'rejected' %}bg-slate-100 text-slate-700{% else %}bg-accent/30 text-primary{% endif %}">{{ app.label }}</span>
+                            <span class="shrink-0 rounded-full px-2 py-0.5 text-xs font-black {% if app.status == 'sent' %}bg-secondary/15 text-primary{% elseif app.status == 'interview' %}bg-secondary/15 text-primary{% elseif app.status == 'hired' %}bg-accent/35 text-primary{% elseif app.status == 'rejected' %}bg-slate-100 text-slate-700{% else %}bg-accent/30 text-primary{% endif %}">{{ app.label }}</span>
                         </div>
                         <p class="truncate text-sm font-semibold text-slate-500">{{ app.job }}</p>
                         <p class="mt-1 text-xs font-semibold text-slate-400">{{ app.age }} ans · {{ app.location }}</p>
@@ -157,8 +158,22 @@
                             {% else %}
                                 <span class="rounded-2xl bg-slate-100 px-4 py-3 text-center font-black text-slate-400">CV indisponible</span>
                             {% endif %}
-                            <button class="rounded-2xl bg-accent px-4 py-3 font-black text-white">Shortlister</button>
-                            <button class="rounded-2xl bg-secondary px-4 py-3 font-black text-white">Convoquer</button>
+                            <form method="post" action="{{ path('recruiter_application_status', {id: app.id, status: 'viewed'}) }}">
+                                <input type="hidden" name="_token" value="{{ csrf_token('application_status_' ~ app.id) }}">
+                                <button class="w-full rounded-2xl bg-accent px-4 py-3 font-black text-primary">Shortlister</button>
+                            </form>
+                            <form method="post" action="{{ path('recruiter_application_status', {id: app.id, status: 'interview'}) }}">
+                                <input type="hidden" name="_token" value="{{ csrf_token('application_status_' ~ app.id) }}">
+                                <button class="w-full rounded-2xl bg-secondary px-4 py-3 font-black text-white">Convoquer</button>
+                            </form>
+                            <form method="post" action="{{ path('recruiter_application_status', {id: app.id, status: 'rejected'}) }}" onsubmit="return confirm('Confirmez-vous le refus de cette candidature ?');">
+                                <input type="hidden" name="_token" value="{{ csrf_token('application_status_' ~ app.id) }}">
+                                <button class="w-full rounded-2xl bg-slate-100 px-4 py-3 font-black text-slate-700">Refuser</button>
+                            </form>
+                            <form method="post" action="{{ path('recruiter_application_status', {id: app.id, status: 'hired'}) }}" onsubmit="return confirm('Confirmez-vous que ce candidat est retenu ?');">
+                                <input type="hidden" name="_token" value="{{ csrf_token('application_status_' ~ app.id) }}">
+                                <button class="w-full rounded-2xl bg-primary px-4 py-3 font-black text-white">Recruter</button>
+                            </form>
                         </div>
                     </div>
                 </div>
@@ -171,4 +186,40 @@
         {% endfor %}
     </div>
 </div>
+
+<script>
+(() => {
+    const cards = [...document.querySelectorAll('[data-application-card]')];
+    const search = document.querySelector('[data-application-search]');
+    const filters = [...document.querySelectorAll('[data-application-filter]')];
+    let activeStatus = 'all';
+
+    const refresh = () => {
+        const term = (search?.value || '').trim().toLowerCase();
+        cards.forEach((card) => {
+            const statusMatches = activeStatus === 'all' || card.dataset.status === activeStatus;
+            const textMatches = !term || (card.dataset.search || '').includes(term);
+            card.classList.toggle('hidden', !(statusMatches && textMatches));
+        });
+    };
+
+    filters.forEach((button) => {
+        button.addEventListener('click', () => {
+            activeStatus = button.dataset.applicationFilter || 'all';
+            filters.forEach((item) => {
+                const active = item === button;
+                item.classList.toggle('bg-secondary', active);
+                item.classList.toggle('text-white', active);
+                item.classList.toggle('border', !active);
+                item.classList.toggle('border-slate-200', !active);
+                item.classList.toggle('bg-white', !active);
+                item.classList.toggle('text-slate-600', !active);
+            });
+            refresh();
+        });
+    });
+
+    search?.addEventListener('input', refresh);
+})();
+</script>
 {% endblock %}

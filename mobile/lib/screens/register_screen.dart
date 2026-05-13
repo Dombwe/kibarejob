@@ -25,6 +25,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   final _cityController = TextEditingController(text: 'Ouagadougou');
   bool _obscurePassword = true;
   bool _verificationSent = false;
+  bool _acceptedDataConsent = false;
 
   @override
   void dispose() {
@@ -39,6 +40,18 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
 
   Future<void> _register() async {
     if (!_formKey.currentState!.validate()) {
+      return;
+    }
+    if (!_acceptedDataConsent) {
+      ScaffoldMessenger.of(context)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(
+          const SnackBar(
+            content: Text(
+              'Vous devez accepter le traitement de vos données CV pour créer votre compte.',
+            ),
+          ),
+        );
       return;
     }
 
@@ -301,6 +314,15 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                                   text:
                                       'Votre email sera vérifié avant la première connexion.',
                                 ),
+                                const SizedBox(height: 12),
+                                _ConsentBox(
+                                  value: _acceptedDataConsent,
+                                  onChanged: (value) {
+                                    setState(() {
+                                      _acceptedDataConsent = value;
+                                    });
+                                  },
+                                ),
                                 if (authState.hasError) ...[
                                   const SizedBox(height: 12),
                                   Text(
@@ -376,6 +398,53 @@ class _HintRow extends StatelessWidget {
           child: Text(text, style: Theme.of(context).textTheme.bodyMedium),
         ),
       ],
+    );
+  }
+}
+
+class _ConsentBox extends StatelessWidget {
+  const _ConsentBox({
+    required this.value,
+    required this.onChanged,
+  });
+
+  final bool value;
+  final ValueChanged<bool> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final color = theme.colorScheme.secondary;
+
+    return InkWell(
+      borderRadius: BorderRadius.circular(18),
+      onTap: () => onChanged(!value),
+      child: Container(
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: color.withValues(alpha: 0.08),
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(color: color.withValues(alpha: 0.16)),
+        ),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Checkbox(
+              value: value,
+              onChanged: (checked) => onChanged(checked ?? false),
+            ),
+            const SizedBox(width: 6),
+            Expanded(
+              child: Text(
+                "J'accepte que KIBARE-JOB utilise mes données de profil, CV et documents pour le matching, la génération de CV, la génération de lettres et l'envoi de candidatures.",
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

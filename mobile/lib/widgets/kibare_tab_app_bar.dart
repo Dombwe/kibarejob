@@ -1,20 +1,30 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../providers/profile_provider.dart';
 import '../theme/app_theme.dart';
 import '../theme/responsive.dart';
+import 'kibare_logo.dart';
 import 'theme_mode_toggle.dart';
 
-class KibareTabAppBar extends StatelessWidget implements PreferredSizeWidget {
-  const KibareTabAppBar({super.key});
+class KibareTabAppBar extends ConsumerWidget implements PreferredSizeWidget {
+  const KibareTabAppBar({super.key, this.showBackButton = false});
+
+  final bool showBackButton;
 
   @override
   Size get preferredSize => const Size.fromHeight(108);
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
+    final profile = ref.watch(profileProvider).valueOrNull;
+    final candidateName =
+        '${profile?.firstName.trim() ?? ''} ${profile?.lastName.trim() ?? ''}'
+            .trim();
+    final headerTitle = candidateName.isEmpty ? 'KIBARE-JOB' : candidateName;
 
     final background = isDark ? AppColors.darkSurface : Colors.white;
     final borderColor =
@@ -47,7 +57,20 @@ class KibareTabAppBar extends StatelessWidget implements PreferredSizeWidget {
                   ),
                   child: Row(
                     children: [
-                      _BrandMark(isDark: isDark),
+                      if (showBackButton)
+                        _HeaderAction(
+                          tooltip: 'Retour',
+                          icon: Icons.arrow_back_rounded,
+                          onPressed: () {
+                            if (context.canPop()) {
+                              context.pop();
+                            } else {
+                              context.go('/swipe');
+                            }
+                          },
+                        )
+                      else
+                        _BrandMark(isDark: isDark),
                       SizedBox(width: compact ? 10 : 12),
                       Expanded(
                         child: Column(
@@ -56,7 +79,7 @@ class KibareTabAppBar extends StatelessWidget implements PreferredSizeWidget {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              'KIBARE-JOB',
+                              headerTitle,
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                               style: TextStyle(
@@ -147,16 +170,10 @@ class _BrandMark extends StatelessWidget {
           ),
         ],
       ),
-      child: Center(
-        child: Text(
-          'KJ',
-          style: TextStyle(
-            color: isDark ? AppColors.accent : AppColors.primary,
-            fontSize: compact ? 13 : 15,
-            fontWeight: FontWeight.w900,
-            letterSpacing: 0,
-          ),
-        ),
+      clipBehavior: Clip.antiAlias,
+      child: KibareLogo(
+        size: compact ? 36 : 42,
+        borderRadius: 14,
       ),
     );
   }

@@ -38,8 +38,17 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
   }
 
   Future<List<JobModel>> _loadJobs() async {
-    final result = await ref.read(jobServiceProvider).fetchFeed(limit: 30);
-    return result.jobs;
+    try {
+      final result = await ref.read(jobServiceProvider).fetchFeed(limit: 30);
+      await ref.read(offlineServiceProvider).cacheJobs(result.jobs);
+      return result.jobs;
+    } catch (_) {
+      final cachedJobs = ref.read(offlineServiceProvider).cachedJobs;
+      if (cachedJobs.isNotEmpty) {
+        return cachedJobs;
+      }
+      rethrow;
+    }
   }
 
   @override

@@ -11,6 +11,10 @@ use Symfony\Component\Routing\Attribute\Route;
 #[Route('/api/app-config', name: 'api_app_config_')]
 class AppConfigController extends AbstractController
 {
+    public function __construct(private readonly string $storageBaseUrl)
+    {
+    }
+
     #[Route('', name: 'show', methods: ['GET'])]
     public function show(ApplicationSettingRepository $settingsRepository, Request $request): JsonResponse
     {
@@ -27,7 +31,18 @@ class AppConfigController extends AbstractController
             'environment' => $settings->getActiveEnvironment(),
             'localBaseUrl' => $settings->getLocalBaseUrl(),
             'onlineBaseUrl' => $settings->getOnlineBaseUrl(),
+            'storageBaseUrl' => $this->normalizeStorageBaseUrl($activeBaseUrl),
+            'requestBaseUrl' => $requestBaseUrl,
         ]);
+    }
+
+    private function normalizeStorageBaseUrl(string $apiBaseUrl): string
+    {
+        if (str_starts_with($this->storageBaseUrl, 'http://') || str_starts_with($this->storageBaseUrl, 'https://')) {
+            return rtrim($this->storageBaseUrl, '/');
+        }
+
+        return rtrim($apiBaseUrl, '/') . '/' . ltrim($this->storageBaseUrl, '/');
     }
 
     private function shouldUseRequestBaseUrl(string $configuredBaseUrl, string $requestBaseUrl): bool

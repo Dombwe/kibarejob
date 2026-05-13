@@ -26,6 +26,10 @@ class ApiService {
           'API_BASE_URL',
           defaultValue: 'http://10.0.2.2:8000',
         ),
+        _lanBaseUrl = const String.fromEnvironment(
+          'API_LAN_BASE_URL',
+          defaultValue: '',
+        ),
         dio = Dio(
           BaseOptions(
             connectTimeout: const Duration(seconds: 20),
@@ -61,6 +65,7 @@ class ApiService {
 
   final StorageService _storage;
   final String _primaryBaseUrl;
+  final String _lanBaseUrl;
   final Dio dio;
   bool _configurationLoaded = false;
 
@@ -147,6 +152,14 @@ class ApiService {
     return response.data ?? <String, dynamic>{};
   }
 
+  Future<void> delete(String path) async {
+    await _loadRemoteConfigurationIfNeeded(path);
+    await _requestWithFallback(
+      path,
+      (requestPath) => dio.delete<Map<String, dynamic>>(requestPath),
+    );
+  }
+
   Future<Response<Map<String, dynamic>>> _requestWithFallback(
     String path,
     Future<Response<Map<String, dynamic>>> Function(String path) request,
@@ -212,15 +225,15 @@ class ApiService {
 
   List<String> get _baseUrlCandidates {
     final candidates = <String>[
-      _primaryBaseUrl,
-      'https://192.168.11.113:8000',
       if (_storage.apiBaseUrl != null && _storage.apiBaseUrl!.isNotEmpty)
         _storage.apiBaseUrl!,
-      'https://192.168.11.105:8000',
+      if (_lanBaseUrl.isNotEmpty) _lanBaseUrl,
+      _primaryBaseUrl,
+      'https://192.168.11.100:8000',
+      'http://192.168.11.100:8000',
       'http://10.0.2.2:8000',
-      'http://192.168.11.113:8000',
-      'http://192.168.11.105:8000',
       'http://127.0.0.1:8000',
+      'http://localhost:8000',
     ];
 
     return _normalizeBaseUrlCandidates(candidates);
@@ -344,7 +357,7 @@ class ApiService {
     }
 
     if (error?.type == DioExceptionType.connectionError) {
-      return 'Backend inaccessible depuis l’application. Sur émulateur Android, utilisez http://10.0.2.2:8000 ou https://10.0.2.2:8000. Sur téléphone réel, configurez dans l’admin l’adresse IP du PC sur le même Wi-Fi.';
+      return 'Backend inaccessible. Sur émulateur Android, utilisez http://10.0.2.2:8000. Sur téléphone réel, utilisez l’adresse Wi-Fi du PC, par exemple https://192.168.11.100:8000.';
     }
 
     if (error?.type == DioExceptionType.connectionTimeout ||
@@ -370,7 +383,7 @@ class ApiService {
     if (error?.type == DioExceptionType.unknown) {
       final cause = error?.error?.toString().trim();
       if (cause != null && cause.isNotEmpty) {
-        return 'Erreur reseau inconnue vers ${error?.requestOptions.baseUrl ?? 'adresse inconnue'} : $cause';
+        return 'Erreur réseau vers ${error?.requestOptions.baseUrl ?? 'adresse inconnue'} : $cause';
       }
     }
 

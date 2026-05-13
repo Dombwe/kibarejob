@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 
 import '../models/job_model.dart';
 import '../theme/app_theme.dart';
-import 'kibare_logo.dart';
 
 class JobCard extends StatelessWidget {
   const JobCard({
@@ -75,58 +74,61 @@ class JobCard extends StatelessWidget {
                 final tight = constraints.maxHeight < 460;
                 final gap = dense ? 6.0 : (compact ? 10.0 : 18.0);
 
-                return Padding(
-                  padding: EdgeInsets.fromLTRB(
-                    dense ? 12 : (compact ? 16 : 22),
-                    dense ? 12 : (compact ? 16 : 22),
-                    dense ? 12 : (compact ? 16 : 22),
-                    dense ? 10 : (compact ? 14 : 18),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      _CompanyHeader(job: job, compact: compact, dense: dense),
-                      SizedBox(height: dense ? 8 : (compact ? 12 : 22)),
-                      Text(
-                        job.title,
-                        maxLines: dense ? 2 : (compact ? 2 : 3),
-                        overflow: TextOverflow.ellipsis,
-                        style: (compact
-                                ? theme.textTheme.headlineSmall
-                                : theme.textTheme.headlineMedium)
-                            ?.copyWith(
-                          height: 1.08,
-                          fontWeight: FontWeight.w900,
+                return SingleChildScrollView(
+                  physics: const BouncingScrollPhysics(),
+                  child: Padding(
+                    padding: EdgeInsets.fromLTRB(
+                      dense ? 12 : (compact ? 16 : 22),
+                      dense ? 12 : (compact ? 16 : 22),
+                      dense ? 12 : (compact ? 16 : 22),
+                      dense ? 10 : (compact ? 14 : 18),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _CompanyHeader(
+                            job: job, compact: compact, dense: dense),
+                        SizedBox(height: dense ? 8 : (compact ? 12 : 22)),
+                        Text(
+                          job.title,
+                          maxLines: dense ? 2 : (compact ? 2 : 3),
+                          overflow: TextOverflow.ellipsis,
+                          style: (compact
+                                  ? theme.textTheme.headlineSmall
+                                  : theme.textTheme.headlineMedium)
+                              ?.copyWith(
+                            height: 1.08,
+                            fontWeight: FontWeight.w900,
+                          ),
                         ),
-                      ),
-                      SizedBox(height: dense ? 4 : (compact ? 6 : 10)),
-                      Text(
-                        job.companyName ?? 'Entreprise',
-                        maxLines: dense ? 1 : 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: theme.textTheme.bodyLarge?.copyWith(
-                          fontWeight: FontWeight.w800,
+                        SizedBox(height: dense ? 4 : (compact ? 6 : 10)),
+                        Text(
+                          job.companyName ?? 'Entreprise',
+                          maxLines: dense ? 1 : 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: theme.textTheme.bodyLarge?.copyWith(
+                            fontWeight: FontWeight.w800,
+                          ),
                         ),
-                      ),
-                      SizedBox(height: dense ? 6 : (compact ? 8 : 12)),
-                      _DescriptionExcerpt(job: job, dense: dense),
-                      SizedBox(height: dense ? 6 : (compact ? 10 : 18)),
-                      _InfoGrid(
-                        job: job,
-                        compact: compact,
-                        tight: tight,
-                      ),
-                      if (job.requiredSkills.isNotEmpty &&
-                          !tight &&
-                          !dense) ...[
-                        SizedBox(height: gap),
-                        _SkillStrip(
-                            skills: job.requiredSkills, compact: compact),
+                        SizedBox(height: dense ? 6 : (compact ? 8 : 12)),
+                        _DescriptionExcerpt(job: job, dense: dense),
+                        SizedBox(height: dense ? 6 : (compact ? 10 : 18)),
+                        _InfoGrid(
+                          job: job,
+                          compact: compact,
+                          tight: tight,
+                        ),
+                        if (job.requiredSkills.isNotEmpty &&
+                            !tight &&
+                            !dense) ...[
+                          SizedBox(height: gap),
+                          _SkillStrip(
+                              skills: job.requiredSkills, compact: compact),
+                        ],
+                        SizedBox(height: dense ? 8 : (compact ? 12 : 18)),
+                        _MetricsStrip(job: job, compact: compact),
                       ],
-                      const Spacer(),
-                      SizedBox(height: dense ? 6 : (compact ? 8 : 12)),
-                      _MetricsStrip(job: job, compact: compact),
-                    ],
+                    ),
                   ),
                 );
               },
@@ -263,6 +265,7 @@ class _CompanyLogo extends StatelessWidget {
   Widget build(BuildContext context) {
     final hasLogo =
         job.companyLogoUrl != null && job.companyLogoUrl!.isNotEmpty;
+    final monogram = _companyMonogram(job.companyName);
 
     return Container(
       width: dense ? 42 : (compact ? 48 : 58),
@@ -277,9 +280,70 @@ class _CompanyLogo extends StatelessWidget {
               imageUrl: job.companyLogoUrl!,
               fit: BoxFit.cover,
               errorWidget: (_, __, ___) => Center(
-                  child: KibareLogo(size: dense ? 24 : (compact ? 28 : 34))),
+                child: _CompanyMonogram(
+                  value: monogram,
+                  dense: dense,
+                  compact: compact,
+                ),
+              ),
+              placeholder: (_, __) => Center(
+                child: _CompanyMonogram(
+                  value: monogram,
+                  dense: dense,
+                  compact: compact,
+                ),
+              ),
             )
-          : Center(child: KibareLogo(size: dense ? 24 : (compact ? 28 : 34))),
+          : Center(
+              child: _CompanyMonogram(
+                value: monogram,
+                dense: dense,
+                compact: compact,
+              ),
+            ),
+    );
+  }
+}
+
+class _CompanyMonogram extends StatelessWidget {
+  const _CompanyMonogram({
+    required this.value,
+    required this.compact,
+    required this.dense,
+  });
+
+  final String value;
+  final bool compact;
+  final bool dense;
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return Container(
+      width: double.infinity,
+      height: double.infinity,
+      alignment: Alignment.center,
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: isDark
+              ? const [Color(0xFF263849), Color(0xFF5F7F99)]
+              : const [Color(0xFFE7F3EC), Color(0xFFB8C7B4)],
+        ),
+      ),
+      child: Text(
+        value,
+        maxLines: 1,
+        overflow: TextOverflow.clip,
+        style: TextStyle(
+          color: isDark ? Colors.white : AppColors.primary,
+          fontSize: dense ? 15 : (compact ? 17 : 20),
+          fontWeight: FontWeight.w900,
+          letterSpacing: 0,
+        ),
+      ),
     );
   }
 }
@@ -631,6 +695,30 @@ String _documentsLabel(JobModel job) {
       (job.requiredDocuments.length > 3
           ? ' +${job.requiredDocuments.length - 3}'
           : '');
+}
+
+String _companyMonogram(String? companyName) {
+  final clean = (companyName ?? 'Entreprise')
+      .replaceAll(RegExp(r'[^A-Za-zÀ-ÿ0-9 ]+'), ' ')
+      .trim();
+  if (clean.isEmpty) {
+    return 'EN';
+  }
+
+  final words = clean
+      .split(RegExp(r'\s+'))
+      .where((word) => word.trim().isNotEmpty)
+      .toList();
+  if (words.isEmpty) {
+    return 'EN';
+  }
+
+  if (words.length == 1) {
+    final word = words.first;
+    return word.substring(0, word.length >= 2 ? 2 : 1).toUpperCase();
+  }
+
+  return '${words.first[0]}${words[1][0]}'.toUpperCase();
 }
 
 String _compactMoney(int value) {

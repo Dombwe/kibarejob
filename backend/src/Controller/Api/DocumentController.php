@@ -7,11 +7,13 @@ use App\Entity\Enum\DocumentType;
 use App\Entity\Enum\VerificationAction;
 use App\Entity\User;
 use App\Repository\CandidateDocumentRepository;
+use App\Service\CacheService;
 use App\Service\ChunkedUploadService;
 use App\Service\CandidateProfileCompletionService;
 use App\Service\DocumentVerificationService;
 use App\Service\DocumentExtractorService;
 use App\Service\FileUploadService;
+use App\Service\ScoreCacheService;
 use App\Service\SubscriptionService;
 use App\Service\ValidationService;
 use Doctrine\ORM\EntityManagerInterface;
@@ -37,7 +39,10 @@ class DocumentController extends AbstractController
         private readonly SubscriptionService $subscriptionService,
         private readonly ValidationService $validationService,
         private readonly CandidateProfileCompletionService $completionService,
+        private readonly ScoreCacheService $scoreCacheService,
+        private readonly CacheService $cacheService,
         private readonly string $projectDir,
+        private readonly string $storagePath,
     ) {
     }
 
@@ -98,7 +103,73 @@ class DocumentController extends AbstractController
         $this->entityManager->flush();
         $this->refreshCandidateProfileCompletion($user);
 
-        return $this->json(['document' => $this->serializeDocument($document)], JsonResponse::HTTP_CREATED);
+        return $this->json([
+            'document' => $this->serializeDocument($document),
+            'profile' => null !== $user->getCandidateProfile() ? $this->serializeProfile($user->getCandidateProfile()) : null,
+        ], JsonResponse::HTTP_CREATED);
+    }
+
+    #[Route('/generate-cv', name: 'api_documents_generate_cv', methods: ['POST'])]
+    public function generateCv(Request $request): JsonResponse
+    {
+        $user = $this->authenticatedUser();
+        $profile = $user->getCandidateProfile();
+        if (null === $profile) {
+            return $this->json(['message' => 'Profil candidat introuvable.'], JsonResponse::HTTP_NOT_FOUND);
+        }
+
+        if (!$this->subscriptionService->canUploadDocument($user, $this->countActiveDocuments($user))) {
+            return $this->json([
+                'message' => 'Quota de documents atteint.',
+                'code' => 'document_quota_exceeded',
+            ], JsonResponse::HTTP_TOO_MANY_REQUESTS);
+        }
+
+        $payload = $this->jsonPayload($request);
+        $this->hydrateProfileFromGeneratedCv($profile, $payload);
+
+        $directory = $this->resolveStorageRoot()
+            . DIRECTORY_SEPARATOR . 'candidates' . DIRECTORY_SEPARATOR . (string) $user->getId()
+            . DIRECTORY_SEPARATOR . 'generated';
+        if (!is_dir($directory) && !mkdir($directory, 0775, true) && !is_dir($directory)) {
+            return $this->json(['message' => 'Impossible de préparer le dossier du CV.'], JsonResponse::HTTP_INTERNAL_SERVER_ERROR);
+        }
+
+        $fileName = 'cv-guide-' . (new \DateTimeImmutable())->format('YmdHis') . '.pdf';
+        $absolutePath = $directory . DIRECTORY_SEPARATOR . $fileName;
+        $this->writeCvPdf($absolutePath, $profile, $payload);
+        if (!is_file($absolutePath)) {
+            return $this->json(['message' => 'Impossible de générer le CV.'], JsonResponse::HTTP_INTERNAL_SERVER_ERROR);
+        }
+
+        $fileUrl = '/storage/candidates/' . (string) $user->getId() . '/generated/' . $fileName;
+        $document = (new CandidateDocument())
+            ->setCandidate($user)
+            ->setType(DocumentType::Other)
+            ->setTitle('CV')
+            ->setDescription('CV généré avec l’assistant Kibaré Job.')
+            ->setFileUrl($fileUrl)
+            ->setFileHash(hash_file('sha256', $absolutePath))
+            ->setIsPublic(true)
+            ->setIsPinned(true)
+            ->setIsVerified(true)
+            ->setConfidenceScore(90)
+            ->setUploadedAt(new \DateTimeImmutable())
+            ->setLastVerifiedAt(new \DateTimeImmutable())
+            ->setTags(['cv', 'generated', 'kibare-job']);
+
+        $profile
+            ->setCvGeneratedUrl($fileUrl)
+            ->setCvLastUpdated(new \DateTimeImmutable());
+
+        $this->entityManager->persist($document);
+        $this->entityManager->flush();
+        $this->refreshCandidateProfileCompletion($user);
+
+        return $this->json([
+            'document' => $this->serializeDocument($document),
+            'profile' => $this->serializeProfile($profile),
+        ], JsonResponse::HTTP_CREATED);
     }
 
     #[Route('/{id}', name: 'api_documents_show', methods: ['GET'])]
@@ -185,6 +256,7 @@ class DocumentController extends AbstractController
         }
 
         $this->entityManager->flush();
+        $this->refreshCandidateProfileCompletion($document->getCandidate());
 
         return $this->json(['document' => $this->serializeDocument($document)]);
     }
@@ -260,6 +332,7 @@ class DocumentController extends AbstractController
         return $this->json([
             'upload' => $result,
             'document' => $this->serializeDocument($document),
+            'profile' => null !== $user->getCandidateProfile() ? $this->serializeProfile($user->getCandidateProfile()) : null,
         ], JsonResponse::HTTP_CREATED);
     }
 
@@ -383,6 +456,20 @@ class DocumentController extends AbstractController
         if ([] !== $references) {
             $profile->setReferences($references);
         }
+
+        if ('' === trim($profile->getEducationLevel()) || 'Aucun' === $profile->getEducationLevel()) {
+            $educationLevel = $this->extractEducationLevel($text);
+            if (null !== $educationLevel) {
+                $profile->setEducationLevel($educationLevel);
+            }
+        }
+
+        if (null === $profile->getEducationField() || '' === trim($profile->getEducationField())) {
+            $educationField = $this->extractEducationField($text);
+            if (null !== $educationField) {
+                $profile->setEducationField($educationField);
+            }
+        }
     }
 
     /**
@@ -442,11 +529,17 @@ class DocumentController extends AbstractController
             'Relation client', 'Analyse de donnees', 'Analyse de données', 'Python', 'PHP', 'JavaScript',
             'React', 'Flutter', 'Dart', 'Laravel', 'Symfony', 'SQL', 'MySQL', 'PostgreSQL', 'Git',
             'Gestion administrative', 'Ressources humaines', 'Logistique', 'Finance', 'Budget',
+            'Comptabilite analytique', 'Paie', 'Fiscalite', 'Secretariat', 'Assistanat',
+            'Prospection', 'Community management', 'Canva', 'Photoshop', 'Illustrator',
+            'Maintenance informatique', 'Reseaux', 'Cybersecurite', 'Support utilisateur',
+            'Electricite', 'Mecanique', 'BTP', 'Suivi chantier', 'Approvisionnement',
+            'Gestion de stock', 'Achat', 'Transport', 'Qualite', 'Hygiene securite',
+            'Redaction', 'Reporting', 'Planification', 'Coordination', 'Management',
         ];
         $found = [];
-        $normalized = mb_strtolower($text);
+        $normalized = $this->normalizeForSearch($text);
         foreach ($catalog as $skill) {
-            if (str_contains($normalized, mb_strtolower($skill))) {
+            if (str_contains($normalized, $this->normalizeForSearch($skill))) {
                 $found[] = $skill;
             }
         }
@@ -460,10 +553,10 @@ class DocumentController extends AbstractController
     private function extractLanguages(string $text): array
     {
         $languages = ['francais' => 'Français', 'français' => 'Français', 'anglais' => 'Anglais', 'mooré' => 'Mooré', 'moore' => 'Mooré', 'dioula' => 'Dioula', 'fulfulde' => 'Fulfulde'];
-        $normalized = mb_strtolower($text);
+        $normalized = $this->normalizeForSearch($text);
         $found = [];
         foreach ($languages as $needle => $label) {
-            if (str_contains($normalized, $needle)) {
+            if (str_contains($normalized, $this->normalizeForSearch($needle))) {
                 $found[mb_strtolower($label)] = ['name' => $label, 'level' => 'Intermediaire'];
             }
         }
@@ -484,10 +577,19 @@ class DocumentController extends AbstractController
 
         foreach ($lines as $line) {
             $clean = trim(preg_replace('/^[•\-\*\d\.\)\s]+/', '', $line) ?? $line);
-            $normalized = mb_strtolower(str_replace([':', '.', '-'], '', $clean));
+            $normalized = $this->normalizeForSearch(str_replace(['.', '-'], '', $clean));
 
             if (in_array($normalized, $headings, true) || $this->lineContainsHeading($normalized, $headings)) {
                 $capture = true;
+                $inline = trim((string) preg_replace('/^.*?[:\-]\s*/u', '', $clean));
+                if ($inline !== $clean && '' !== $inline && mb_strlen($inline) <= 160) {
+                    foreach (preg_split('/[,;|]/', $inline) ?: [] as $part) {
+                        $part = trim($part);
+                        if ('' !== $part && mb_strlen($part) >= 2 && mb_strlen($part) <= 80) {
+                            $items[] = $part;
+                        }
+                    }
+                }
                 continue;
             }
 
@@ -518,12 +620,82 @@ class DocumentController extends AbstractController
     private function lineContainsHeading(string $line, array $headings): bool
     {
         foreach ($headings as $heading) {
-            if (str_contains($line, mb_strtolower($heading))) {
+            if (str_contains($line, $this->normalizeForSearch($heading))) {
                 return true;
             }
         }
 
         return false;
+    }
+
+    private function extractEducationLevel(string $text): ?string
+    {
+        $normalized = $this->normalizeForSearch($text);
+        $levels = [
+            'doctorat' => 'Doctorat',
+            'master' => 'Master',
+            'licence' => 'Licence',
+            'bac 5' => 'Master',
+            'bac +5' => 'Master',
+            'bac 3' => 'Licence',
+            'bac +3' => 'Licence',
+            'baccalaureat' => 'Bac',
+            'bac' => 'Bac',
+            'bepc' => 'BEPC',
+            'cep' => 'CEP',
+        ];
+
+        foreach ($levels as $needle => $level) {
+            if (str_contains($normalized, $this->normalizeForSearch($needle))) {
+                return $level;
+            }
+        }
+
+        return null;
+    }
+
+    private function extractEducationField(string $text): ?string
+    {
+        $fields = [
+            'genie logiciel' => 'Génie logiciel',
+            'informatique' => 'Informatique',
+            'reseaux' => 'Réseaux et télécommunications',
+            'telecommunications' => 'Réseaux et télécommunications',
+            'gestion' => 'Gestion',
+            'comptabilite' => 'Comptabilité',
+            'finance' => 'Finance',
+            'marketing' => 'Marketing',
+            'communication' => 'Communication',
+            'ressources humaines' => 'Ressources humaines',
+            'logistique' => 'Logistique',
+            'droit' => 'Droit',
+            'economie' => 'Économie',
+            'agronomie' => 'Agronomie',
+            'sante' => 'Santé',
+            'electricite' => 'Électricité',
+            'mecanique' => 'Mécanique',
+            'btp' => 'BTP',
+        ];
+        $normalized = $this->normalizeForSearch($text);
+
+        foreach ($fields as $needle => $field) {
+            if (str_contains($normalized, $needle)) {
+                return $field;
+            }
+        }
+
+        return null;
+    }
+
+    private function normalizeForSearch(string $value): string
+    {
+        $value = mb_strtolower($value, 'UTF-8');
+        $converted = iconv('UTF-8', 'ASCII//TRANSLIT//IGNORE', $value);
+        $value = false === $converted ? $value : $converted;
+        $value = str_replace(["'", '’', '`'], ' ', $value);
+        $value = preg_replace('/[^a-z0-9+]+/', ' ', $value) ?? $value;
+
+        return trim(preg_replace('/\s+/', ' ', $value) ?? $value);
     }
 
     private function refreshCandidateProfileCompletion(User $user): void
@@ -534,8 +706,210 @@ class DocumentController extends AbstractController
         }
 
         $this->completionService->refresh($profile);
+        $this->scoreCacheService->invalidateCandidate($profile);
+        $this->cacheService->invalidateFeed((string) $user->getId());
         $user->setUpdatedAt(new \DateTimeImmutable());
         $this->entityManager->flush();
+    }
+
+    private function hydrateProfileFromGeneratedCv(\App\Entity\CandidateProfile $profile, array $payload): void
+    {
+        $profile
+            ->setFirstName($this->stringFromPayload($payload, 'firstName', $profile->getFirstName()))
+            ->setLastName($this->stringFromPayload($payload, 'lastName', $profile->getLastName()))
+            ->setCity($this->stringFromPayload($payload, 'city', $profile->getCity()))
+            ->setEducationLevel($this->stringFromPayload($payload, 'educationLevel', $profile->getEducationLevel() ?: 'Aucun'))
+            ->setEducationField($this->nullableString($payload['educationField'] ?? $profile->getEducationField()))
+            ->setAvailability($this->stringFromPayload($payload, 'availability', $profile->getAvailability() ?: 'Immédiate'));
+
+        if (array_key_exists('birthDate', $payload)) {
+            $profile->setBirthDate($this->nullableDate($payload['birthDate']));
+        }
+        if (array_key_exists('salaryExpectation', $payload)) {
+            $salary = (int) $payload['salaryExpectation'];
+            $profile->setSalaryExpectation($salary > 0 ? $salary : null);
+        }
+
+        $skills = $this->mergeUnique($profile->getSkills(), $this->arrayFromPayload($payload, 'skills'));
+        if ([] !== $skills) {
+            $profile->setSkills($skills);
+        }
+
+        $experiences = $this->mergeUnique($profile->getExperiences(), $this->arrayFromPayload($payload, 'experiences'));
+        if ([] !== $experiences) {
+            $profile->setExperiences($experiences);
+        }
+
+        $interests = $this->mergeUnique($profile->getInterests(), $this->arrayFromPayload($payload, 'interests'));
+        if ([] !== $interests) {
+            $profile->setInterests($interests);
+        }
+
+        $profile->setLanguages($this->mergeLanguageItems($profile->getLanguages(), $this->languageItemsFromPayload($payload)));
+    }
+
+    private function writeCvPdf(string $path, \App\Entity\CandidateProfile $profile, array $payload): void
+    {
+        $name = trim($profile->getFirstName() . ' ' . $profile->getLastName()) ?: 'Candidat Kibaré Job';
+        $lines = [
+            mb_strtoupper($name, 'UTF-8'),
+            $this->stringFromPayload($payload, 'jobTitle', 'Candidat'),
+            '',
+            'Coordonnées',
+            'Email : ' . $profile->getUser()->getEmail(),
+            'Ville : ' . ($profile->getCity() ?: 'Non renseignée'),
+            'Disponibilité : ' . ($profile->getAvailability() ?: 'Non renseignée'),
+        ];
+
+        $summary = trim((string) ($payload['summary'] ?? ''));
+        if ('' !== $summary) {
+            array_push($lines, '', 'Profil', $summary);
+        }
+
+        $skills = $this->arrayFromPayload($payload, 'skills');
+        if ([] !== $skills) {
+            array_push($lines, '', 'Compétences clés', implode(', ', $skills));
+        }
+
+        $experiences = $this->arrayFromPayload($payload, 'experiences');
+        if ([] !== $experiences) {
+            array_push($lines, '', 'Expériences');
+            foreach ($experiences as $experience) {
+                $lines[] = '- ' . $experience;
+            }
+        }
+
+        $education = $this->arrayFromPayload($payload, 'education');
+        array_push($lines, '', 'Formation');
+        $lines[] = trim($profile->getEducationLevel() . ' - ' . (string) $profile->getEducationField(), ' -') ?: 'Non renseignée';
+        foreach ($education as $item) {
+            $lines[] = '- ' . $item;
+        }
+
+        $languages = $this->arrayFromPayload($payload, 'languages');
+        if ([] !== $languages) {
+            array_push($lines, '', 'Langues', implode(', ', $languages));
+        }
+
+        $interests = $this->arrayFromPayload($payload, 'interests');
+        if ([] !== $interests) {
+            array_push($lines, '', 'Centres d’intérêt', implode(', ', $interests));
+        }
+
+        $this->writeTextPdf($path, $lines);
+    }
+
+    /**
+     * @param string[] $lines
+     */
+    private function writeTextPdf(string $path, array $lines): void
+    {
+        $wrapped = [];
+        foreach ($lines as $line) {
+            $line = trim((string) $line);
+            if ('' === $line) {
+                $wrapped[] = '';
+                continue;
+            }
+
+            foreach (explode("\n", wordwrap($line, 86, "\n", true)) as $chunk) {
+                $wrapped[] = $chunk;
+            }
+        }
+
+        $pages = array_chunk($wrapped, 42) ?: [[]];
+        $objects = [
+            1 => '<< /Type /Catalog /Pages 2 0 R >>',
+            3 => '<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>',
+        ];
+        $pageObjectIds = [];
+        $nextObjectId = 4;
+
+        foreach ($pages as $pageLines) {
+            $contentObjectId = $nextObjectId++;
+            $pageObjectId = $nextObjectId++;
+            $pageObjectIds[] = $pageObjectId;
+
+            $stream = "BT\n/F1 11 Tf\n50 790 Td\n15 TL\n";
+            foreach ($pageLines as $index => $line) {
+                if (0 === $index && '' !== $line) {
+                    $stream .= "/F1 17 Tf\n";
+                } elseif ('' !== $line && in_array($line, ['Coordonnées', 'Profil', 'Compétences clés', 'Expériences', 'Formation', 'Langues', 'Centres d’intérêt'], true)) {
+                    $stream .= "/F1 13 Tf\n";
+                } else {
+                    $stream .= "/F1 11 Tf\n";
+                }
+                $stream .= '(' . $this->pdfEscape($line) . ") Tj\nT*\n";
+            }
+            $stream .= "ET\n";
+
+            $objects[$contentObjectId] = "<< /Length " . strlen($stream) . " >>\nstream\n" . $stream . "endstream";
+            $objects[$pageObjectId] = '<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 3 0 R >> >> /Contents ' . $contentObjectId . ' 0 R >>';
+        }
+
+        $objects[2] = '<< /Type /Pages /Kids [' . implode(' ', array_map(static fn (int $id): string => $id . ' 0 R', $pageObjectIds)) . '] /Count ' . count($pageObjectIds) . ' >>';
+        ksort($objects);
+
+        $pdf = "%PDF-1.4\n";
+        $offsets = [0 => 0];
+        foreach ($objects as $id => $object) {
+            $offsets[$id] = strlen($pdf);
+            $pdf .= $id . " 0 obj\n" . $object . "\nendobj\n";
+        }
+
+        $xrefOffset = strlen($pdf);
+        $maxId = max(array_keys($objects));
+        $pdf .= "xref\n0 " . ($maxId + 1) . "\n0000000000 65535 f \n";
+        for ($id = 1; $id <= $maxId; $id++) {
+            $pdf .= sprintf("%010d 00000 n \n", $offsets[$id] ?? 0);
+        }
+        $pdf .= "trailer\n<< /Size " . ($maxId + 1) . " /Root 1 0 R >>\nstartxref\n" . $xrefOffset . "\n%%EOF";
+
+        file_put_contents($path, $pdf);
+    }
+
+    private function pdfEscape(string $value): string
+    {
+        $encoded = iconv('UTF-8', 'Windows-1252//TRANSLIT//IGNORE', $value);
+        $encoded = false === $encoded ? $value : $encoded;
+
+        return str_replace(['\\', '(', ')'], ['\\\\', '\\(', '\\)'], $encoded);
+    }
+
+    private function stringFromPayload(array $payload, string $key, string $fallback = ''): string
+    {
+        $value = trim((string) ($payload[$key] ?? $fallback));
+
+        return '' === $value ? $fallback : $value;
+    }
+
+    /**
+     * @return string[]
+     */
+    private function arrayFromPayload(array $payload, string $key): array
+    {
+        $value = $payload[$key] ?? [];
+        if (is_string($value)) {
+            $value = preg_split('/[,;\n]+/', $value) ?: [];
+        }
+        if (!is_array($value)) {
+            return [];
+        }
+
+        return array_values(array_filter(array_map(static fn (mixed $item): string => trim((string) $item), $value)));
+    }
+
+    /**
+     * @return array<int, array{name: string, level: string}>
+     */
+    private function languageItemsFromPayload(array $payload): array
+    {
+        $languages = [];
+        foreach ($this->arrayFromPayload($payload, 'languages') as $language) {
+            $languages[] = ['name' => $language, 'level' => 'Intermédiaire'];
+        }
+
+        return $languages;
     }
 
     private function findOwnedDocument(string $id): CandidateDocument
@@ -601,11 +975,20 @@ class DocumentController extends AbstractController
 
     private function absolutePathFromUrl(string $url): string
     {
-        $path = str_starts_with($url, '/storage/')
-            ? 'var/storage/' . substr($url, strlen('/storage/'))
-            : ltrim($url, '/\\');
+        if (str_starts_with($url, '/storage/')) {
+            return $this->resolveStorageRoot() . DIRECTORY_SEPARATOR . str_replace(['/', '\\'], DIRECTORY_SEPARATOR, ltrim(substr($url, strlen('/storage/')), '/\\'));
+        }
 
-        return $this->projectDir . DIRECTORY_SEPARATOR . str_replace(['/', '\\'], DIRECTORY_SEPARATOR, $path);
+        return $this->projectDir . DIRECTORY_SEPARATOR . str_replace(['/', '\\'], DIRECTORY_SEPARATOR, ltrim($url, '/\\'));
+    }
+
+    private function resolveStorageRoot(): string
+    {
+        if (str_starts_with($this->storagePath, '/') || preg_match('/^[A-Za-z]:[\/\\\\]/', $this->storagePath)) {
+            return rtrim($this->storagePath, '/\\');
+        }
+
+        return $this->projectDir . DIRECTORY_SEPARATOR . trim($this->storagePath, '/\\');
     }
 
     /**
@@ -631,6 +1014,36 @@ class DocumentController extends AbstractController
             'tags' => $document->getTags(),
             'uploadedAt' => $document->getUploadedAt()->format(DATE_ATOM),
             'lastVerifiedAt' => $document->getLastVerifiedAt()?->format(DATE_ATOM),
+        ];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function serializeProfile(\App\Entity\CandidateProfile $profile): array
+    {
+        return [
+            'userId' => (string) $profile->getUser()->getId(),
+            'firstName' => $profile->getFirstName(),
+            'lastName' => $profile->getLastName(),
+            'photoUrl' => $profile->getPhotoUrl(),
+            'birthDate' => $profile->getBirthDate()?->format('Y-m-d'),
+            'city' => $profile->getCity(),
+            'educationLevel' => $profile->getEducationLevel(),
+            'educationField' => $profile->getEducationField(),
+            'skills' => $profile->getSkills(),
+            'languages' => $profile->getLanguages(),
+            'experiences' => $profile->getExperiences(),
+            'interests' => $profile->getInterests(),
+            'references' => $profile->getReferences(),
+            'drivingLicense' => $profile->hasDrivingLicense(),
+            'drivingLicenseCategory' => $profile->getDrivingLicenseCategory(),
+            'availability' => $profile->getAvailability(),
+            'salaryExpectation' => $profile->getSalaryExpectation(),
+            'cvOriginalUrl' => $profile->getCvOriginalUrl(),
+            'cvGeneratedUrl' => $profile->getCvGeneratedUrl(),
+            'cvLastUpdated' => $profile->getCvLastUpdated()?->format(DATE_ATOM),
+            'profileCompletedPercent' => $profile->getUser()->getProfileCompletedPercent(),
         ];
     }
 }

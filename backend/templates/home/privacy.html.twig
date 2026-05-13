@@ -1,0 +1,63 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Politique de confidentialité - KIBARE-JOB{% endblock %}
+
+{% block body %}
+<main class="min-h-screen bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100">
+    <header class="border-b border-slate-200 bg-white/90 px-4 py-5 backdrop-blur dark:border-slate-800 dark:bg-slate-900/90">
+        <div class="mx-auto flex max-w-5xl items-center justify-between">
+            <a href="{{ path('home') }}">
+                <img src="{{ asset('assets/brand/kibare-job-logo.jpg') }}" alt="KIBARE-JOB" class="h-12 w-auto rounded-2xl shadow-lg shadow-secondary/20">
+            </a>
+            <nav class="flex items-center gap-5 text-sm font-bold text-slate-600 dark:text-slate-300">
+                <a href="{{ path('home') }}">Accueil</a>
+                <a href="{{ path('terms_of_use') }}">Conditions</a>
+                <a href="{{ path('contact') }}">Contact</a>
+            </nav>
+        </div>
+    </header>
+
+    <section class="mx-auto max-w-5xl px-4 py-14">
+        <p class="mb-3 text-sm font-black uppercase tracking-wide text-secondary">Données personnelles</p>
+        <h1 class="text-4xl font-black tracking-tight">Politique de confidentialité</h1>
+        <p class="mt-5 max-w-3xl text-lg leading-8 text-slate-600 dark:text-slate-300">
+            Cette politique explique comment KIBARE-JOB collecte, utilise et protège les données nécessaires au fonctionnement de la plateforme, notamment les données de profil, les CV et les documents de candidature.
+        </p>
+
+        <div class="mt-10 grid gap-5">
+            {% set sections = [
+                {
+                    title: 'Données collectées',
+                    text: "Nous collectons les informations de compte, de profil candidat, les documents téléversés, les candidatures envoyées, les interactions avec les offres, ainsi que les informations techniques nécessaires à la sécurité et à la stabilité du service."
+                },
+                {
+                    title: 'Utilisation des CV et documents',
+                    text: "Les CV, diplômes, attestations et certificats servent à compléter le profil candidat, calculer le score de compatibilité avec les offres, générer des documents adaptés et envoyer les candidatures lorsque l'utilisateur en donne l'action explicite."
+                },
+                {
+                    title: 'Consentement',
+                    text: "Avant la création du compte et avant les traitements sensibles liés au CV, l'utilisateur doit accepter que ses données soient utilisées pour le matching, la génération de CV, la génération de lettres et l'envoi de candidatures."
+                },
+                {
+                    title: 'Partage des données',
+                    text: "Les données de candidature sont transmises uniquement aux recruteurs concernés par une offre ou aux destinataires nécessaires à l'envoi d'une candidature. Les sources externes d'offres ne reçoivent pas les documents candidat depuis KIBARE-JOB."
+                },
+                {
+                    title: 'Conservation et suppression',
+                    text: "Les documents et candidatures sont conservés pour permettre le suivi du candidat. L'utilisateur peut demander la correction ou la suppression de ses données via la page Contact."
+                },
+                {
+                    title: 'Sécurité',
+                    text: "KIBARE-JOB applique des contrôles d'accès, une séparation des espaces candidat, recruteur et administrateur, et recommande l'utilisation d'un stockage fichiers sécurisé en production."
+                }
+            ] %}
+            {% for section in sections %}
+                <article class="rounded-3xl bg-white p-6 shadow-sm ring-1 ring-slate-100 dark:bg-slate-900 dark:ring-slate-800">
+                    <h2 class="text-xl font-black">{{ section.title }}</h2>
+                    <p class="mt-3 leading-7 text-slate-600 dark:text-slate-300">{{ section.text }}</p>
+                </article>
+            {% endfor %}
+        </div>
+    </section>
+</main>
+{% endblock %}

@@ -9,6 +9,7 @@ use App\Entity\JobOffer;
 use App\Entity\Swipe;
 use App\Entity\User;
 use App\Message\GenerateApplicationJob;
+use App\MessageHandler\GenerateApplicationJobHandler;
 use App\Repository\CandidateDocumentRepository;
 use App\Repository\JobOfferRepository;
 use App\Repository\SwipeRepository;
@@ -20,7 +21,6 @@ use Psr\Log\LoggerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\Messenger\MessageBusInterface;
 use Symfony\Component\Routing\Attribute\Route;
 
 #[Route('/api/jobs')]
@@ -31,7 +31,7 @@ class SwipeController extends AbstractController
         private readonly SwipeRepository $swipeRepository,
         private readonly CandidateDocumentRepository $documentRepository,
         private readonly EntityManagerInterface $entityManager,
-        private readonly MessageBusInterface $messageBus,
+        private readonly GenerateApplicationJobHandler $applicationJobHandler,
         private readonly SubscriptionService $subscriptionService,
         private readonly ScoreCacheService $scoreCacheService,
         private readonly CacheService $cacheService,
@@ -81,16 +81,36 @@ class SwipeController extends AbstractController
             }
         }
 
-        if ($this->swipeRepository->findOneBy(['candidate' => $user, 'offer' => $offer, 'isDeleted' => false]) instanceof Swipe) {
+        $existingSwipe = $this->swipeRepository->findOneBy([
+            'candidate' => $user,
+            'offer' => $offer,
+        ]);
+
+        if ($existingSwipe instanceof Swipe && !$existingSwipe->isDeleted()) {
             return $this->json(['error' => 'Cette offre a déjà été swipée.'], JsonResponse::HTTP_CONFLICT);
         }
 
-        $swipe = (new Swipe())
+        $swipe = $existingSwipe instanceof Swipe ? $existingSwipe : new Swipe();
+        $swipe
             ->setCandidate($user)
             ->setOffer($offer)
             ->setDirection($direction)
             ->setMatchScore($this->scoreCacheService->getScore($candidateProfile, $offer))
-            ->setStatus(SwipeStatus::Sent);
+            ->setStatus(SwipeStatus::Sent)
+            ->setSentAt(new \DateTimeImmutable())
+            ->setViewedAt(null)
+            ->setIsDeleted(false)
+            ->setCvUsedUrl(null)
+            ->setMotivationLetterText(null)
+            ->setDocumentsSent(null)
+            ->setEmailSent(false)
+            ->setEmailRecipient(null)
+            ->setEmailSender(null)
+            ->setEmailReplyTo(null)
+            ->setEmailSubject(null)
+            ->setEmailBody(null)
+            ->setEmailError(null)
+            ->setEmailSentAt(null);
 
         $user->setSwipesUsedToday($user->getSwipesUsedToday() + 1);
 
@@ -99,13 +119,13 @@ class SwipeController extends AbstractController
         $this->cacheService->incrementDailyQuota((string) $user->getId());
         $this->cacheService->invalidateFeed((string) $user->getId());
 
-        $applicationQueued = false;
+        $applicationProcessed = false;
         if ($direction !== SwipeDirection::Dislike) {
             try {
-                $this->messageBus->dispatch(new GenerateApplicationJob((string) $swipe->getId()));
-                $applicationQueued = true;
+                ($this->applicationJobHandler)(new GenerateApplicationJob((string) $swipe->getId()));
+                $applicationProcessed = true;
             } catch (\Throwable $exception) {
-                $this->logger->warning('La génération automatique de candidature n’a pas pu être planifiée après un swipe.', [
+                $this->logger->warning('La génération automatique de candidature n’a pas pu être finalisée après un swipe.', [
                     'swipeId' => (string) $swipe->getId(),
                     'offerId' => (string) $offer->getId(),
                     'candidateId' => (string) $user->getId(),
@@ -119,7 +139,11 @@ class SwipeController extends AbstractController
             'swipeId' => (string) $swipe->getId(),
             'direction' => $direction->value,
             'matchScore' => $swipe->getMatchScore(),
-            'queued' => $applicationQueued,
+            'queued' => false,
+            'processed' => $applicationProcessed,
+            'emailSent' => $swipe->isEmailSent(),
+            'emailRecipient' => $swipe->getEmailRecipient(),
+            'emailError' => $swipe->getEmailError(),
         ], JsonResponse::HTTP_ACCEPTED);
     }
 

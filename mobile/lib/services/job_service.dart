@@ -7,12 +7,22 @@ class SwipeResult {
     this.swipeId,
     this.direction,
     this.queued = false,
+    this.processed = false,
+    this.emailSent = false,
+    this.emailRecipient,
+    this.emailError,
   });
 
   final bool accepted;
   final String? swipeId;
   final String? direction;
   final bool queued;
+  final bool processed;
+  final bool emailSent;
+  final String? emailRecipient;
+  final String? emailError;
+
+  bool get hasEmailError => emailError != null && emailError!.trim().isNotEmpty;
 }
 
 class ProfileCompletionRequiredException implements Exception {
@@ -67,6 +77,10 @@ class JobService {
         swipeId: data['swipeId']?.toString(),
         direction: data['direction']?.toString(),
         queued: data['queued'] == true,
+        processed: data['processed'] == true,
+        emailSent: data['emailSent'] == true,
+        emailRecipient: data['emailRecipient']?.toString(),
+        emailError: data['emailError']?.toString(),
       );
     } on ApiException catch (error) {
       final data = error.data;

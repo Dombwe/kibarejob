@@ -25,6 +25,7 @@ class CleanupDocumentsCommand extends Command
         private readonly EntityManagerInterface $entityManager,
         private readonly ChunkedUploadService $chunkedUploadService,
         private readonly string $projectDir,
+        private readonly string $storagePath,
     ) {
         parent::__construct();
     }
@@ -104,10 +105,19 @@ class CleanupDocumentsCommand extends Command
 
     private function absolutePathFromUrl(string $url): string
     {
-        $path = str_starts_with($url, '/storage/')
-            ? 'var/storage/' . substr($url, strlen('/storage/'))
-            : ltrim($url, '/\\');
+        if (str_starts_with($url, '/storage/')) {
+            return $this->resolveStorageRoot() . DIRECTORY_SEPARATOR . str_replace(['/', '\\'], DIRECTORY_SEPARATOR, ltrim(substr($url, strlen('/storage/')), '/\\'));
+        }
 
-        return $this->projectDir . DIRECTORY_SEPARATOR . str_replace(['/', '\\'], DIRECTORY_SEPARATOR, $path);
+        return $this->projectDir . DIRECTORY_SEPARATOR . str_replace(['/', '\\'], DIRECTORY_SEPARATOR, ltrim($url, '/\\'));
+    }
+
+    private function resolveStorageRoot(): string
+    {
+        if (str_starts_with($this->storagePath, '/') || preg_match('/^[A-Za-z]:[\/\\\\]/', $this->storagePath)) {
+            return rtrim($this->storagePath, '/\\');
+        }
+
+        return $this->projectDir . DIRECTORY_SEPARATOR . trim($this->storagePath, '/\\');
     }
 }
