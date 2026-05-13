@@ -893,7 +893,16 @@ function initOfferPreview() {
     if (profile) {
       const level = valueOf("[data-education-level-input]", "Niveau non renseigne");
       const fields = listValue("[data-education-field-input]");
-      profile.textContent = `${level} · ${fields.length ? fields.join(", ") : "Domaine non renseigne"}`;
+      const expMin = Math.max(0, parseInt(valueOf("[data-experience-min-input]", "0"), 10) || 0);
+      const rawExpMax = valueOf("[data-experience-max-input]", "");
+      const expMax = rawExpMax === "" ? null : Math.max(0, parseInt(rawExpMax, 10) || 0);
+      let experience = "Debutant accepte";
+      if (expMax !== null && expMax > expMin) {
+        experience = `${expMin} - ${expMax} ans`;
+      } else if (expMin > 0) {
+        experience = `${expMin} an${expMin > 1 ? "s" : ""} minimum`;
+      }
+      profile.textContent = `${level} - ${fields.length ? fields.join(", ") : "Domaine non renseigne"} - ${experience}`;
     }
 
     if (documents) {
@@ -1174,3 +1183,4 @@ const ISO_COUNTRY_CODES = [
   "YE","YT",
   "ZA","ZM","ZW",
 ];
+

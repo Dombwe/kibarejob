@@ -91,6 +91,16 @@
                         Pas encore de compte ?
                         <a href="{{ path('app_register') }}" class="font-black text-secondary transition hover:text-primary">Créer un compte recruteur</a>
                     </p>
+
+                    <form class="mt-5 rounded-2xl border border-slate-200 bg-slate-50 p-4" method="post" action="{{ path('app_resend_verification') }}">
+                        <label class="block">
+                            <span class="text-sm font-black text-slate-700">Renvoyer le mail de confirmation</span>
+                            <input class="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 outline-none transition focus:border-secondary focus:ring-4 focus:ring-secondary/20" type="email" name="email" value="{{ last_username }}" autocomplete="email" required>
+                        </label>
+                        <button class="mt-3 w-full rounded-2xl border border-secondary/30 px-5 py-3 text-sm font-black text-secondary transition hover:bg-secondary hover:text-white" type="submit">
+                            Renvoyer le lien
+                        </button>
+                    </form>
                 </div>
             </div>
         </section>

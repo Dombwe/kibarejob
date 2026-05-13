@@ -6,7 +6,8 @@ parameters:
     app.subscription_mode_default: 'mock'
     app.payment_method_default: 'none'
     app.public_url_default: 'http://localhost:8000'
-    app.mail_from_default: 'no-reply@kibarejob.local'
+    app.mail_from_default: 'emmanueldombwe@gmail.com'
+    app.mail_from_name_default: 'KIBARE Job'
     app.contact_to_default: '%app.mail_from%'
     app.subscription_mode: '%env(default:app.subscription_mode_default:SUBSCRIPTION_MODE)%'
     app.payment_method: '%env(default:app.payment_method_default:PAYMENT_METHOD)%'
@@ -15,6 +16,7 @@ parameters:
     app.storage_base_url: '%env(default:app.storage_base_url_default:KIBARE_STORAGE_BASE_URL)%'
     app.storage_path: '%env(default:app.storage_path_default:KIBARE_STORAGE_PATH)%'
     app.mail_from: '%env(default:app.mail_from_default:MAIL_FROM)%'
+    app.mail_from_name: '%env(default:app.mail_from_name_default:MAIL_FROM_NAME)%'
     app.contact_to: '%env(default:app.contact_to_default:CONTACT_TO)%'
 
 services:
@@ -84,6 +86,7 @@ services:
         arguments:
             $publicUrl: '%app.public_url%'
             $mailFrom: '%app.mail_from%'
+            $mailFromName: '%app.mail_from_name%'
 
     App\Service\ContactEmailService:
         arguments:

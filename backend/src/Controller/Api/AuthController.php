@@ -150,11 +150,13 @@ class AuthController extends AbstractController
             $errors['phone'][] = 'Le téléphone doit respecter le format +226XXXXXXXX.';
         }
 
-        if ($this->userRepository->findOneBy(['email' => $email]) instanceof User) {
+        $emailUser = $this->userRepository->findOneBy(['email' => $email]);
+        if ($emailUser instanceof User && !$emailUser->isDeleted()) {
             $errors['email'][] = 'Cet email est déjà utilisé.';
         }
 
-        if ($phone && $this->userRepository->findOneBy(['phone' => $phone]) instanceof User) {
+        $phoneUser = $phone ? $this->userRepository->findOneBy(['phone' => $phone]) : null;
+        if ($phoneUser instanceof User && !$phoneUser->isDeleted()) {
             $errors['phone'][] = 'Ce téléphone est déjà utilisé.';
         }
 
@@ -170,6 +172,12 @@ class AuthController extends AbstractController
         if ([] !== $errors) {
             return $this->json(['errors' => $errors], JsonResponse::HTTP_UNPROCESSABLE_ENTITY);
         }
+
+        $this->releaseDeletedIdentity($emailUser, $email);
+        if ($phoneUser instanceof User && $phoneUser !== $emailUser) {
+            $this->releaseDeletedIdentity($phoneUser, $phoneUser->getEmail());
+        }
+        $this->entityManager->flush();
 
         $user = (new User())
             ->setEmail($email)
@@ -487,6 +495,21 @@ class AuthController extends AbstractController
         $response['debug'][$key] = $token;
 
         return $response;
+    }
+
+    private function releaseDeletedIdentity(?User $user, string $requestedEmail): void
+    {
+        if (!$user instanceof User || !$user->isDeleted()) {
+            return;
+        }
+
+        $suffix = null !== $user->getId() ? (string) $user->getId() : bin2hex(random_bytes(8));
+
+        $user
+            ->setEmail(sprintf('deleted+%s+%s', $suffix, $requestedEmail))
+            ->setPhone(null)
+            ->setIsActive(false)
+            ->setIsEmailVerified(false);
     }
 
     /**

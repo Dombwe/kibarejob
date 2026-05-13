@@ -4,11 +4,17 @@ namespace App\Controller\Admin;
 
 use App\Entity\User;
 use Doctrine\ORM\EntityManagerInterface;
+use Doctrine\ORM\QueryBuilder;
+use EasyCorp\Bundle\EasyAdminBundle\Collection\FieldCollection;
+use EasyCorp\Bundle\EasyAdminBundle\Collection\FilterCollection;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Action;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Actions;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Crud;
 use EasyCorp\Bundle\EasyAdminBundle\Controller\AbstractCrudController;
 use EasyCorp\Bundle\EasyAdminBundle\Context\AdminContext;
+use EasyCorp\Bundle\EasyAdminBundle\Dto\BatchActionDto;
+use EasyCorp\Bundle\EasyAdminBundle\Dto\EntityDto;
+use EasyCorp\Bundle\EasyAdminBundle\Dto\SearchDto;
 use EasyCorp\Bundle\EasyAdminBundle\Field\ArrayField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\BooleanField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\DateTimeField;
@@ -54,14 +60,30 @@ class UserCrudController extends AbstractCrudController
         $activate = Action::new('activate', 'Activer')->linkToCrudAction('activate');
         $deactivate = Action::new('deactivate', 'Désactiver')->linkToCrudAction('deactivate');
         $ban = Action::new('ban', 'Bannir')->linkToCrudAction('ban')->addCssClass('btn btn-danger');
+        $batchBan = Action::new('batchBan', 'Supprimer la sélection')
+            ->linkToCrudAction('batchBan')
+            ->createAsBatchAction()
+            ->addCssClass('btn btn-danger');
 
         return $actions
+            ->disable(Action::DELETE)
+            ->add(Crud::PAGE_INDEX, $batchBan)
             ->add(Crud::PAGE_INDEX, $activate)
             ->add(Crud::PAGE_INDEX, $deactivate)
             ->add(Crud::PAGE_INDEX, $ban)
             ->add(Crud::PAGE_DETAIL, $activate)
             ->add(Crud::PAGE_DETAIL, $deactivate)
             ->add(Crud::PAGE_DETAIL, $ban);
+    }
+
+    public function createIndexQueryBuilder(SearchDto $searchDto, EntityDto $entityDto, FieldCollection $fields, FilterCollection $filters): QueryBuilder
+    {
+        $queryBuilder = parent::createIndexQueryBuilder($searchDto, $entityDto, $fields, $filters);
+        $alias = $queryBuilder->getRootAliases()[0] ?? 'entity';
+
+        return $queryBuilder
+            ->andWhere(sprintf('%s.isDeleted = :deleted', $alias))
+            ->setParameter('deleted', false);
     }
 
     public function activate(AdminContext $context, EntityManagerInterface $entityManager)
@@ -79,6 +101,12 @@ class UserCrudController extends AbstractCrudController
     {
         $user = $context->getEntity()->getInstance();
         if ($user instanceof User) {
+            if ($this->isProtectedAdmin($user)) {
+                $this->addFlash('warning', 'Le compte admin principal ne peut pas etre desactive.');
+
+                return $this->redirect($context->getReferrer() ?? $this->generateUrl('admin'));
+            }
+
             $user->setIsActive(false);
             $entityManager->flush();
         }
@@ -90,11 +118,46 @@ class UserCrudController extends AbstractCrudController
     {
         $user = $context->getEntity()->getInstance();
         if ($user instanceof User) {
+            if ($this->isProtectedAdmin($user)) {
+                $this->addFlash('warning', 'Le compte admin principal ne peut pas etre supprime.');
+
+                return $this->redirect($context->getReferrer() ?? $this->generateUrl('admin'));
+            }
+
             $user->setIsActive(false)->setIsDeleted(true);
             $entityManager->flush();
         }
 
         return $this->redirect($context->getReferrer() ?? $this->generateUrl('admin'));
+    }
+
+    public function batchBan(BatchActionDto $batchActionDto, EntityManagerInterface $entityManager)
+    {
+        $count = 0;
+
+        foreach ($batchActionDto->getEntityIds() as $id) {
+            $user = $entityManager->find(User::class, $id);
+            if (!$user instanceof User) {
+                continue;
+            }
+
+            if ($this->isProtectedAdmin($user)) {
+                continue;
+            }
+
+            $user->setIsActive(false)->setIsDeleted(true);
+            ++$count;
+        }
+
+        $entityManager->flush();
+        $this->addFlash('success', sprintf('%d utilisateur(s) supprimé(s) logiquement.', $count));
+
+        return $this->redirect($batchActionDto->getReferrerUrl());
+    }
+
+    private function isProtectedAdmin(User $user): bool
+    {
+        return 'admin@kibarejob.test' === mb_strtolower($user->getEmail());
     }
 }
 

@@ -66,11 +66,16 @@ class WebAuthController extends AbstractController
             if ('' === $form['email'] || false === filter_var($form['email'], FILTER_VALIDATE_EMAIL)) {
                 $errors['email'][] = 'Email invalide.';
             }
-            if ($userRepository->findOneBy(['email' => $form['email']]) instanceof User) {
+            $emailUser = $userRepository->findOneBy(['email' => $form['email']]);
+            if ($emailUser instanceof User && !$emailUser->isDeleted()) {
                 $errors['email'][] = 'Cet email est déjà utilisé';
             }
             if (!$validationService->isValidBurkinaPhone($form['phone'] ?: null)) {
                 $errors['phone'][] = 'Le téléphone doit respecter le format +226XXXXXXXX.';
+            }
+            $phoneUser = '' === $form['phone'] ? null : $userRepository->findOneBy(['phone' => $form['phone']]);
+            if ($phoneUser instanceof User && !$phoneUser->isDeleted()) {
+                $errors['phone'][] = 'Ce telephone est deja utilise.';
             }
             if ('' === $form['companyName']) {
                 $errors['companyName'][] = "Le nom de l'entreprise est obligatoire.";
@@ -97,6 +102,12 @@ class WebAuthController extends AbstractController
             }
 
             if ([] === $errors) {
+                $this->releaseDeletedIdentity($emailUser, $form['email']);
+                if ($phoneUser instanceof User && $phoneUser !== $emailUser) {
+                    $this->releaseDeletedIdentity($phoneUser, $phoneUser->getEmail());
+                }
+                $entityManager->flush();
+
                 $user = (new User())
                     ->setEmail($form['email'])
                     ->setPhone('' === $form['phone'] ? null : $form['phone'])
@@ -131,6 +142,21 @@ class WebAuthController extends AbstractController
         ]);
     }
 
+    private function releaseDeletedIdentity(?User $user, string $requestedEmail): void
+    {
+        if (!$user instanceof User || !$user->isDeleted()) {
+            return;
+        }
+
+        $suffix = null !== $user->getId() ? (string) $user->getId() : bin2hex(random_bytes(8));
+
+        $user
+            ->setEmail(sprintf('deleted+%s+%s', $suffix, $requestedEmail))
+            ->setPhone(null)
+            ->setIsActive(false)
+            ->setIsEmailVerified(false);
+    }
+
     #[Route('/verify-email', name: 'app_verify_email', methods: ['GET'])]
     public function verifyEmail(
         Request $request,
@@ -160,6 +186,31 @@ class WebAuthController extends AbstractController
         $entityManager->flush();
 
         $this->addFlash('success', 'Adresse email confirmée. Vous pouvez maintenant vous connecter.');
+
+        return $this->redirectToRoute('app_login');
+    }
+
+    #[Route('/resend-verification', name: 'app_resend_verification', methods: ['POST'])]
+    public function resendVerification(
+        Request $request,
+        UserRepository $userRepository,
+        ValidationService $validationService,
+        AuthEmailService $authEmailService,
+        EntityManagerInterface $entityManager,
+    ): RedirectResponse {
+        $email = $validationService->normalizeEmail($request->request->get('email'));
+
+        if ('' !== $email && false !== filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            $user = $userRepository->findOneBy(['email' => $email]);
+
+            if ($user instanceof User && !$user->isDeleted() && !$user->isEmailVerified()) {
+                $token = $authEmailService->createEmailVerificationToken($user);
+                $entityManager->flush();
+                $authEmailService->sendEmailVerification($user, $token);
+            }
+        }
+
+        $this->addFlash('success', 'Si un compte non confirme existe avec cet email, un nouveau lien de confirmation a ete envoye.');
 
         return $this->redirectToRoute('app_login');
     }

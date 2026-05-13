@@ -51,6 +51,9 @@ class JobOffer
     #[ORM\Column(options: ['default' => 0])]
     private int $requiredExperienceYears = 0;
 
+    #[ORM\Column(nullable: true)]
+    private ?int $requiredExperienceYearsMax = null;
+
     #[ORM\Column(enumType: ContractType::class)]
     private ContractType $contractType = ContractType::Cdi;
 
@@ -147,7 +150,24 @@ class JobOffer
     public function getEducationField(): ?string { return $this->educationField; }
     public function setEducationField(?string $educationField): self { $this->educationField = $educationField; return $this; }
     public function getRequiredExperienceYears(): int { return $this->requiredExperienceYears; }
-    public function setRequiredExperienceYears(int $requiredExperienceYears): self { $this->requiredExperienceYears = $requiredExperienceYears; return $this; }
+    public function setRequiredExperienceYears(int $requiredExperienceYears): self { $this->requiredExperienceYears = max(0, $requiredExperienceYears); return $this; }
+    public function getRequiredExperienceYearsMax(): ?int { return $this->requiredExperienceYearsMax; }
+    public function setRequiredExperienceYearsMax(?int $requiredExperienceYearsMax): self
+    {
+        $this->requiredExperienceYearsMax = null === $requiredExperienceYearsMax ? null : max(0, $requiredExperienceYearsMax);
+
+        return $this;
+    }
+    public function getRequiredExperienceLabel(): string
+    {
+        if (null !== $this->requiredExperienceYearsMax && $this->requiredExperienceYearsMax > $this->requiredExperienceYears) {
+            return sprintf('%d - %d ans', $this->requiredExperienceYears, $this->requiredExperienceYearsMax);
+        }
+
+        return 0 === $this->requiredExperienceYears
+            ? 'Debutant accepte'
+            : $this->requiredExperienceYears . ' an' . ($this->requiredExperienceYears > 1 ? 's' : '') . ' minimum';
+    }
     public function getContractType(): ContractType { return $this->contractType; }
     public function setContractType(ContractType $contractType): self { $this->contractType = $contractType; return $this; }
     public function getLocation(): string { return $this->location; }

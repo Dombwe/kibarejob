@@ -157,6 +157,9 @@ class OfferController extends AbstractController
         if (array_key_exists('requiredExperienceYears', $payload) || array_key_exists('required_expérience_years', $payload)) {
             $offer->setRequiredExperienceYears((int) ($payload['requiredExperienceYears'] ?? $payload['required_expérience_years']));
         }
+        if (array_key_exists('requiredExperienceYearsMax', $payload) || array_key_exists('required_experience_years_max', $payload)) {
+            $offer->setRequiredExperienceYearsMax($this->nullableInt($payload['requiredExperienceYearsMax'] ?? $payload['required_experience_years_max']));
+        }
         if (array_key_exists('contractType', $payload) || array_key_exists('contract_type', $payload)) {
             $offer->setContractType(ContractType::from((string) ($payload['contractType'] ?? $payload['contract_type'])));
         }
@@ -223,6 +226,8 @@ class OfferController extends AbstractController
             'requiredSkills' => $offer->getRequiredSkills(),
             'requiredEducation' => $offer->getRequiredEducation(),
             'requiredExperienceYears' => $offer->getRequiredExperienceYears(),
+            'requiredExperienceYearsMax' => $offer->getRequiredExperienceYearsMax(),
+            'requiredExperienceLabel' => $offer->getRequiredExperienceLabel(),
             'contractType' => $offer->getContractType()->value,
             'location' => $offer->getLocation(),
             'salaryMin' => $offer->getSalaryMin(),

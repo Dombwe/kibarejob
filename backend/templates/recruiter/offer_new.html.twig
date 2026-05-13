@@ -5,7 +5,7 @@
 
 {% block recruiter_content %}
 {% set contracts = ['CDI', 'CDD', 'Stage', 'Freelance', 'Prestation'] %}
-{% set educations = ['Aucun', 'CEP', 'BEPC', 'Bac', 'Bac +1', 'Bac +2', 'Licence', 'Master', 'Doctorat'] %}
+{% set educations = ['Aucun', 'CEP', 'BEPC', 'Bac', 'Bac +1', 'Bac +2', 'Bac +3', 'Bac +4', 'Bac +5', 'Bac +6', 'Bac +7', 'Bac +8', 'Bac +9', 'Bac +10', 'Bac +11', 'Bac +12'] %}
 {% set skills = ['Communication', 'Travail en équipe', 'Organisation', 'Gestion de projet', 'Excel', 'Leadership', 'Analyse', 'Reporting'] %}
 {% set offerMode = offerMode|default('create') %}
 {% set offerForm = offerForm|default({
@@ -18,9 +18,10 @@
     deadline: '',
     salaryMin: '',
     salaryMax: '',
-    requiredEducation: 'Licence',
+    requiredEducation: 'Bac +3',
     educationField: '',
     requiredExperienceYears: 0,
+    requiredExperienceYearsMax: '',
     requiredSkills: 'JavaScript, React, Node.js',
     requiredDocuments: ['CV', 'Lettre de motivation'],
     recommendedDocuments: [],
@@ -164,10 +165,22 @@
                         </div>
                     </div>
                     <div>
-                        <label class="block">
-                            <span class="mb-2 block text-sm font-black text-slate-700">Annees d'expérience minimum</span>
-                            <input type="number" min="0" name="requiredExperienceYears" value="{{ offerForm.requiredExperienceYears }}" class="w-full rounded-2xl border border-slate-200 px-4 py-3 font-semibold outline-none focus:ring-4 focus:ring-secondary/20">
-                        </label>
+                        <span class="mb-2 block text-sm font-black text-slate-700">Années d'expérience souhaitées</span>
+                        <div class="flex items-center gap-4">
+                            <label class="min-w-0 flex-1">
+                                <span class="mb-2 block text-xs font-black uppercase tracking-wide text-slate-400">Minimum</span>
+                                <input type="number" min="0" name="requiredExperienceYears" value="{{ offerForm.requiredExperienceYears }}" class="w-full rounded-2xl border border-slate-200 px-4 py-3 font-semibold outline-none focus:ring-4 focus:ring-secondary/20" data-experience-min-input>
+                            </label>
+                            <span class="mt-6 font-black text-slate-400">à</span>
+                            <label class="min-w-0 flex-1">
+                                <span class="mb-2 block text-xs font-black uppercase tracking-wide text-slate-400">Maximum</span>
+                                <input type="number" min="0" name="requiredExperienceYearsMax" value="{{ offerForm.requiredExperienceYearsMax }}" class="w-full rounded-2xl border border-slate-200 px-4 py-3 font-semibold outline-none focus:ring-4 focus:ring-secondary/20" placeholder="Ex: 10" data-experience-max-input>
+                            </label>
+                        </div>
+                        {% for error in errors.requiredExperienceYearsMax ?? [] %}
+                            <span class="mt-2 block text-sm font-semibold text-slate-700">{{ error }}</span>
+                        {% endfor %}
+                        <p class="mt-2 text-sm font-semibold text-slate-500">Exemple : minimum 5 et maximum 10 pour afficher 5 - 10 ans.</p>
                     </div>
                 </div>
             </section>
@@ -258,7 +271,7 @@
                     <div class="mt-4 grid gap-3 md:grid-cols-2">
                         <div class="rounded-2xl bg-slate-50 p-3">
                             <p class="text-xs font-black uppercase tracking-wide text-slate-400">Profil</p>
-                            <p class="mt-1 text-sm font-semibold text-slate-700" data-preview-profile>Licence · Domaine non renseigné</p>
+                            <p class="mt-1 text-sm font-semibold text-slate-700" data-preview-profile>Bac +3 · Domaine non renseigné · Débutant accepté</p>
                         </div>
                         <div class="rounded-2xl bg-slate-50 p-3">
                             <p class="text-xs font-black uppercase tracking-wide text-slate-400">Documents</p>

@@ -150,6 +150,8 @@ class FeedController extends AbstractController
             'requiredEducation' => $offer->getRequiredEducation(),
             'educationField' => $offer->getEducationField(),
             'requiredExperienceYears' => $offer->getRequiredExperienceYears(),
+            'requiredExperienceYearsMax' => $offer->getRequiredExperienceYearsMax(),
+            'requiredExperienceLabel' => $offer->getRequiredExperienceLabel(),
             'contractType' => $offer->getContractType()->value,
             'location' => $offer->getLocation(),
             'salaryMin' => $offer->getSalaryMin(),

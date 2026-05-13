@@ -47,8 +47,9 @@ class JobOfferCrudController extends AbstractCrudController
         yield TextField::new('title', 'Titre');
         yield TextareaField::new('description')->hideOnIndex();
         yield ArrayField::new('requiredSkills', 'Compétences')->hideOnIndex();
-        yield TextField::new('requiredEducation', 'Niveau')->hideOnIndex();
+        yield ChoiceField::new('requiredEducation', 'Niveau')->setChoices($this->educationChoices())->hideOnIndex();
         yield IntegerField::new('requiredExperienceYears', 'Expérience')->hideOnIndex();
+        yield IntegerField::new('requiredExperienceYearsMax', 'Expérience max')->hideOnIndex();
         yield TextField::new('location', 'Lieu');
         yield IntegerField::new('salaryMin', 'Salaire min')->hideOnIndex();
         yield IntegerField::new('salaryMax', 'Salaire max')->hideOnIndex();
@@ -125,6 +126,16 @@ class JobOfferCrudController extends AbstractCrudController
         }
 
         return $this->redirect($context->getReferrer() ?? $this->generateUrl('admin'));
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    private function educationChoices(): array
+    {
+        $levels = ['Aucun', 'CEP', 'BEPC', 'Bac', 'Bac +1', 'Bac +2', 'Bac +3', 'Bac +4', 'Bac +5', 'Bac +6', 'Bac +7', 'Bac +8', 'Bac +9', 'Bac +10', 'Bac +11', 'Bac +12'];
+
+        return array_combine($levels, $levels);
     }
 }
 

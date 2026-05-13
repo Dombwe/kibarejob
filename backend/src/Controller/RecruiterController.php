@@ -63,6 +63,8 @@ class RecruiterController extends AbstractController
             $location = trim((string) $request->request->get('location'));
             $requiredEducation = (string) $request->request->get('requiredEducation', 'Aucun');
             $educationField = trim((string) $request->request->get('educationField'));
+            $requiredExperienceYears = max(0, (int) $request->request->get('requiredExperienceYears', 0));
+            $requiredExperienceYearsMax = $this->nullableInt($request->request->get('requiredExperienceYearsMax'));
             $deadline = (string) $request->request->get('deadline');
             $scheduledPublishAt = trim((string) $request->request->get('scheduledPublishAt'));
             $isDraft = 'draft' === $publishAction;
@@ -78,6 +80,9 @@ class RecruiterController extends AbstractController
             }
             if (!$isDraft && 'scheduled' === $publishMode && '' === $scheduledPublishAt) {
                 $errors['scheduledPublishAt'][] = 'Indiquez une date de publication.';
+            }
+            if (null !== $requiredExperienceYearsMax && $requiredExperienceYearsMax < $requiredExperienceYears) {
+                $errors['requiredExperienceYearsMax'][] = 'L experience maximum doit etre superieure ou egale au minimum.';
             }
 
             $contract = ContractType::tryFrom($contractType) ?? ContractType::Cdi;
@@ -111,7 +116,8 @@ class RecruiterController extends AbstractController
                     ->setRequiredEducation($requiredEducation)
                     ->setEducationField('' === $educationField ? null : $educationField)
                     ->setRequiredSkills($skills)
-                    ->setRequiredExperienceYears((int) $request->request->get('requiredExperienceYears', 0))
+                    ->setRequiredExperienceYears($requiredExperienceYears)
+                    ->setRequiredExperienceYearsMax($requiredExperienceYearsMax)
                     ->setRequiredDocuments($requiredDocuments ?: null)
                     ->setRecommendedDocuments($recommendedDocuments ?: null)
                     ->setSalaryMin($this->nullableInt($request->request->get('salaryMin')))
@@ -169,6 +175,8 @@ class RecruiterController extends AbstractController
             $location = trim((string) $request->request->get('location'));
             $requiredEducation = (string) $request->request->get('requiredEducation', 'Aucun');
             $educationField = trim((string) $request->request->get('educationField'));
+            $requiredExperienceYears = max(0, (int) $request->request->get('requiredExperienceYears', 0));
+            $requiredExperienceYearsMax = $this->nullableInt($request->request->get('requiredExperienceYearsMax'));
             $deadline = (string) $request->request->get('deadline');
             $scheduledPublishAt = trim((string) $request->request->get('scheduledPublishAt'));
             $isDraft = 'draft' === $publishAction;
@@ -184,6 +192,9 @@ class RecruiterController extends AbstractController
             }
             if (!$isDraft && 'scheduled' === $publishMode && '' === $scheduledPublishAt) {
                 $errors['scheduledPublishAt'][] = 'Indiquez une date de publication.';
+            }
+            if (null !== $requiredExperienceYearsMax && $requiredExperienceYearsMax < $requiredExperienceYears) {
+                $errors['requiredExperienceYearsMax'][] = 'L experience maximum doit etre superieure ou egale au minimum.';
             }
 
             if ([] === $errors) {
@@ -216,7 +227,8 @@ class RecruiterController extends AbstractController
                     ->setRequiredEducation($requiredEducation)
                     ->setEducationField('' === $educationField ? null : $educationField)
                     ->setRequiredSkills($skills)
-                    ->setRequiredExperienceYears((int) $request->request->get('requiredExperienceYears', 0))
+                    ->setRequiredExperienceYears($requiredExperienceYears)
+                    ->setRequiredExperienceYearsMax($requiredExperienceYearsMax)
                     ->setRequiredDocuments($requiredDocuments ?: null)
                     ->setRecommendedDocuments($recommendedDocuments ?: null)
                     ->setSalaryMin($this->nullableInt($request->request->get('salaryMin')))
@@ -500,9 +512,10 @@ class RecruiterController extends AbstractController
                 'deadline' => '',
                 'salaryMin' => '',
                 'salaryMax' => '',
-                'requiredEducation' => 'Licence',
+                'requiredEducation' => 'Bac +3',
                 'educationField' => '',
                 'requiredExperienceYears' => 0,
+                'requiredExperienceYearsMax' => '',
                 'requiredSkills' => 'JavaScript, React, Node.js',
                 'requiredDocuments' => ['CV', 'Lettre de motivation'],
                 'recommendedDocuments' => [],
@@ -524,6 +537,7 @@ class RecruiterController extends AbstractController
             'requiredEducation' => $offer->getRequiredEducation(),
             'educationField' => $offer->getEducationField() ?? '',
             'requiredExperienceYears' => $offer->getRequiredExperienceYears(),
+            'requiredExperienceYearsMax' => $offer->getRequiredExperienceYearsMax(),
             'requiredSkills' => implode(', ', $offer->getRequiredSkills()),
             'requiredDocuments' => $offer->getRequiredDocuments() ?: ['CV', 'Lettre de motivation'],
             'recommendedDocuments' => $offer->getRecommendedDocuments() ?: [],

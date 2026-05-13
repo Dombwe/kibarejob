@@ -254,7 +254,7 @@ class DashboardStatsService
                 'skills' => $profile?->getSkills() ?: [],
                 'education' => $profile?->getEducationLevel() ?: 'Non renseigné',
                 'educationField' => $profile?->getEducationField() ?: 'Non renseigné',
-                'experience' => $this->experienceLabel($swipe->getOffer()->getRequiredExperienceYears()),
+                'experience' => $swipe->getOffer()->getRequiredExperienceLabel(),
                 'appliedAt' => 'Il y a ' . $this->relativeTime($swipe->getSentAt()),
                 'email' => $swipe->getCandidate()->getEmail(),
                 'phone' => $swipe->getCandidate()->getPhone(),
