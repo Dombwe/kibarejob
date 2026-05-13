@@ -38,7 +38,7 @@ class CandidateProfile
     private string $city = '';
 
     #[Assert\NotBlank]
-    #[Assert\Choice(['Aucun', 'CEP', 'BEPC', 'Bac', 'Licence', 'Master', 'Doctorat'])]
+    #[Assert\Choice(['Aucun', 'CEP', 'BEPC', 'Bac', 'Bac +1', 'Bac +2', 'Bac +3', 'Bac +4', 'Bac +5', 'Bac +6', 'Bac +7', 'Bac +8', 'Bac +9', 'Bac +10', 'Bac +11', 'Bac +12', 'Licence', 'Master', 'Doctorat'])]
     #[ORM\Column(length: 50)]
     private string $educationLevel = '';
 

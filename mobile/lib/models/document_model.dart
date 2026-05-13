@@ -40,4 +40,17 @@ class DocumentModel {
           .toList(),
     );
   }
+
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        'type': type,
+        'title': title,
+        'description': description,
+        'issuingOrganization': issuingOrganization,
+        'fileUrl': fileUrl,
+        'isVerified': isVerified,
+        'confidenceScore': confidenceScore,
+        'uploadedAt': uploadedAt?.toIso8601String(),
+        'tags': tags,
+      };
 }

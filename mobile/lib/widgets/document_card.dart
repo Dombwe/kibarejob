@@ -24,7 +24,7 @@ class DocumentCard extends StatelessWidget {
         subtitle: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(document.type),
+            Text(_documentTypeLabel(document.type)),
             const SizedBox(height: 6),
             VerificationBadge(
               isVerified: document.isVerified,
@@ -52,4 +52,15 @@ class DocumentCard extends StatelessWidget {
       ),
     );
   }
+}
+
+String _documentTypeLabel(String type) {
+  return switch (type) {
+    'cv' => 'CV',
+    'diploma' => 'Diplome',
+    'certificate' => 'Certificat',
+    'attestation' => 'Attestation',
+    'driving_license' => 'Permis de conduire',
+    _ => 'Autre',
+  };
 }

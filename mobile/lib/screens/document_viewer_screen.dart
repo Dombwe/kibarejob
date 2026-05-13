@@ -41,8 +41,7 @@ class _ImagePreview extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return FutureBuilder<List<int>>(
-      future:
-          ref.read(apiServiceProvider).getBytes(_documentFilePath(document)),
+      future: _loadDocumentBytes(ref, document),
       builder: (context, snapshot) {
         if (snapshot.connectionState != ConnectionState.done) {
           return const LoadingWidget(message: 'Chargement du document...');
@@ -71,8 +70,7 @@ class _PdfPreview extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return FutureBuilder<List<int>>(
-      future:
-          ref.read(apiServiceProvider).getBytes(_documentFilePath(document)),
+      future: _loadDocumentBytes(ref, document),
       builder: (context, snapshot) {
         if (snapshot.connectionState != ConnectionState.done) {
           return const LoadingWidget(message: 'Chargement du document...');
@@ -103,9 +101,7 @@ class _TextPreview extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return FutureBuilder<Map<String, dynamic>>(
-      future: ref.read(apiServiceProvider).getJson(
-            '/api/documents/${document.id}/preview',
-          ),
+      future: _loadDocumentPreview(ref, document),
       builder: (context, snapshot) {
         if (snapshot.connectionState != ConnectionState.done) {
           return const LoadingWidget(message: 'Préparation de l’aperçu...');
@@ -141,6 +137,63 @@ class _TextPreview extends ConsumerWidget {
       },
     );
   }
+}
+
+Future<List<int>> _loadDocumentBytes(
+    WidgetRef ref, DocumentModel document) async {
+  final storage = ref.read(storageServiceProvider);
+  final key = _documentCacheKey(document);
+
+  try {
+    final bytes = await ref.read(apiServiceProvider).getBytes(
+          _documentFilePath(document),
+        );
+    if (bytes.isNotEmpty) {
+      await storage.saveDocumentBytes(key, bytes);
+    }
+
+    return bytes;
+  } catch (error) {
+    final cached = storage.cachedDocumentBytes(key);
+    if (cached != null && cached.isNotEmpty) {
+      return cached;
+    }
+
+    rethrow;
+  }
+}
+
+Future<Map<String, dynamic>> _loadDocumentPreview(
+  WidgetRef ref,
+  DocumentModel document,
+) async {
+  final storage = ref.read(storageServiceProvider);
+  final key = _documentCacheKey(document);
+
+  try {
+    final data = await ref.read(apiServiceProvider).getJson(
+          '/api/documents/${document.id}/preview',
+        );
+    final text = data['text']?.toString();
+    if (text != null && text.trim().isNotEmpty) {
+      await storage.saveDocumentPreview(key, text);
+    }
+
+    return data;
+  } catch (error) {
+    final cached = storage.cachedDocumentPreview(key);
+    if (cached != null && cached.trim().isNotEmpty) {
+      return {'text': cached, '_offline': true};
+    }
+
+    rethrow;
+  }
+}
+
+String _documentCacheKey(DocumentModel document) {
+  final raw = document.id.isNotEmpty ? document.id : document.fileUrl;
+
+  return raw.replaceAll(RegExp(r'[^a-zA-Z0-9_-]+'), '_');
 }
 
 class _PreviewError extends StatelessWidget {

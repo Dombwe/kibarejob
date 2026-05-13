@@ -59,25 +59,35 @@ class SwipeScreen extends ConsumerWidget {
 
     if (direction == 'like') {
       _showBlockingLoader(context, 'Envoi de votre candidature...');
+    } else if (direction == 'superlike') {
+      _showBlockingLoader(context, 'Ajout aux favoris...');
     }
 
     try {
       final result = await notifier.swipe(job, direction);
-      if (context.mounted && direction == 'like') {
+      if (context.mounted && direction != 'dislike') {
         Navigator.of(context, rootNavigator: true).pop();
       }
       if (context.mounted && direction == 'like' && result.accepted) {
         await _showApplicationSentDialog(context, job, result);
+      } else if (context.mounted &&
+          direction == 'superlike' &&
+          result.accepted) {
+        ScaffoldMessenger.of(context)
+          ..hideCurrentSnackBar()
+          ..showSnackBar(
+            const SnackBar(content: Text('Offre ajoutee aux favoris.')),
+          );
       }
     } on ProfileCompletionRequiredException catch (error) {
-      if (context.mounted && direction == 'like') {
+      if (context.mounted && direction != 'dislike') {
         Navigator.of(context, rootNavigator: true).pop();
       }
       if (context.mounted) {
         await _showProfileCompletionDialog(context, error);
       }
     } catch (error) {
-      if (context.mounted && direction == 'like') {
+      if (context.mounted && direction != 'dislike') {
         Navigator.of(context, rootNavigator: true).pop();
       }
       if (context.mounted) {
@@ -319,35 +329,61 @@ class _SwipeBody extends StatelessWidget {
             SizedBox(height: topPadding),
             if (isOffline)
               Container(
-                margin: const EdgeInsets.fromLTRB(18, 0, 18, 12),
+                margin: EdgeInsets.fromLTRB(
+                  compact ? 14 : 18,
+                  0,
+                  compact ? 14 : 18,
+                  compact ? 8 : 10,
+                ),
                 padding:
-                    const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                 decoration: BoxDecoration(
                   color: AppColors.accent.withValues(alpha: 0.22),
-                  borderRadius: BorderRadius.circular(18),
+                  borderRadius: BorderRadius.circular(999),
                   border: Border.all(
                     color: AppColors.accent.withValues(alpha: 0.40),
                   ),
                 ),
                 child: Row(
                   children: [
-                    const Icon(Icons.cloud_off_rounded, size: 20),
-                    const SizedBox(width: 10),
+                    Container(
+                      width: 30,
+                      height: 30,
+                      decoration: BoxDecoration(
+                        color: AppColors.primary.withValues(alpha: 0.10),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(Icons.cloud_off_rounded, size: 17),
+                    ),
+                    const SizedBox(width: 9),
                     Expanded(
                       child: Text(
-                        'Mode hors connexion : vous pouvez consulter les offres sauvegardées, mais pas swiper.',
-                        style: Theme.of(context).textTheme.bodyMedium,
+                        'Hors ligne - offres sauvegardees uniquement',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: Theme.of(context).textTheme.labelLarge,
                       ),
                     ),
                     const SizedBox(width: 8),
                     TextButton(
                       onPressed: onRetryOnline,
-                      child: const Text('Revenir en ligne'),
+                      style: TextButton.styleFrom(
+                        minimumSize: const Size(0, 32),
+                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        padding: const EdgeInsets.symmetric(horizontal: 10),
+                      ),
+                      child: const Text('Reessayer'),
                     ),
-                    IconButton(
-                      tooltip: 'Configurer le serveur',
-                      onPressed: onConfigureServer,
-                      icon: const Icon(Icons.dns_outlined),
+                    SizedBox(
+                      width: 32,
+                      height: 32,
+                      child: IconButton(
+                        tooltip: 'Configurer le serveur',
+                        onPressed: onConfigureServer,
+                        padding: EdgeInsets.zero,
+                        iconSize: 18,
+                        icon: const Icon(Icons.tune_rounded),
+                      ),
                     ),
                   ],
                 ),

@@ -9,6 +9,7 @@ import '../theme/responsive.dart';
 import '../widgets/app_bottom_navigation.dart';
 import '../widgets/kibare_tab_app_bar.dart';
 import '../widgets/loading_widget.dart';
+import '../widgets/state_message.dart';
 
 class ProfileScreen extends ConsumerWidget {
   const ProfileScreen({super.key});
@@ -19,15 +20,59 @@ class ProfileScreen extends ConsumerWidget {
     final user = ref.watch(authControllerProvider).valueOrNull;
 
     return Scaffold(
-      appBar: const KibareTabAppBar(),
+      appBar: KibareTabAppBar(
+        actions: [
+          PopupMenuButton<_ProfileMenuAction>(
+            tooltip: 'Menu du profil',
+            icon: const Icon(Icons.more_vert_rounded),
+            onSelected: (action) => _handleProfileMenu(context, ref, action),
+            itemBuilder: (context) => const [
+              PopupMenuItem(
+                value: _ProfileMenuAction.documents,
+                child: ListTile(
+                  leading: Icon(Icons.description_outlined),
+                  title: Text('Consulter mes documents'),
+                ),
+              ),
+              PopupMenuItem(
+                value: _ProfileMenuAction.subscription,
+                child: ListTile(
+                  leading: Icon(Icons.workspace_premium_outlined),
+                  title: Text('Gerer mon abonnement'),
+                ),
+              ),
+              PopupMenuDivider(),
+              PopupMenuItem(
+                value: _ProfileMenuAction.logout,
+                child: ListTile(
+                  leading: Icon(Icons.logout_rounded),
+                  title: Text('Deconnexion'),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
       bottomNavigationBar:
           const AppBottomNavigation(currentTab: AppTab.profile),
       body: profileState.when(
         loading: () => const LoadingWidget(),
-        error: (error, _) => Center(child: Text(error.toString())),
+        error: (error, _) => StateMessage(
+          icon: Icons.person_off_outlined,
+          title: 'Profil indisponible',
+          message:
+              'Votre profil sera disponible hors ligne apres une premiere ouverture avec internet.',
+          actionLabel: 'Reessayer',
+          onAction: () => ref.invalidate(profileProvider),
+        ),
         data: (profile) {
           if (profile == null) {
-            return const Center(child: Text('Profil introuvable'));
+            return const StateMessage(
+              icon: Icons.person_outline_rounded,
+              title: 'Profil a completer',
+              message:
+                  'Ajoutez vos informations pour recevoir de meilleures offres.',
+            );
           }
 
           return Responsive.centeredContent(
@@ -57,6 +102,13 @@ class ProfileScreen extends ConsumerWidget {
                     items: profile.skills,
                     onChanged: (items) =>
                         _updateList(context, ref, profile, 'skills', items),
+                    onClear: () => _confirmClearList(
+                      context,
+                      ref,
+                      profile,
+                      'skills',
+                      'toutes les competences',
+                    ),
                   ),
                   const SizedBox(height: 14),
                   _EditableListSection(
@@ -66,6 +118,13 @@ class ProfileScreen extends ConsumerWidget {
                     multiline: true,
                     onChanged: (items) => _updateList(
                         context, ref, profile, 'experiences', items),
+                    onClear: () => _confirmClearList(
+                      context,
+                      ref,
+                      profile,
+                      'experiences',
+                      'toutes les experiences',
+                    ),
                   ),
                   const SizedBox(height: 14),
                   _EditableListSection(
@@ -74,6 +133,13 @@ class ProfileScreen extends ConsumerWidget {
                     items: profile.interests,
                     onChanged: (items) =>
                         _updateList(context, ref, profile, 'interests', items),
+                    onClear: () => _confirmClearList(
+                      context,
+                      ref,
+                      profile,
+                      'interests',
+                      'tous les centres d interet',
+                    ),
                   ),
                   const SizedBox(height: 14),
                   _EditableListSection(
@@ -83,29 +149,13 @@ class ProfileScreen extends ConsumerWidget {
                     multiline: true,
                     onChanged: (items) =>
                         _updateList(context, ref, profile, 'references', items),
-                  ),
-                  const SizedBox(height: 20),
-                  FilledButton.icon(
-                    onPressed: () => context.push('/documents'),
-                    icon: const Icon(Icons.description_outlined),
-                    label: const Text('Consulter mes documents'),
-                  ),
-                  const SizedBox(height: 12),
-                  OutlinedButton.icon(
-                    onPressed: () => context.push('/subscription'),
-                    icon: const Icon(Icons.workspace_premium_outlined),
-                    label: const Text('Gérer mon abonnement'),
-                  ),
-                  const SizedBox(height: 12),
-                  OutlinedButton.icon(
-                    onPressed: () async {
-                      await ref.read(authControllerProvider.notifier).logout();
-                      if (context.mounted) {
-                        context.go('/login');
-                      }
-                    },
-                    icon: const Icon(Icons.logout_rounded),
-                    label: const Text('Déconnexion'),
+                    onClear: () => _confirmClearList(
+                      context,
+                      ref,
+                      profile,
+                      'references',
+                      'toutes les references',
+                    ),
                   ),
                 ],
               ),
@@ -135,6 +185,60 @@ class ProfileScreen extends ConsumerWidget {
         }
       },
     );
+  }
+
+  static Future<void> _confirmClearList(
+    BuildContext context,
+    WidgetRef ref,
+    CandidateProfileModel profile,
+    String field,
+    String label,
+  ) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Confirmer la suppression'),
+        content: Text('Voulez-vous vraiment vider $label ?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Annuler'),
+          ),
+          FilledButton.icon(
+            onPressed: () => Navigator.pop(context, true),
+            icon: const Icon(Icons.delete_sweep_outlined),
+            label: const Text('Vider'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true || !context.mounted) {
+      return;
+    }
+
+    await _updateList(context, ref, profile, field, const []);
+  }
+
+  static Future<void> _handleProfileMenu(
+    BuildContext context,
+    WidgetRef ref,
+    _ProfileMenuAction action,
+  ) async {
+    switch (action) {
+      case _ProfileMenuAction.documents:
+        context.push('/documents');
+        return;
+      case _ProfileMenuAction.subscription:
+        context.push('/subscription');
+        return;
+      case _ProfileMenuAction.logout:
+        await ref.read(authControllerProvider.notifier).logout();
+        if (context.mounted) {
+          context.go('/login');
+        }
+        return;
+    }
   }
 
   static Future<void> _updateAvailability(
@@ -187,6 +291,8 @@ class ProfileScreen extends ConsumerWidget {
     }
   }
 }
+
+enum _ProfileMenuAction { documents, subscription, logout }
 
 class _ProfileHeader extends StatelessWidget {
   const _ProfileHeader({required this.profile, required this.email});
@@ -490,6 +596,7 @@ class _EditableListSection extends StatelessWidget {
     required this.emptyText,
     required this.items,
     required this.onChanged,
+    required this.onClear,
     this.multiline = false,
   });
 
@@ -497,6 +604,7 @@ class _EditableListSection extends StatelessWidget {
   final String emptyText;
   final List<String> items;
   final ValueChanged<List<String>> onChanged;
+  final VoidCallback onClear;
   final bool multiline;
 
   @override
@@ -521,6 +629,11 @@ class _EditableListSection extends StatelessWidget {
                   tooltip: 'Ajouter',
                   onPressed: () => _openEditor(context),
                   icon: const Icon(Icons.add_circle_outline),
+                ),
+                IconButton(
+                  tooltip: 'Tout vider',
+                  onPressed: items.isEmpty ? null : onClear,
+                  icon: const Icon(Icons.delete_sweep_outlined),
                 ),
               ],
             ),

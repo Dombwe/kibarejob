@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../providers/document_provider.dart';
 import '../widgets/document_card.dart';
 import '../widgets/loading_widget.dart';
+import '../widgets/state_message.dart';
 
 class DocumentsScreen extends ConsumerWidget {
   const DocumentsScreen({super.key});
@@ -14,57 +15,60 @@ class DocumentsScreen extends ConsumerWidget {
     final documentsState = ref.watch(documentProvider);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Mes documents')),
-      floatingActionButton: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.end,
-        children: [
-          FloatingActionButton.extended(
-            heroTag: 'generate-cv',
-            onPressed: () => context.push('/documents/generate-cv'),
-            icon: const Icon(Icons.auto_awesome_outlined),
-            label: const Text('Générer un CV'),
-          ),
-          const SizedBox(height: 10),
-          FloatingActionButton.extended(
-            heroTag: 'upload-document',
-            onPressed: () => context.push('/documents/upload'),
-            icon: const Icon(Icons.upload_file),
-            label: const Text('Ajouter'),
+      appBar: AppBar(
+        title: const Text('Mes documents'),
+        actions: [
+          PopupMenuButton<_DocumentMenuAction>(
+            tooltip: 'Actions documents',
+            icon: const Icon(Icons.more_vert_rounded),
+            onSelected: (action) {
+              switch (action) {
+                case _DocumentMenuAction.generateCv:
+                  context.push('/documents/generate-cv');
+                  return;
+                case _DocumentMenuAction.upload:
+                  context.push('/documents/upload');
+                  return;
+              }
+            },
+            itemBuilder: (context) => const [
+              PopupMenuItem(
+                value: _DocumentMenuAction.generateCv,
+                child: ListTile(
+                  leading: Icon(Icons.auto_awesome_outlined),
+                  title: Text('Generer un CV'),
+                ),
+              ),
+              PopupMenuItem(
+                value: _DocumentMenuAction.upload,
+                child: ListTile(
+                  leading: Icon(Icons.upload_file),
+                  title: Text('Ajouter un document'),
+                ),
+              ),
+            ],
           ),
         ],
       ),
       body: documentsState.when(
         loading: () => const LoadingWidget(),
-        error: (error, _) => Center(child: Text(error.toString())),
+        error: (error, _) => StateMessage(
+          icon: Icons.wifi_off_rounded,
+          title: 'Documents indisponibles',
+          message:
+              'Vos documents apparaitront ici des qu ils auront ete charges au moins une fois avec internet.',
+          actionLabel: 'Reessayer',
+          onAction: () => ref.invalidate(documentProvider),
+        ),
         data: (documents) {
           if (documents.isEmpty) {
-            return Center(
-              child: Padding(
-                padding: const EdgeInsets.all(24),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Icon(Icons.description_outlined, size: 52),
-                    const SizedBox(height: 12),
-                    Text(
-                      'Aucun document ajouté',
-                      style: Theme.of(context).textTheme.titleLarge,
-                    ),
-                    const SizedBox(height: 8),
-                    const Text(
-                      'Vous pouvez générer un CV guidé ou ajouter vos documents existants.',
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 18),
-                    FilledButton.icon(
-                      onPressed: () => context.push('/documents/generate-cv'),
-                      icon: const Icon(Icons.auto_awesome_outlined),
-                      label: const Text('Générer mon CV'),
-                    ),
-                  ],
-                ),
-              ),
+            return StateMessage(
+              icon: Icons.description_outlined,
+              title: 'Aucun document ajouté',
+              message:
+                  'Ajoutez votre CV, vos attestations ou générez un CV prêt à envoyer.',
+              actionLabel: 'Générer mon CV',
+              onAction: () => context.push('/documents/generate-cv'),
             );
           }
 
@@ -122,3 +126,5 @@ class DocumentsScreen extends ConsumerWidget {
     );
   }
 }
+
+enum _DocumentMenuAction { generateCv, upload }

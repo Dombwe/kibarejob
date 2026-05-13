@@ -17,12 +17,28 @@ class DocumentNotifier extends AsyncNotifier<List<DocumentModel>> {
   Future<List<DocumentModel>> build() => fetchDocuments();
 
   Future<List<DocumentModel>> fetchDocuments() async {
-    final api = ref.read(apiServiceProvider);
-    final data = await api.getJson('/api/documents');
-    return (data['documents'] as List<dynamic>? ?? const [])
-        .whereType<Map>()
-        .map((json) => DocumentModel.fromJson(Map<String, dynamic>.from(json)))
-        .toList();
+    final storage = ref.read(storageServiceProvider);
+
+    try {
+      final api = ref.read(apiServiceProvider);
+      final rawDocuments =
+          ((await api.getJson('/api/documents?limit=100'))['documents']
+                      as List<dynamic>? ??
+                  const [])
+              .whereType<Map>()
+              .map((json) => Map<String, dynamic>.from(json))
+              .toList();
+      await storage.saveCachedDocuments(rawDocuments);
+
+      return rawDocuments.map(DocumentModel.fromJson).toList();
+    } catch (error) {
+      final cached = storage.cachedDocuments;
+      if (cached.isEmpty || !_shouldUseCache(error)) {
+        rethrow;
+      }
+
+      return cached.map(DocumentModel.fromJson).toList();
+    }
   }
 
   Future<void> uploadDocument({
@@ -75,6 +91,17 @@ class DocumentNotifier extends AsyncNotifier<List<DocumentModel>> {
     await api.delete('/api/documents/$id');
     state = AsyncValue.data(await fetchDocuments());
     ref.invalidate(profileProvider);
+  }
+
+  bool _shouldUseCache(Object error) {
+    final message = error.toString().toLowerCase();
+    return message.contains('connection') ||
+        message.contains('inaccessible') ||
+        message.contains('socket') ||
+        message.contains('timeout') ||
+        message.contains('network') ||
+        message.contains('reseau') ||
+        message.contains('réseau');
   }
 
   Future<void> _syncReturnedProfile(Map<String, dynamic> data) async {

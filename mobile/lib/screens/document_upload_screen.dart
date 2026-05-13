@@ -21,7 +21,7 @@ class DocumentUploadScreen extends ConsumerStatefulWidget {
 class _DocumentUploadScreenState extends ConsumerState<DocumentUploadScreen> {
   final _titleController = TextEditingController();
   final _descriptionController = TextEditingController();
-  String _type = 'diploma';
+  String _type = 'cv';
   File? _file;
   bool _isUploading = false;
 
@@ -46,11 +46,14 @@ class _DocumentUploadScreenState extends ConsumerState<DocumentUploadScreen> {
                   decoration: const InputDecoration(labelText: 'Type'),
                   items: const [
                     DropdownMenuItem(value: 'cv', child: Text('CV')),
-                    DropdownMenuItem(value: 'diploma', child: Text('Diplome')),
+                    DropdownMenuItem(value: 'diploma', child: Text('Diplôme')),
                     DropdownMenuItem(
                         value: 'certificate', child: Text('Certificat')),
                     DropdownMenuItem(
                         value: 'attestation', child: Text('Attestation')),
+                    DropdownMenuItem(
+                        value: 'driving_license',
+                        child: Text('Permis de conduire')),
                     DropdownMenuItem(value: 'other', child: Text('Autre')),
                   ],
                   onChanged: (value) {

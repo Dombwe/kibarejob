@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../providers/notification_provider.dart';
 import '../theme/responsive.dart';
 import '../widgets/loading_widget.dart';
+import '../widgets/state_message.dart';
 
 class NotificationsScreen extends ConsumerWidget {
   const NotificationsScreen({super.key});
@@ -26,10 +27,22 @@ class NotificationsScreen extends ConsumerWidget {
       ),
       body: notificationsState.when(
         loading: () => const LoadingWidget(),
-        error: (error, _) => Center(child: Text(error.toString())),
+        error: (error, _) => StateMessage(
+          icon: Icons.notifications_off_outlined,
+          title: 'Notifications indisponibles',
+          message:
+              'Vos notifications apparaitront ici apres une premiere synchronisation avec internet.',
+          actionLabel: 'Reessayer',
+          onAction: () => ref.invalidate(notificationProvider),
+        ),
         data: (notifications) {
           if (notifications.isEmpty) {
-            return const Center(child: Text('Aucune notification'));
+            return const StateMessage(
+              icon: Icons.notifications_none_rounded,
+              title: 'Aucune notification',
+              message:
+                  'Les nouvelles informations importantes apparaitront ici.',
+            );
           }
           return RefreshIndicator(
             onRefresh: () => ref.read(notificationProvider.notifier).refresh(),

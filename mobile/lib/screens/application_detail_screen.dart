@@ -8,6 +8,7 @@ import '../providers/matches_provider.dart';
 import '../theme/responsive.dart';
 import '../widgets/app_bottom_navigation.dart';
 import '../widgets/kibare_tab_app_bar.dart';
+import '../widgets/state_message.dart';
 
 class ApplicationDetailScreen extends ConsumerWidget {
   const ApplicationDetailScreen({super.key, required this.application});
@@ -27,7 +28,14 @@ class ApplicationDetailScreen extends ConsumerWidget {
           application: application,
           onResend: () => _resend(context, ref, application.id),
         ),
-        error: (error, _) => Center(child: Text(error.toString())),
+        error: (error, _) => StateMessage(
+          icon: Icons.assignment_late_outlined,
+          title: 'Candidature indisponible',
+          message:
+              'Le detail sera disponible hors ligne apres une premiere ouverture avec internet.',
+          actionLabel: 'Reessayer',
+          onAction: () => ref.invalidate(matchDetailProvider(application.id)),
+        ),
         data: (freshApplication) => _ApplicationBody(
           application: freshApplication,
           onResend: () => _resend(context, ref, freshApplication.id),

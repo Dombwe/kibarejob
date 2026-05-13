@@ -11,6 +11,8 @@ use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Entity(repositoryClass: NotificationRepository::class)]
 #[ORM\Table(name: 'notifications')]
+#[ORM\Index(name: 'idx_notifications_user_created', columns: ['user_id', 'is_deleted', 'created_at'])]
+#[ORM\Index(name: 'idx_notifications_user_unread', columns: ['user_id', 'is_deleted', 'is_read'])]
 class Notification
 {
     #[ORM\Id]

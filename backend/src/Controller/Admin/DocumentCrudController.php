@@ -45,6 +45,7 @@ class DocumentCrudController extends AbstractCrudController
             'Diplôme' => DocumentType::Diploma,
             'Certificat' => DocumentType::Certificate,
             'Attestation' => DocumentType::Attestation,
+            'Permis de conduire' => DocumentType::DrivingLicense,
             'Autre' => DocumentType::Other,
         ]);
         yield TextField::new('title', 'Titre');

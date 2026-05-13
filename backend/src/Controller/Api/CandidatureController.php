@@ -13,6 +13,7 @@ use App\Repository\SwipeRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Attribute\Route;
 
 class CandidatureController extends AbstractController
@@ -27,9 +28,11 @@ class CandidatureController extends AbstractController
     }
 
     #[Route('/api/matches', name: 'api_candidate_matches', methods: ['GET'])]
-    public function matches(): JsonResponse
+    public function matches(Request $request): JsonResponse
     {
         $user = $this->authenticatedUser();
+        $limit = $this->boundedInt($request->query->get('limit'), 50, 1, 100);
+        $cursor = $this->boundedInt($request->query->get('cursor'), 0, 0, 1000000);
         $swipes = $this->swipeRepository->createQueryBuilder('swipe')
             ->andWhere('swipe.candidate = :candidate')
             ->andWhere('swipe.isDeleted = :deleted')
@@ -38,11 +41,17 @@ class CandidatureController extends AbstractController
             ->setParameter('deleted', false)
             ->setParameter('dislike', SwipeDirection::Dislike)
             ->orderBy('swipe.sentAt', 'DESC')
+            ->setFirstResult($cursor)
+            ->setMaxResults($limit + 1)
             ->getQuery()
             ->getResult();
+        $hasMore = count($swipes) > $limit;
+        $swipes = array_slice($swipes, 0, $limit);
 
         return $this->json([
             'matches' => array_map(fn (Swipe $swipe): array => $this->serializeSwipe($swipe), $swipes),
+            'nextCursor' => $hasMore ? $cursor + $limit : null,
+            'hasMore' => $hasMore,
         ]);
     }
 
@@ -113,6 +122,16 @@ class CandidatureController extends AbstractController
         }
 
         return $user;
+    }
+
+    private function boundedInt(mixed $value, int $default, int $min, int $max): int
+    {
+        $parsed = filter_var($value, FILTER_VALIDATE_INT);
+        if (false === $parsed) {
+            $parsed = $default;
+        }
+
+        return max($min, min($max, (int) $parsed));
     }
 
     /**

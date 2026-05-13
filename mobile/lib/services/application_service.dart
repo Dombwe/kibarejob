@@ -1,24 +1,58 @@
 import '../models/swipe_model.dart';
 import 'api_service.dart';
+import 'storage_service.dart';
 
 class ApplicationService {
-  const ApplicationService(this._api);
+  const ApplicationService(this._api, this._storage);
 
   final ApiService _api;
+  final StorageService _storage;
 
   Future<List<SwipeModel>> fetchMatches() async {
-    final data = await _api.getJson('/api/matches');
-    return (data['matches'] as List<dynamic>? ?? const [])
-        .whereType<Map>()
-        .map((item) => SwipeModel.fromJson(Map<String, dynamic>.from(item)))
-        .toList();
+    try {
+      final data = await _api.getJson('/api/matches?limit=100');
+      final rawMatches = (data['matches'] as List<dynamic>? ?? const [])
+          .whereType<Map>()
+          .map((item) => Map<String, dynamic>.from(item))
+          .toList();
+      await _storage.saveCachedMatches(rawMatches);
+
+      return rawMatches.map(SwipeModel.fromJson).toList();
+    } catch (error) {
+      if (!_shouldUseCache(error)) {
+        rethrow;
+      }
+
+      final cached = _storage.cachedMatches;
+      if (cached.isEmpty) {
+        rethrow;
+      }
+
+      return cached.map(SwipeModel.fromJson).toList();
+    }
   }
 
   Future<SwipeModel> fetchMatch(String id) async {
-    final data = await _api.getJson('/api/matches/$id');
-    return SwipeModel.fromJson(
-      Map<String, dynamic>.from(data['match'] as Map),
-    );
+    try {
+      final data = await _api.getJson('/api/matches/$id');
+      return SwipeModel.fromJson(
+        Map<String, dynamic>.from(data['match'] as Map),
+      );
+    } catch (error) {
+      if (!_shouldUseCache(error)) {
+        rethrow;
+      }
+
+      final cached = _storage.cachedMatches
+          .map(SwipeModel.fromJson)
+          .where((match) => match.id == id)
+          .firstOrNull;
+      if (cached == null) {
+        rethrow;
+      }
+
+      return cached;
+    }
   }
 
   Future<void> deleteMatch(String id) {
@@ -30,5 +64,20 @@ class ApplicationService {
     return SwipeModel.fromJson(
       Map<String, dynamic>.from(data['match'] as Map),
     );
+  }
+
+  bool _shouldUseCache(Object error) {
+    if (error is ApiException) {
+      return error.statusCode == null;
+    }
+
+    final message = error.toString().toLowerCase();
+    return message.contains('connection') ||
+        message.contains('inaccessible') ||
+        message.contains('socket') ||
+        message.contains('timeout') ||
+        message.contains('network') ||
+        message.contains('reseau') ||
+        message.contains('réseau');
   }
 }

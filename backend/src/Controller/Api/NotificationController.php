@@ -8,6 +8,7 @@ use App\Repository\NotificationRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Attribute\Route;
 
 #[Route('/api/notifications')]
@@ -20,14 +21,19 @@ class NotificationController extends AbstractController
     }
 
     #[Route('', name: 'api_notifications_index', methods: ['GET'])]
-    public function index(): JsonResponse
+    public function index(Request $request): JsonResponse
     {
         $user = $this->authenticatedUser();
+        $limit = $this->boundedInt($request->query->get('limit'), 50, 1, 100);
+        $cursor = $this->boundedInt($request->query->get('cursor'), 0, 0, 1000000);
         $notifications = $this->notificationRepository->findBy(
             ['user' => $user, 'isDeleted' => false],
             ['createdAt' => 'DESC'],
-            50
+            $limit + 1,
+            $cursor
         );
+        $hasMore = count($notifications) > $limit;
+        $notifications = array_slice($notifications, 0, $limit);
 
         return $this->json([
             'notifications' => array_map(
@@ -38,6 +44,8 @@ class NotificationController extends AbstractController
                 $notifications,
                 static fn (Notification $notification): bool => !$notification->isRead()
             )),
+            'nextCursor' => $hasMore ? $cursor + $limit : null,
+            'hasMore' => $hasMore,
         ]);
     }
 
@@ -95,6 +103,16 @@ class NotificationController extends AbstractController
         }
 
         return $user;
+    }
+
+    private function boundedInt(mixed $value, int $default, int $min, int $max): int
+    {
+        $parsed = filter_var($value, FILTER_VALIDATE_INT);
+        if (false === $parsed) {
+            $parsed = $default;
+        }
+
+        return max($min, min($max, (int) $parsed));
     }
 
     /**

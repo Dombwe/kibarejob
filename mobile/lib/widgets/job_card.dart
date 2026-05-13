@@ -18,25 +18,32 @@ class JobCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
-    final surface = isDark ? AppColors.darkSurface : Colors.white;
-    final borderColor =
-        isDark ? Colors.white.withValues(alpha: 0.12) : const Color(0xFFE2E8F0);
+    final surface = isDark ? const Color(0xFF243447) : Colors.white;
+    final borderColor = isDark
+        ? AppColors.accent.withValues(alpha: 0.46)
+        : const Color(0xFFCBD5E1);
 
     return DecoratedBox(
       decoration: BoxDecoration(
         color: surface,
-        borderRadius: BorderRadius.circular(30),
-        border: Border.all(color: borderColor),
+        borderRadius: BorderRadius.circular(28),
+        border: Border.all(color: borderColor, width: 1.4),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: isDark ? 0.30 : 0.10),
-            blurRadius: 34,
-            offset: const Offset(0, 18),
+            color: Colors.black.withValues(alpha: isDark ? 0.72 : 0.18),
+            blurRadius: isDark ? 54 : 42,
+            offset: const Offset(0, 24),
+          ),
+          BoxShadow(
+            color: (isDark ? AppColors.accent : AppColors.primary)
+                .withValues(alpha: isDark ? 0.28 : 0.12),
+            blurRadius: isDark ? 20 : 12,
+            offset: const Offset(0, 5),
           ),
         ],
       ),
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(30),
+        borderRadius: BorderRadius.circular(28),
         child: Stack(
           children: [
             Positioned.fill(
@@ -46,15 +53,34 @@ class JobCard extends StatelessWidget {
                     begin: Alignment.topCenter,
                     end: Alignment.bottomCenter,
                     colors: isDark
-                        ? const [Color(0xFF1E293B), Color(0xFF111827)]
+                        ? const [Color(0xFF2B3B4F), Color(0xFF172033)]
                         : const [Color(0xFFFFFFFF), Color(0xFFF8FAFC)],
+                  ),
+                ),
+              ),
+            ),
+            Positioned(
+              top: 0,
+              left: 0,
+              right: 0,
+              child: Container(
+                height: 6,
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      isDark
+                          ? const Color(0xFFE2E8F0)
+                          : const Color(0xFF9AA5B1).withValues(alpha: 0.88),
+                      isDark ? AppColors.accent : AppColors.secondary,
+                      isDark ? const Color(0xFF8FB7A2) : AppColors.primary,
+                    ],
                   ),
                 ),
               ),
             ),
             if (dragOffset.dx.abs() > 18)
               Positioned(
-                top: 24,
+                top: 30,
                 left: dragOffset.dx > 0 ? 24 : null,
                 right: dragOffset.dx < 0 ? 24 : null,
                 child: _SwipeStamp(
@@ -63,7 +89,7 @@ class JobCard extends StatelessWidget {
                       ? Icons.favorite_rounded
                       : Icons.close_rounded,
                   color: dragOffset.dx > 0
-                      ? AppColors.primary
+                      ? (isDark ? AppColors.accent : AppColors.primary)
                       : const Color(0xFF7A8694),
                 ),
               ),

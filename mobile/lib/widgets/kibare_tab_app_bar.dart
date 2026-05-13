@@ -9,9 +9,14 @@ import 'kibare_logo.dart';
 import 'theme_mode_toggle.dart';
 
 class KibareTabAppBar extends ConsumerWidget implements PreferredSizeWidget {
-  const KibareTabAppBar({super.key, this.showBackButton = false});
+  const KibareTabAppBar({
+    super.key,
+    this.showBackButton = false,
+    this.actions = const [],
+  });
 
   final bool showBackButton;
+  final List<Widget> actions;
 
   @override
   Size get preferredSize => const Size.fromHeight(108);
@@ -112,6 +117,12 @@ class KibareTabAppBar extends ConsumerWidget implements PreferredSizeWidget {
                         onPressed: () => context.push('/notifications'),
                       ),
                       SizedBox(width: compact ? 4 : 6),
+                      ...actions.expand(
+                        (action) => [
+                          action,
+                          SizedBox(width: compact ? 4 : 6),
+                        ],
+                      ),
                       const ThemeModeToggle(compact: true),
                     ],
                   ),

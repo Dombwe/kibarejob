@@ -5,7 +5,10 @@ import '../services/application_service.dart';
 import 'auth_provider.dart';
 
 final applicationServiceProvider = Provider<ApplicationService>((ref) {
-  return ApplicationService(ref.watch(apiServiceProvider));
+  return ApplicationService(
+    ref.watch(apiServiceProvider),
+    ref.watch(storageServiceProvider),
+  );
 });
 
 final matchesProvider = FutureProvider<List<SwipeModel>>((ref) {

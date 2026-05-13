@@ -4,7 +4,9 @@ import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../models/job_model.dart';
+import '../providers/job_provider.dart';
 import '../providers/profile_provider.dart';
+import '../services/job_service.dart';
 import '../theme/app_theme.dart';
 import '../theme/responsive.dart';
 import '../widgets/app_bottom_navigation.dart';
@@ -243,18 +245,12 @@ class JobDetailScreen extends ConsumerWidget {
                         label: const Text('Compléter mon profil'),
                       ),
                     ],
-                    if (job.applicationEmail != null &&
-                        job.applicationEmail!.isNotEmpty) ...[
-                      const SizedBox(height: 14),
-                      OutlinedButton.icon(
-                        onPressed: () => _openExternal(
-                          context,
-                          'mailto:${job.applicationEmail}?subject=Candidature - ${Uri.encodeComponent(job.title)}',
-                        ),
-                        icon: const Icon(Icons.mail_outline_rounded),
-                        label: const Text('Postuler par email'),
-                      ),
-                    ],
+                    const SizedBox(height: 14),
+                    FilledButton.icon(
+                      onPressed: () => _applyToJob(context, ref, job),
+                      icon: const Icon(Icons.favorite_rounded),
+                      label: const Text('Postuler'),
+                    ),
                   ],
                 ),
               ),
@@ -271,6 +267,43 @@ class JobDetailScreen extends ConsumerWidget {
         ),
       ),
     );
+  }
+
+  Future<void> _applyToJob(
+    BuildContext context,
+    WidgetRef ref,
+    JobModel job,
+  ) async {
+    final notifier = ref.read(feedProvider.notifier);
+    if (notifier.isOfflineMode) {
+      _showDetailSnackBar(
+        context,
+        'Le swipe necessite une connexion. Vous pouvez seulement consulter les offres sauvegardees.',
+      );
+      return;
+    }
+
+    _showDetailBlockingLoader(context, 'Envoi de votre candidature...');
+
+    try {
+      final result = await notifier.swipe(job, 'like');
+      if (context.mounted) {
+        Navigator.of(context, rootNavigator: true).pop();
+      }
+      if (context.mounted && result.accepted) {
+        await _showDetailApplicationSentDialog(context, job, result);
+      }
+    } on ProfileCompletionRequiredException catch (error) {
+      if (context.mounted) {
+        Navigator.of(context, rootNavigator: true).pop();
+        await _showDetailProfileCompletionDialog(context, error);
+      }
+    } catch (error) {
+      if (context.mounted) {
+        Navigator.of(context, rootNavigator: true).pop();
+        await _showDetailApplicationErrorDialog(context, error.toString());
+      }
+    }
   }
 }
 
@@ -444,6 +477,250 @@ Future<void> _openExternal(BuildContext context, String rawUrl) async {
       const SnackBar(
         content: Text(
             'Impossible d’ouvrir ce lien. Vérifiez votre connexion internet.'),
+      ),
+    );
+  }
+}
+
+void _showDetailSnackBar(BuildContext context, String message) {
+  ScaffoldMessenger.of(context)
+    ..hideCurrentSnackBar()
+    ..showSnackBar(SnackBar(content: Text(message)));
+}
+
+void _showDetailBlockingLoader(BuildContext context, String message) {
+  showDialog<void>(
+    context: context,
+    barrierDismissible: false,
+    builder: (context) => PopScope(
+      canPop: false,
+      child: Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const CircularProgressIndicator(),
+              const SizedBox(height: 18),
+              Text(
+                message,
+                textAlign: TextAlign.center,
+                style: Theme.of(context).textTheme.bodyLarge,
+              ),
+            ],
+          ),
+        ),
+      ),
+    ),
+  );
+}
+
+Future<void> _showDetailApplicationErrorDialog(
+  BuildContext context,
+  String message,
+) {
+  return showDialog<void>(
+    context: context,
+    builder: (context) => AlertDialog(
+      icon: Icon(
+        Icons.error_outline_rounded,
+        color: Theme.of(context).colorScheme.error,
+      ),
+      title: const Text('Candidature non envoyee'),
+      content: Text(message.replaceFirst('Exception: ', '')),
+      actions: [
+        FilledButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text('Compris'),
+        ),
+      ],
+    ),
+  );
+}
+
+Future<void> _showDetailProfileCompletionDialog(
+  BuildContext context,
+  ProfileCompletionRequiredException error,
+) {
+  final missingProfile = error.missingProfileItems;
+  final missingDocuments = error.missingDocuments;
+
+  return showDialog<void>(
+    context: context,
+    builder: (context) => AlertDialog(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+      icon: const Icon(Icons.assignment_ind_outlined),
+      title: const Text('Profil a completer'),
+      content: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(error.message, style: Theme.of(context).textTheme.bodyMedium),
+            if (missingProfile.isNotEmpty) ...[
+              const SizedBox(height: 14),
+              Text(
+                'Informations manquantes',
+                style: Theme.of(context).textTheme.titleSmall,
+              ),
+              const SizedBox(height: 6),
+              ...missingProfile.map((item) => _MissingDetailItem(label: item)),
+            ],
+            if (missingDocuments.isNotEmpty) ...[
+              const SizedBox(height: 14),
+              Text(
+                'Documents a ajouter',
+                style: Theme.of(context).textTheme.titleSmall,
+              ),
+              const SizedBox(height: 6),
+              ...missingDocuments
+                  .map((item) => _MissingDetailItem(label: item)),
+            ],
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: const Text('Plus tard'),
+        ),
+        FilledButton(
+          onPressed: () {
+            Navigator.of(context).pop();
+            context
+                .push(missingDocuments.isNotEmpty ? '/documents' : '/profile');
+          },
+          child: Text(
+            missingDocuments.isNotEmpty
+                ? 'Ajouter les documents'
+                : 'Completer mon profil',
+          ),
+        ),
+      ],
+    ),
+  );
+}
+
+Future<void> _showDetailApplicationSentDialog(
+  BuildContext context,
+  JobModel job,
+  SwipeResult result,
+) {
+  return showDialog<void>(
+    context: context,
+    barrierDismissible: true,
+    builder: (context) => Dialog(
+      insetPadding: const EdgeInsets.symmetric(horizontal: 22),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(28, 30, 28, 28),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 100,
+              height: 100,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: LinearGradient(
+                  colors: result.emailSent
+                      ? const [Color(0xFFB8C7B4), Color(0xFF2F6F5E)]
+                      : const [Color(0xFFFDE68A), Color(0xFFB45309)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+              ),
+              child: Icon(
+                result.emailSent
+                    ? Icons.mark_email_read_outlined
+                    : Icons.mark_email_unread_outlined,
+                color: Colors.white,
+                size: 50,
+              ),
+            ),
+            const SizedBox(height: 24),
+            Text(
+              result.emailSent
+                  ? 'Candidature envoyee !'
+                  : 'Candidature non envoyee',
+              textAlign: TextAlign.center,
+              style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                    fontWeight: FontWeight.w900,
+                  ),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              result.emailSent
+                  ? 'L email de candidature a bien ete transmis. Une copie a ete envoyee a votre adresse mail et la preuve d envoi est disponible dans l onglet Candidatures.'
+                  : (result.hasEmailError
+                      ? result.emailError!
+                      : 'Votre candidature est enregistree, mais l email n a pas ete confirme. Vous pourrez la renvoyer depuis l onglet Candidatures.'),
+              textAlign: TextAlign.center,
+              style: Theme.of(context).textTheme.bodyLarge,
+            ),
+            const SizedBox(height: 12),
+            Text(
+              result.emailRecipient ?? job.companyName ?? 'Entreprise',
+              textAlign: TextAlign.center,
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    color: const Color(0xFF2F6F5E),
+                    fontWeight: FontWeight.w900,
+                  ),
+            ),
+            const SizedBox(height: 18),
+            Text(
+              'pour le poste de ${job.title}',
+              textAlign: TextAlign.center,
+              style: Theme.of(context).textTheme.bodyMedium,
+            ),
+            const SizedBox(height: 28),
+            SizedBox(
+              width: double.infinity,
+              child: FilledButton(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                  if (!result.emailSent) {
+                    context.push('/matches');
+                  }
+                },
+                style: FilledButton.styleFrom(
+                  backgroundColor: const Color(0xFF2F6F5E),
+                ),
+                child: Text(
+                  result.emailSent
+                      ? 'Continuer a swiper'
+                      : 'Voir mes candidatures',
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    ),
+  );
+}
+
+class _MissingDetailItem extends StatelessWidget {
+  const _MissingDetailItem({required this.label});
+
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 6),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(
+            Icons.error_outline_rounded,
+            size: 18,
+            color: Theme.of(context).colorScheme.error,
+          ),
+          const SizedBox(width: 8),
+          Expanded(child: Text(label)),
+        ],
       ),
     );
   }

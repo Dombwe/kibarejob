@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../providers/auth_provider.dart';
 import '../widgets/loading_widget.dart';
+import '../widgets/state_message.dart';
 
 class SubscriptionScreen extends ConsumerStatefulWidget {
   const SubscriptionScreen({super.key});
@@ -32,7 +33,19 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
             return const LoadingWidget();
           }
 
+          if (snapshot.hasError && !snapshot.hasData) {
+            return StateMessage(
+              icon: Icons.workspace_premium_outlined,
+              title: 'Abonnement indisponible',
+              message:
+                  'Votre statut sera disponible hors ligne apres une premiere ouverture avec internet.',
+              actionLabel: 'Reessayer',
+              onAction: () => setState(() => _statusFuture = _fetchStatus()),
+            );
+          }
+
           final status = snapshot.data ?? const <String, dynamic>{};
+          final isOffline = status['_offline'] == true;
           final candidate = status['candidate'] is Map<String, dynamic>
               ? status['candidate'] as Map<String, dynamic>
               : const <String, dynamic>{};
@@ -41,6 +54,10 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
           return ListView(
             padding: const EdgeInsets.all(16),
             children: [
+              if (isOffline) ...[
+                const _OfflineSubscriptionNotice(),
+                const SizedBox(height: 12),
+              ],
               Card(
                 child: ListTile(
                   leading: const Icon(Icons.workspace_premium_outlined),
@@ -74,11 +91,13 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
                   'Super swipe',
                   'Statistiques personnelles',
                 ],
-                onPressed: _isSubmitting ? null : () => _subscribe('candidate_premium'),
+                onPressed: _isSubmitting || isOffline
+                    ? null
+                    : () => _subscribe('candidate_premium'),
               ),
               const SizedBox(height: 20),
               OutlinedButton.icon(
-                onPressed: _isSubmitting ? null : _cancel,
+                onPressed: _isSubmitting || isOffline ? null : _cancel,
                 icon: const Icon(Icons.cancel_outlined),
                 label: const Text('Resilier'),
               ),
@@ -89,8 +108,23 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
     );
   }
 
-  Future<Map<String, dynamic>> _fetchStatus() {
-    return ref.read(apiServiceProvider).getJson('/api/subscription/status');
+  Future<Map<String, dynamic>> _fetchStatus() async {
+    final storage = ref.read(storageServiceProvider);
+    try {
+      final status = await ref
+          .read(apiServiceProvider)
+          .getJson('/api/subscription/status');
+      await storage.saveCachedSubscriptionStatus(status);
+
+      return status;
+    } catch (error) {
+      final cached = storage.cachedSubscriptionStatus;
+      if (cached == null || !_shouldUseCache(error)) {
+        rethrow;
+      }
+
+      return {...cached, '_offline': true};
+    }
   }
 
   Future<void> _subscribe(String planCode) async {
@@ -118,6 +152,34 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
         setState(() => _isSubmitting = false);
       }
     }
+  }
+
+  bool _shouldUseCache(Object error) {
+    final message = error.toString().toLowerCase();
+    return message.contains('connection') ||
+        message.contains('inaccessible') ||
+        message.contains('socket') ||
+        message.contains('timeout') ||
+        message.contains('network') ||
+        message.contains('reseau') ||
+        message.contains('réseau');
+  }
+}
+
+class _OfflineSubscriptionNotice extends StatelessWidget {
+  const _OfflineSubscriptionNotice();
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      child: ListTile(
+        leading: const Icon(Icons.wifi_off_rounded),
+        title: const Text('Mode hors ligne'),
+        subtitle: const Text(
+          'Dernier statut connu affiché. Les changements d’abonnement nécessitent une connexion.',
+        ),
+      ),
+    );
   }
 }
 

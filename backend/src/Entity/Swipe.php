@@ -14,6 +14,8 @@ use Symfony\Component\Validator\Constraints as Assert;
 #[ORM\Entity(repositoryClass: SwipeRepository::class)]
 #[ORM\Table(name: 'swipes')]
 #[ORM\UniqueConstraint(name: 'uniq_swipe_candidate_offer', columns: ['candidate_id', 'offer_id'])]
+#[ORM\Index(name: 'idx_swipes_candidate_sent', columns: ['candidate_id', 'is_deleted', 'direction', 'sent_at'])]
+#[ORM\Index(name: 'idx_swipes_offer_status', columns: ['offer_id', 'is_deleted', 'status', 'sent_at'])]
 class Swipe
 {
     #[ORM\Id]

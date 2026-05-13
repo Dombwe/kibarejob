@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../models/job_model.dart';
+import '../theme/app_theme.dart';
 import '../theme/responsive.dart';
 import 'job_card.dart';
 
@@ -77,19 +78,72 @@ class _CardStackState extends State<CardStack> {
           compact ? 620.0 : 760.0,
         );
 
-        return Stack(
-          alignment: Alignment.center,
-          children: [
-            for (var index = 0; index < visibleJobs.length; index++)
-              _buildPositionedCard(
-                context,
-                visibleJobs[index],
-                index,
-                visibleJobs.length - 1,
-                cardWidth,
-                cardHeight,
+        return Padding(
+          padding: EdgeInsets.symmetric(vertical: compact ? 4 : 8),
+          child: Container(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(36),
+              boxShadow: [
+                if (Theme.of(context).brightness == Brightness.dark)
+                  BoxShadow(
+                    color: AppColors.accent.withValues(alpha: 0.16),
+                    blurRadius: 28,
+                    spreadRadius: 2,
+                  ),
+              ],
+            ),
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(34),
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: Theme.of(context).brightness == Brightness.dark
+                      ? const [Color(0xFF050A12), Color(0xFF182435)]
+                      : const [Color(0xFFE2E8F0), Color(0xFFF8FAFC)],
+                ),
+                border: Border.all(
+                  color: Theme.of(context).brightness == Brightness.dark
+                      ? AppColors.accent.withValues(alpha: 0.34)
+                      : const Color(0xFFCBD5E1),
+                  width:
+                      Theme.of(context).brightness == Brightness.dark ? 1.4 : 1,
+                ),
               ),
-          ],
+              child: Stack(
+                alignment: Alignment.center,
+                children: [
+                  const Positioned(
+                    left: 12,
+                    top: 16,
+                    child: _SwipeSideHint(
+                      icon: Icons.keyboard_arrow_left_rounded,
+                      label: 'Passer',
+                      alignment: CrossAxisAlignment.start,
+                    ),
+                  ),
+                  const Positioned(
+                    right: 12,
+                    top: 16,
+                    child: _SwipeSideHint(
+                      icon: Icons.keyboard_arrow_right_rounded,
+                      label: 'Postuler',
+                      alignment: CrossAxisAlignment.end,
+                    ),
+                  ),
+                  for (var index = 0; index < visibleJobs.length; index++)
+                    _buildPositionedCard(
+                      context,
+                      visibleJobs[index],
+                      index,
+                      visibleJobs.length - 1,
+                      cardWidth - (compact ? 10 : 18),
+                      cardHeight - (compact ? 8 : 14),
+                    ),
+                ],
+              ),
+            ),
+          ),
         );
       },
     );
@@ -146,5 +200,41 @@ class _CardStackState extends State<CardStack> {
     final direction = _dragOffset.dx > 0 ? 'like' : 'dislike';
     setState(() => _dragOffset = Offset.zero);
     widget.onSwipe(job, direction);
+  }
+}
+
+class _SwipeSideHint extends StatelessWidget {
+  const _SwipeSideHint({
+    required this.icon,
+    required this.label,
+    required this.alignment,
+  });
+
+  final IconData icon;
+  final String label;
+  final CrossAxisAlignment alignment;
+
+  @override
+  Widget build(BuildContext context) {
+    final isRight = alignment == CrossAxisAlignment.end;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final color = isRight
+        ? (isDark ? AppColors.accent : AppColors.primary)
+        : (isDark ? const Color(0xFFCBD5E1) : const Color(0xFF64748B));
+
+    return Column(
+      crossAxisAlignment: alignment,
+      children: [
+        Icon(icon, size: 24, color: color.withValues(alpha: 0.70)),
+        Text(
+          label,
+          style: TextStyle(
+            color: color.withValues(alpha: 0.78),
+            fontSize: 12,
+            fontWeight: FontWeight.w900,
+          ),
+        ),
+      ],
+    );
   }
 }

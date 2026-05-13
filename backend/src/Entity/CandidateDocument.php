@@ -14,6 +14,8 @@ use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Entity(repositoryClass: CandidateDocumentRepository::class)]
 #[ORM\Table(name: 'candidate_documents')]
+#[ORM\Index(name: 'idx_candidate_documents_owner_uploaded', columns: ['candidate_id', 'is_deleted', 'uploaded_at'])]
+#[ORM\Index(name: 'idx_candidate_documents_type', columns: ['candidate_id', 'type', 'is_deleted'])]
 class CandidateDocument
 {
     #[ORM\Id]

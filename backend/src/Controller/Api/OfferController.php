@@ -68,17 +68,23 @@ class OfferController extends AbstractController
     }
 
     #[Route('', name: 'api_employer_offers_list', methods: ['GET'])]
-    public function list(): JsonResponse
+    public function list(Request $request): JsonResponse
     {
         $employer = $this->getEmployer();
+        $limit = $this->boundedInt($request->query->get('limit'), 50, 1, 100);
+        $cursor = $this->boundedInt($request->query->get('cursor'), 0, 0, 1000000);
         $offers = $this->offerRepository->findBy([
             'employer' => $employer->getUser(),
             'isDeleted' => false,
-        ], ['createdAt' => 'DESC']);
+        ], ['createdAt' => 'DESC'], $limit + 1, $cursor);
+        $hasMore = count($offers) > $limit;
+        $offers = array_slice($offers, 0, $limit);
 
         return $this->json([
             'offers' => array_map(fn (JobOffer $offer): array => $this->serializeOffer($offer), $offers),
             'remaining_offers' => $this->subscriptionService->getRemainingOffers($employer),
+            'nextCursor' => $hasMore ? $cursor + $limit : null,
+            'hasMore' => $hasMore,
         ]);
     }
 
@@ -202,6 +208,16 @@ class OfferController extends AbstractController
     private function nullableInt(mixed $value): ?int
     {
         return null === $value || '' === $value ? null : (int) $value;
+    }
+
+    private function boundedInt(mixed $value, int $default, int $min, int $max): int
+    {
+        $parsed = filter_var($value, FILTER_VALIDATE_INT);
+        if (false === $parsed) {
+            $parsed = $default;
+        }
+
+        return max($min, min($max, (int) $parsed));
     }
 
     private function arrayValue(mixed $value): array

@@ -44,4 +44,14 @@ class NotificationModel {
       createdAt: createdAt,
     );
   }
+
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        'type': type,
+        'title': title,
+        'message': message,
+        'isRead': isRead,
+        'data': data,
+        'createdAt': createdAt?.toIso8601String(),
+      };
 }

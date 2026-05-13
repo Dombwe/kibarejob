@@ -13,6 +13,7 @@ use App\Service\CandidateProfileCompletionService;
 use App\Service\DocumentVerificationService;
 use App\Service\DocumentExtractorService;
 use App\Service\FileUploadService;
+use App\Service\ModernCvPdfWriter;
 use App\Service\ScoreCacheService;
 use App\Service\SubscriptionService;
 use App\Service\ValidationService;
@@ -41,6 +42,7 @@ class DocumentController extends AbstractController
         private readonly CandidateProfileCompletionService $completionService,
         private readonly ScoreCacheService $scoreCacheService,
         private readonly CacheService $cacheService,
+        private readonly ModernCvPdfWriter $modernCvPdfWriter,
         private readonly string $projectDir,
         private readonly string $storagePath,
     ) {
@@ -56,10 +58,16 @@ class DocumentController extends AbstractController
             $criteria['type'] = $this->documentTypeFromInput($request->query->get('type'));
         }
 
-        $documents = $this->documentRepository->findBy($criteria, ['uploadedAt' => 'DESC']);
+        $limit = $this->boundedInt($request->query->get('limit'), 60, 1, 120);
+        $cursor = $this->boundedInt($request->query->get('cursor'), 0, 0, 1000000);
+        $documents = $this->documentRepository->findBy($criteria, ['uploadedAt' => 'DESC'], $limit + 1, $cursor);
+        $hasMore = count($documents) > $limit;
+        $documents = array_slice($documents, 0, $limit);
 
         return $this->json([
             'documents' => array_map(fn (CandidateDocument $document) => $this->serializeDocument($document), $documents),
+            'nextCursor' => $hasMore ? $cursor + $limit : null,
+            'hasMore' => $hasMore,
         ]);
     }
 
@@ -137,7 +145,7 @@ class DocumentController extends AbstractController
 
         $fileName = 'cv-guide-' . (new \DateTimeImmutable())->format('YmdHis') . '.pdf';
         $absolutePath = $directory . DIRECTORY_SEPARATOR . $fileName;
-        $this->writeCvPdf($absolutePath, $profile, $payload);
+        $this->modernCvPdfWriter->writeGenerated($absolutePath, $profile, $payload);
         if (!is_file($absolutePath)) {
             return $this->json(['message' => 'Impossible de générer le CV.'], JsonResponse::HTTP_INTERNAL_SERVER_ERROR);
         }
@@ -381,6 +389,7 @@ class DocumentController extends AbstractController
             'diplome', 'diploma', 'degree' => DocumentType::Diploma,
             'certificat', 'certificate', 'certification' => DocumentType::Certificate,
             'attestation', 'work_certificate', 'work_attestation' => DocumentType::Attestation,
+            'permis', 'permis_conduire', 'permis_de_conduire', 'driving_license', 'driver_license' => DocumentType::DrivingLicense,
             default => DocumentType::tryFrom($type) ?? DocumentType::Other,
         };
     }
@@ -971,6 +980,16 @@ class DocumentController extends AbstractController
         $decoded = json_decode($value, true);
 
         return is_array($decoded) ? $decoded : null;
+    }
+
+    private function boundedInt(mixed $value, int $default, int $min, int $max): int
+    {
+        $parsed = filter_var($value, FILTER_VALIDATE_INT);
+        if (false === $parsed) {
+            $parsed = $default;
+        }
+
+        return max($min, min($max, (int) $parsed));
     }
 
     private function absolutePathFromUrl(string $url): string

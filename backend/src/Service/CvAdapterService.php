@@ -10,6 +10,7 @@ class CvAdapterService
     public function __construct(
         private readonly string $projectDir,
         private readonly string $storagePath,
+        private readonly ModernCvPdfWriter $modernCvPdfWriter,
     )
     {
     }
@@ -29,7 +30,7 @@ class CvAdapterService
         $path = $dir . DIRECTORY_SEPARATOR . $fileName;
 
         try {
-            $this->writeCvPdf($path, $candidate, $offer);
+            $this->modernCvPdfWriter->writeAdapted($path, $candidate, $offer);
         } catch (\Throwable) {
             return $sourceUrl ?: '';
         }

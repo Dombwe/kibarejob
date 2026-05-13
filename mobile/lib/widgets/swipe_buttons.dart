@@ -28,6 +28,7 @@ class SwipeButtons extends StatelessWidget {
         children: [
           _ActionButton(
             tooltip: 'Passer',
+            label: 'Passer',
             icon: Icons.close_rounded,
             color: const Color(0xFF9AA5B1),
             foregroundColor: const Color(0xFF45515F),
@@ -37,6 +38,7 @@ class SwipeButtons extends StatelessWidget {
           SizedBox(width: compact ? 12 : 18),
           _ActionButton(
             tooltip: 'Mettre en favori',
+            label: 'Favori',
             icon: Icons.star_rounded,
             color: const Color(0xFFC8A24A),
             foregroundColor:
@@ -47,6 +49,7 @@ class SwipeButtons extends StatelessWidget {
           SizedBox(width: compact ? 12 : 18),
           _ActionButton(
             tooltip: 'Postuler',
+            label: 'Postuler',
             icon: Icons.favorite_rounded,
             color: isDark ? AppColors.accent : const Color(0xFF2F6F5E),
             foregroundColor: Colors.white,
@@ -62,6 +65,7 @@ class SwipeButtons extends StatelessWidget {
 class _ActionButton extends StatelessWidget {
   const _ActionButton({
     required this.tooltip,
+    required this.label,
     required this.icon,
     required this.color,
     required this.size,
@@ -70,6 +74,7 @@ class _ActionButton extends StatelessWidget {
   });
 
   final String tooltip;
+  final String label;
   final IconData icon;
   final Color color;
   final Color? foregroundColor;
@@ -85,35 +90,50 @@ class _ActionButton extends StatelessWidget {
 
     return Tooltip(
       message: tooltip,
-      child: DecoratedBox(
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          boxShadow: [
-            BoxShadow(
-              color: color.withValues(
-                  alpha: foregroundColor == null ? 0.10 : 0.26),
-              blurRadius: 22,
-              offset: const Offset(0, 12),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          DecoratedBox(
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              boxShadow: [
+                BoxShadow(
+                  color: color.withValues(
+                      alpha: foregroundColor == null ? 0.10 : 0.26),
+                  blurRadius: 22,
+                  offset: const Offset(0, 12),
+                ),
+              ],
             ),
-          ],
-        ),
-        child: Material(
-          color: bgColor,
-          shape: const CircleBorder(),
-          child: InkWell(
-            customBorder: const CircleBorder(),
-            onTap: onPressed,
-            child: SizedBox(
-              width: size,
-              height: size,
-              child: Icon(
-                icon,
-                size: size * 0.46,
-                color: foregroundColor ?? color,
+            child: Material(
+              color: bgColor,
+              shape: const CircleBorder(),
+              child: InkWell(
+                customBorder: const CircleBorder(),
+                onTap: onPressed,
+                child: SizedBox(
+                  width: size,
+                  height: size,
+                  child: Icon(
+                    icon,
+                    size: size * 0.46,
+                    color: foregroundColor ?? color,
+                  ),
+                ),
               ),
             ),
           ),
-        ),
+          const SizedBox(height: 7),
+          Text(
+            label,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                  color: color,
+                  fontWeight: FontWeight.w900,
+                ),
+          ),
+        ],
       ),
     );
   }

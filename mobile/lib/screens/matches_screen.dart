@@ -9,6 +9,7 @@ import '../theme/responsive.dart';
 import '../widgets/app_bottom_navigation.dart';
 import '../widgets/kibare_tab_app_bar.dart';
 import '../widgets/loading_widget.dart';
+import '../widgets/state_message.dart';
 
 class MatchesScreen extends ConsumerStatefulWidget {
   const MatchesScreen({super.key});
@@ -30,7 +31,14 @@ class _MatchesScreenState extends ConsumerState<MatchesScreen> {
           const AppBottomNavigation(currentTab: AppTab.applications),
       body: matchesState.when(
         loading: () => const LoadingWidget(),
-        error: (error, _) => Center(child: Text(error.toString())),
+        error: (error, _) => StateMessage(
+          icon: Icons.favorite_border_rounded,
+          title: 'Candidatures indisponibles',
+          message:
+              'Vos candidatures apparaitront ici apres une premiere synchronisation avec internet.',
+          actionLabel: 'Reessayer',
+          onAction: () => ref.invalidate(matchesProvider),
+        ),
         data: (matches) {
           final visible = _filtered(matches);
 
@@ -64,8 +72,11 @@ class _MatchesScreenState extends ConsumerState<MatchesScreen> {
                   if (visible.isEmpty)
                     const SliverFillRemaining(
                       hasScrollBody: false,
-                      child: Center(
-                        child: Text('Aucune candidature dans ce filtre.'),
+                      child: StateMessage(
+                        icon: Icons.inbox_outlined,
+                        title: 'Rien ici pour le moment',
+                        message:
+                            'Changez de filtre ou postulez a une offre pour la voir apparaitre ici.',
                       ),
                     )
                   else
@@ -237,42 +248,50 @@ class _ApplicationCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final tone = _statusTone(application.status, application.email.sent);
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final surface = isDark ? const Color(0xFF172033) : const Color(0xFFFFFFFF);
+    final outline =
+        isDark ? Colors.white.withValues(alpha: 0.10) : const Color(0xFFE2E8F0);
 
     return Container(
       margin: const EdgeInsets.only(bottom: 14),
       decoration: BoxDecoration(
-        color: Theme.of(context).cardColor,
-        borderRadius: BorderRadius.circular(24),
-        border: Border(left: BorderSide(color: tone.color, width: 4)),
+        color: surface,
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(color: outline),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: isDark ? 0.18 : 0.06),
-            blurRadius: 18,
-            offset: const Offset(0, 10),
+            color: Colors.black.withValues(alpha: isDark ? 0.24 : 0.07),
+            blurRadius: 24,
+            offset: const Offset(0, 12),
           ),
         ],
       ),
       child: Material(
         color: Colors.transparent,
         child: InkWell(
-          borderRadius: BorderRadius.circular(24),
+          borderRadius: BorderRadius.circular(22),
           onTap: onOpen,
           child: Padding(
-            padding: const EdgeInsets.fromLTRB(18, 18, 12, 18),
+            padding: const EdgeInsets.fromLTRB(16, 16, 10, 16),
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                CircleAvatar(
-                  radius: 30,
-                  backgroundColor: isDark
-                      ? const Color(0xFF0F172A)
-                      : const Color(0xFFF1F5F9),
+                Container(
+                  width: 58,
+                  height: 58,
+                  decoration: BoxDecoration(
+                    color: tone.color.withValues(alpha: isDark ? 0.18 : 0.10),
+                    borderRadius: BorderRadius.circular(18),
+                    border:
+                        Border.all(color: tone.color.withValues(alpha: 0.18)),
+                  ),
+                  alignment: Alignment.center,
                   child: Text(
                     _initials(
                         application.offerCompany ?? application.offerTitle),
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontWeight: FontWeight.w900,
-                      color: AppColors.primary,
+                      color: tone.color,
                     ),
                   ),
                 ),
@@ -311,6 +330,13 @@ class _ApplicationCard extends StatelessWidget {
                               icon: Icons.location_on_outlined,
                               text: application.offerLocation ??
                                   'Lieu non précisé'),
+                          _Meta(
+                              icon: application.email.sent
+                                  ? Icons.mark_email_read_outlined
+                                  : Icons.mark_email_unread_outlined,
+                              text: application.email.sent
+                                  ? 'Email transmis'
+                                  : 'Email a renvoyer'),
                         ],
                       ),
                       const SizedBox(height: 10),
@@ -434,7 +460,7 @@ class _Meta extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ConstrainedBox(
-      constraints: const BoxConstraints(maxWidth: 154),
+      constraints: const BoxConstraints(maxWidth: 178),
       child: Row(
         mainAxisSize: MainAxisSize.max,
         children: [

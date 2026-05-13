@@ -5,7 +5,10 @@ import '../services/notification_service.dart';
 import 'auth_provider.dart';
 
 final notificationServiceProvider = Provider<NotificationService>((ref) {
-  return NotificationService(ref.watch(apiServiceProvider));
+  return NotificationService(
+    ref.watch(apiServiceProvider),
+    ref.watch(storageServiceProvider),
+  );
 });
 
 final notificationProvider =
@@ -28,40 +31,45 @@ class NotificationNotifier extends AsyncNotifier<List<NotificationModel>> {
 
   Future<void> markAsRead(String id) async {
     final current = state.valueOrNull ?? const <NotificationModel>[];
-    state = AsyncValue.data(
-      current
-          .map((notification) => notification.id == id
-              ? notification.copyWith(isRead: true)
-              : notification)
-          .toList(),
-    );
+    final optimistic = current
+        .map((notification) => notification.id == id
+            ? notification.copyWith(isRead: true)
+            : notification)
+        .toList();
+    state = AsyncValue.data(optimistic);
+    await ref.read(storageServiceProvider).saveCachedNotifications(
+          optimistic.map((notification) => notification.toJson()).toList(),
+        );
 
     try {
       final updated =
           await ref.read(notificationServiceProvider).markAsRead(id);
-      state = AsyncValue.data(
-        (state.valueOrNull ?? current)
-            .map((notification) =>
-                notification.id == id ? updated : notification)
-            .toList(),
-      );
-    } catch (error, stackTrace) {
-      state = AsyncValue.error(error, stackTrace);
+      final next = (state.valueOrNull ?? current)
+          .map((notification) => notification.id == id ? updated : notification)
+          .toList();
+      state = AsyncValue.data(next);
+      await ref.read(storageServiceProvider).saveCachedNotifications(
+            next.map((notification) => notification.toJson()).toList(),
+          );
+    } catch (_) {
+      state = AsyncValue.data(optimistic);
     }
   }
 
   Future<void> markAllAsRead() async {
     final current = state.valueOrNull ?? const <NotificationModel>[];
-    state = AsyncValue.data(
-      current
-          .map((notification) => notification.copyWith(isRead: true))
-          .toList(),
-    );
+    final optimistic = current
+        .map((notification) => notification.copyWith(isRead: true))
+        .toList();
+    state = AsyncValue.data(optimistic);
+    await ref.read(storageServiceProvider).saveCachedNotifications(
+          optimistic.map((notification) => notification.toJson()).toList(),
+        );
 
     try {
       await ref.read(notificationServiceProvider).markAllAsRead();
-    } catch (error, stackTrace) {
-      state = AsyncValue.error(error, stackTrace);
+    } catch (_) {
+      state = AsyncValue.data(optimistic);
     }
   }
 }
